@@ -44,7 +44,7 @@ endif()
 
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/mod")
 
-foreach(directory src)
+foreach(directory src tests)
   add_subdirectory("${directory}")
 endforeach()
 
@@ -58,11 +58,11 @@ endif()
 foreach(integration_test
   toy
 )
-#  add_test( NAME "${integration_test}"
-#    COMMAND ${CMAKE_BINARY_DIR}/src/volfil ${write_reference_results}
-#    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/integration/${integration_test}"
-#  )
-#  set_tests_properties(${integration_test}
-#     PROPERTIES PASS_REGULAR_EXPRESSION "Test passed."
-#  )
+  add_test( NAME "${integration_test}"
+    COMMAND ${CMAKE_BINARY_DIR}/src/volfil ${write_reference_results}
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/integration/${integration_test}"
+  )
+  set_tests_properties(${integration_test}
+     PROPERTIES PASS_REGULAR_EXPRESSION "Test passed."
+  )
 endforeach()

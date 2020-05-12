@@ -1,36 +1,47 @@
+    module kind_parameters
+      implicit none
+
+      private
+      public :: DP
+
+      integer, parameter :: precision=15, range=307
+      integer, parameter :: DP = selected_real_kind(precision, range)
+
+    end module
+
     module subdeclare
+      !! this probram calculates a simple, single chamber blowdown/combustion simulation.
+      !! conservation of Mass/Momentum using modern fortran fortran 95/2003 techniques
+      use kind_parameters, only : DP
 
-    implicit none
-    save
-    !! this probram calculates a simple, single chamber blowdown/combustion simulation.
-    ! conservation of Mass/Momentum using modern fortran fortran 95/2003 techniques
-    real, parameter:: DP=kind(1.d0)
-    real, parameter:: Ru=8314d0
-    real, parameter:: pamb=101325d0
-    real, parameter:: tamb=300d0
-    real, parameter:: pi=3.14159d0
-    real, parameter:: pref=20.7D6
+      implicit none
 
-    type flags
-        real(DP) :: temp,dt,tmax
-        integer  ::nsteps=selected_int_kind(12)
-    end type flags
+      real, parameter:: Ru=8314._DP
+      real, parameter:: pamb=101325._DP
+      real, parameter:: tamb=300._DP
+      real, parameter:: pi=3.14159_DP
+      real, parameter:: pref=20.7E6_DP
 
-    type gasprop
-        real(DP) :: cp,cv,h,e,mw,rgas,g
-    end type gasprop
+      type flags
+          real(DP) :: temp,dt,tmax
+          integer  ::nsteps=selected_int_kind(12)
+      end type flags
 
-    type chamber_internal
-        real(DP) :: M, E,P,T,vol
-    end type chamber_internal
+      type gasprop
+          real(DP) :: cp,cv,h,e,mw,rgas,g
+      end type gasprop
 
-    type flow
-        real(DP):: diam, mdoto, edoto
-    end type flow
+      type chamber_internal
+          real(DP) :: M, E,P,T,vol
+      end type chamber_internal
 
-    type combustion
-        real(DP):: mdotgen, edotgen, tflame, mpkg, genmass, genheight, gendiam, rhosolid, ntabs, voltab, mtab,db,rref,r,n,summ
-    end type combustion
+      type flow
+          real(DP):: diam, mdoto, edoto
+      end type flow
+
+      type combustion
+          real(DP):: mdotgen, edotgen, tflame, mpkg, genmass, genheight, gendiam, rhosolid, ntabs, voltab, mtab,db,rref,r,n,summ
+      end type combustion
 
 
     contains
@@ -59,8 +70,8 @@
     xp%rgas=xp%cp-xp%cv
     xp%g=xp%cp/xp%cv
     end subroutine getgasproperties
-    
-    
+
+
 
     subroutine calctp(a,b)  ! calculate flow burning into chamber
     type(chamber_internal),intent(inout) :: a
@@ -68,8 +79,8 @@
     a%T=a%E/a%M/b%cv ! calculate temp, assuming constant specific heat
     a%P=a%M*b%rgas*a%T/a%vol ! calculate ideal gas pressure
     end subroutine calctp
-    
-    
+
+
 
     subroutine calmdotgen(chamcond,comb,gp,flag)
     type(gasprop),intent(in) :: gp
@@ -101,8 +112,7 @@
     type(chamber_internal),intent(in)::ch
     type(gasprop), intent(in)::gas
     type(flow), intent(out) :: flo
-    real(dp) :: pcrit,pratio,p1,p2,ax,tx,gx,rx,px,cpx,hx,cstar,facx,term1,term2,mdtx
-    integer :: dsign
+    real(dp) :: pcrit,pratio,p1,p2,ax,tx,gx,rx,px,cstar,facx,term1,term2,mdtx
     gx=gas%g
     pcrit=(2/(gx+1))**(gx/(gx-1))
     p1 = ch%P
@@ -110,14 +120,11 @@
     ax = pi*.25*flo%diam**2.0
     if(p2>p1) error stop "negative flow"
     ! assuming always positive flow
-    dsign = 1 ! flow from left to right (upstream chamber is left side)
     tx = ch%T
     pratio=p1/p2
 
     rx= gas%rgas
     px = p1
-    cpx = gas%cp
-    hx = gas%h
 
     IF((1. / pratio) .LT. pcrit) then
         ! choked flow
@@ -134,8 +141,8 @@
     flo%mdoto=mdtx
     flo%edoto=mdtx*gas%h
     end subroutine
-    
-    
+
+
 
     subroutine addmass(cham,cmb,flo,flg)  ! update mass and energy balance in the chamber
     type(chamber_internal),intent(inout) :: cham
@@ -152,72 +159,64 @@
 
 
 
-    program volfil
-    use subdeclare
-    implicit none
-    type(chamber_internal)::cham
-    type(combustion)::comb
-    type(gasprop)::gp
-    type(flags)::flag
-    type(flow)::flo
-    
-    integer :: nsteps,i
-    real(DP) :: time
-    real(DP), allocatable :: output(:,:)
+program volfil
+  use kind_parameters, only : DP
+  use subdeclare
+  implicit none
 
-    allocate(output(3,nsteps))
-    open(unit=20,file='volfil.inp')
-    read(20,*);read(20,*)
-    read(20,*) flag%dt,flag%tmax; read(20,*)
-    read(20,*) gp%cp,gp%mw; read(20,*)
-    gp%rgas=gp%cp-gp%cv; gp%cv=gp%cp-Ru/gp%mw ! set a value for rgas
-    gp%g=gp%cp/gp%cv;
-    read(20,*) cham%P,cham%T, cham%vol; read(20,*)
-    read(20,*) flo%diam;read(20,*)
-    read(20,*) comb%tflame,comb%mpkg, comb%genmass, comb%genheight, comb%gendiam, comb%rhosolid, comb%rref, comb%n
-    close(20)
-    nsteps=(flag%tmax)/(flag%dt)
-    comb%db=0.d0 !initialized burn distance to zero
-    cham%T=300;cham%M=.03
-    
-    cham%E=cham%M*cham%T*gp%cv
-    call ntabs(comb)
-    call getgasproperties(gp,cham)
-    call calctp(cham,gp)
-    time=0.d0
-    do i=1,nsteps-1
-        time=time+flag%dt
+  type(chamber_internal)::cham
+  type(combustion)::comb
+  type(gasprop)::gp
+  type(flags)::flag
+  type(flow)::flo
 
-        call calmdotgen(cham, comb, gp,flag)
-        call massflow(cham, gp, flo)
-        call addmass(cham,comb,flo,flag)
-        call getgasproperties(gp,cham)
-        call calctp(cham,gp)
-        print*, [time, cham%P,  cham%T]
-        output(:,i)=[time, cham%P,  cham%T]
-    enddo
-    
-    
-    open(unit=20,file='c:\temp\volfil.out',status='unknown')
-    do i=1,nsteps-1
-        write(20,10) output(:,i)
-    enddo
-    close(20)
-10  format ('3e15.5')
-    end program
+  integer :: nsteps,i
+  real(DP) :: time
+  open(unit=20,file='volfil.inp')
+  read(20,*);read(20,*)
+  read(20,*) flag%dt,flag%tmax; read(20,*)
+  read(20,*) gp%cp,gp%mw; read(20,*)
+  gp%rgas=gp%cp-gp%cv; gp%cv=gp%cp-Ru/gp%mw ! set a value for rgas
+  gp%g=gp%cp/gp%cv;
+  read(20,*) cham%P,cham%T, cham%vol; read(20,*)
+  read(20,*) flo%diam;read(20,*)
+  read(20,*) comb%tflame,comb%mpkg, comb%genmass, comb%genheight, comb%gendiam, comb%rhosolid, comb%rref, comb%n
+  close(20)
+  nsteps=(flag%tmax)/(flag%dt)
+  comb%db=0.d0 !initialized burn distance to zero
+  cham%T=300;cham%M=.03
 
+  cham%E=cham%M*cham%T*gp%cv
+  call ntabs(comb)
+  call getgasproperties(gp,cham)
+  call calctp(cham,gp)
+  time=0.d0
 
+  block
+    integer, parameter :: skip=50, first=1, num_variables=3
+    integer :: step, last
+    real(DP) :: output(num_variables,nsteps)
 
+    last=nsteps-1
+    do i = first, last
+      time=time+flag%dt
 
+      call calmdotgen(cham, comb, gp,flag)
+      call massflow(cham, gp, flo)
+      call addmass(cham,comb,flo,flag)
+      call getgasproperties(gp,cham)
+      call calctp(cham,gp)
+      print*, [time, cham%P,  cham%T]
+      output(:,i)=[time, cham%P,  cham%T]
+    end do
 
+    open(unit=20,file='volfil.out',status='unknown')
 
+    do step = first, last, skip
+      write(20,'(3e15.5)') output(:,step)
+    end do
+  end block
+  close(20)
 
-
-
-
-
-
-
-
-
-
+  print *,"Test passed."
+end program
