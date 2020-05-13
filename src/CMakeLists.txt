@@ -4,4 +4,5 @@ add_executable(volfil
   command_line_interface.f90
   kind_parameters.f90
   main.f90
+  flags_module.f90
 )

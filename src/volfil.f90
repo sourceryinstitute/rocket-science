@@ -11,11 +11,6 @@
       real(DP), parameter:: pi=3.14159_DP
       real(DP), parameter:: pref=20.7E6_DP
 
-      type flags
-          real(DP) :: temp,dt,tmax
-          integer  ::nsteps=selected_int_kind(12)
-      end type flags
-
       type gasprop
           real(DP) :: cp,cv,h,e,mw,rgas,g
       end type gasprop
@@ -71,14 +66,15 @@
 
 
     subroutine calmdotgen(chamcond,comb,gp,flag)
+    use flags_module, only : flags, get_dt
     type(gasprop),intent(in) :: gp
     type(chamber_internal), intent(in):: chamcond
     type(combustion), intent(inout) :: comb
-    type(flags), intent(in)::flag
+    type(flags), intent(in) :: flag
     real(DP) :: surf,dist,h,r
     ! real(DP):: mdotgen, edotgen, tflame, mpkg, genmass, genheight, gendiam, rhosolid, ntabs, voltab, mtab,db,rref,r,n)
     comb%r=comb%rref*(chamcond%p/pref)**comb%n ! forget about conditioning temperature for now
-    comb%db=comb%db+comb%r*flag%dt
+    comb%db=comb%db+comb%r*get_dt(flag)
     r=comb%gendiam/2.
     dist=comb%db
     h=comb%genheight
@@ -86,7 +82,7 @@
     if(dist>r) surf=0.
     if(dist>h/2) surf=0.
     comb%mdotgen=comb%r*surf*comb%rhosolid ! amount of solid combusted
-    comb%summ=comb%summ+comb%mdotgen*flag%dt ! keepting track of how much has burned
+    comb%summ=comb%summ+comb%mdotgen*get_dt(flag) ! keepting track of how much has burned
     if(comb%summ>comb%genmass) comb%mdotgen=0.
    ! now factor in the gas yield
     !1real(DP):: mdotgen, edotgen, tflame, mpkg, genmass, genheight, gendiam, rhosolid, ntabs, voltab, mtab,db,rref,r,n
@@ -133,12 +129,13 @@
 
 
     subroutine addmass(cham,cmb,flo,flg)  ! update mass and energy balance in the chamber
+    use flags_module, only : flags, get_dt
     type(chamber_internal),intent(inout) :: cham
     type(combustion) ,intent(in):: cmb
     type(flow),intent(in) :: flo
     type(flags),intent(in) :: flg
-    cham%M=cham%M+(cmb%mdotgen-flo%mdoto)*flg%dt
-    cham%E=cham%E+(cmb%edotgen-flo%edoto)*flg%dt
+    cham%M=cham%M+(cmb%mdotgen-flo%mdoto)*get_dt(flg)
+    cham%E=cham%E+(cmb%edotgen-flo%edoto)*get_dt(flg)
     end subroutine addmass
 
     ! end contains

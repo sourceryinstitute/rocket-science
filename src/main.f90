@@ -2,6 +2,7 @@ program volfil
   use kind_parameters, only : DP
   use subdeclare
   use command_line_interface, only : command_line
+  use flags_module, only : flags, set_dt, set_tmax
   implicit none
 
   type(command_line) :: volfil_command
@@ -13,17 +14,30 @@ program volfil
 
   integer :: nsteps,i
   real(DP) :: time
+  real(DP) :: dt, tmax
+
+  namelist /time/       dt=1.E-5, tmax=.1
+  namelist /gasprop/    cp=1000., mw=28
+  namelist /state/      P=101250., T=300., vol=10e-4
+  namelist /orifice/    radius=.009
+  namelist /combustion/ tflame=2500., mpkg=18., genmass=.08, genheight=.004, gendiam=.007, rhosolid=1850, rref=.035, n=.4
+
   open(unit=20,file='volfil.inp')
-  read(20,*);read(20,*)
-  read(20,*) flag%dt,flag%tmax; read(20,*)
-  read(20,*) gp%cp,gp%mw; read(20,*)
-  gp%rgas=gp%cp-gp%cv; gp%cv=gp%cp-Ru/gp%mw ! set a value for rgas
+
+  read(20,nml=time) dt,tmax
+  call set_dt(flag, dt)
+  call set_tmax(flag, tmax)
+
+  read(20,nml=gasprop) gp%cp,gp%mw
+  gp%rgas=gp%cp-gp%cv
+  gp%cv=gp%cp-Ru/gp%mw ! set a value for rgas
   gp%g=gp%cp/gp%cv;
-  read(20,*) cham%P,cham%T, cham%vol; read(20,*)
-  read(20,*) flo%diam;read(20,*)
-  read(20,*) comb%tflame,comb%mpkg, comb%genmass, comb%genheight, comb%gendiam, comb%rhosolid, comb%rref, comb%n
+
+  read(20,nml=state) cham%P,cham%T, cham%vol
+  read(20,nml=orifice) flo%diam
+  read(20,nml=combustion) comb%tflame,comb%mpkg, comb%genmass, comb%genheight, comb%gendiam, comb%rhosolid, comb%rref, comb%n
   close(20)
-  nsteps= int( (flag%tmax)/(flag%dt) )
+  nsteps= int( get_tmax(flag)/get_dt(flag) )
   comb%db=0.d0 !initialized burn distance to zero
   cham%T=300;cham%M=.03
 
@@ -42,7 +56,7 @@ program volfil
 
     last=nsteps-1
     do i = first, last
-      time=time+flag%dt
+      time=time+get_dt(flag)
 
       call calmdotgen(cham, comb, gp,flag)
       call massflow(cham, gp, flo)
@@ -54,7 +68,6 @@ program volfil
       end if
       output(:,i)=[time, cham%P,  cham%T]
     end do
-
 
     if (volfil_command%argument_present([ character(len=len("--benchmark")) :: "--benchmark", "-b", "/benchmark", "/b"])) then
       ! write benchmark file

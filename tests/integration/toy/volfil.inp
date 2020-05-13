@@ -1,13 +1,5 @@
-    volfil input deck.  (skip a line, read a line, in main program)
-    type runflags real(DP) :: dt, tmax
-    1e-5,.1
-    type gasprop real(DP) :: cp, mw
-    1000., 28
-    type chamber real(DP) :: P, T, vol
-    101250., 300., 10e-4
-    type flow real(DP):: radius
-    .009
-    type combustion real(DP):: tflame, mpkg, genmass, genheight, gendiam, rhosolid, rref, n
-    2500.,18.,.08,.004,.007,1850,.035,.4
-
-
+&time       dt=1.E-5, tmax=.1 /
+&gasprop    cp=1000., mw=28 /
+&state      P=101250., T=300., vol=10e-4 /
+&orifice    radius=.009 /
+&combustion tflame=2500., mpkg=18., genmass=.08, genheight=.004, gendiam=.007, rhosolid=1850, rref=.035, n=.4 /
