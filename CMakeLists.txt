@@ -55,14 +55,26 @@ if(${benchmark})
   set(write_reference_results "--benchmark")
 endif()
 
-foreach(integration_test
-  toy
+#foreach(integration_test
+#  toy
+#)
+#  add_test( NAME "${integration_test}"
+#    COMMAND ${CMAKE_BINARY_DIR}/src/volfil ${write_reference_results}
+#    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/integration/${integration_test}"
+#  )
+#  set_tests_properties(${integration_test}
+#     PROPERTIES PASS_REGULAR_EXPRESSION "Test passed."
+#  )
+#endforeach()
+
+foreach(unit_test
+  flags
 )
-  add_test( NAME "${integration_test}"
-    COMMAND ${CMAKE_BINARY_DIR}/src/volfil ${write_reference_results}
-    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/integration/${integration_test}"
+  add_test( NAME "${unit_test}"
+    COMMAND "${CMAKE_BINARY_DIR}/tests/unit/${unit_test}/test-${unit_test}"
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/unit/${unit_test}"
   )
-  set_tests_properties(${integration_test}
+  set_tests_properties(${unit_test}
      PROPERTIES PASS_REGULAR_EXPRESSION "Test passed."
   )
 endforeach()
