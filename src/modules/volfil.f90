@@ -1,14 +1,3 @@
-    module kind_parameters
-      implicit none
-
-      private
-      public :: DP
-
-      integer, parameter :: precision=15, range=307
-      integer, parameter :: DP = selected_real_kind(precision, range)
-
-    end module
-
     module subdeclare
       !! this probram calculates a simple, single chamber blowdown/combustion simulation.
       !! conservation of Mass/Momentum using modern fortran fortran 95/2003 techniques
@@ -16,16 +5,11 @@
 
       implicit none
 
-      real, parameter:: Ru=8314._DP
-      real, parameter:: pamb=101325._DP
-      real, parameter:: tamb=300._DP
-      real, parameter:: pi=3.14159_DP
-      real, parameter:: pref=20.7E6_DP
-
-      type flags
-          real(DP) :: temp,dt,tmax
-          integer  ::nsteps=selected_int_kind(12)
-      end type flags
+      real(DP), parameter:: Ru=8314._DP
+      real(DP), parameter:: pamb=101325._DP
+      real(DP), parameter:: tamb=300._DP
+      real(DP), parameter:: pi=3.14159_DP
+      real(DP), parameter:: pref=20.7E6_DP
 
       type gasprop
           real(DP) :: cp,cv,h,e,mw,rgas,g
@@ -42,7 +26,6 @@
       type combustion
           real(DP):: mdotgen, edotgen, tflame, mpkg, genmass, genheight, gendiam, rhosolid, ntabs, voltab, mtab,db,rref,r,n,summ
       end type combustion
-
 
     contains
 
@@ -83,14 +66,15 @@
 
 
     subroutine calmdotgen(chamcond,comb,gp,flag)
+    use flags_module, only : flags, get_dt
     type(gasprop),intent(in) :: gp
     type(chamber_internal), intent(in):: chamcond
     type(combustion), intent(inout) :: comb
-    type(flags), intent(in)::flag
+    type(flags), intent(in) :: flag
     real(DP) :: surf,dist,h,r
     ! real(DP):: mdotgen, edotgen, tflame, mpkg, genmass, genheight, gendiam, rhosolid, ntabs, voltab, mtab,db,rref,r,n)
     comb%r=comb%rref*(chamcond%p/pref)**comb%n ! forget about conditioning temperature for now
-    comb%db=comb%db+comb%r*flag%dt
+    comb%db=comb%db+comb%r*get_dt(flag)
     r=comb%gendiam/2.
     dist=comb%db
     h=comb%genheight
@@ -98,7 +82,7 @@
     if(dist>r) surf=0.
     if(dist>h/2) surf=0.
     comb%mdotgen=comb%r*surf*comb%rhosolid ! amount of solid combusted
-    comb%summ=comb%summ+comb%mdotgen*flag%dt ! keepting track of how much has burned
+    comb%summ=comb%summ+comb%mdotgen*get_dt(flag) ! keepting track of how much has burned
     if(comb%summ>comb%genmass) comb%mdotgen=0.
    ! now factor in the gas yield
     !1real(DP):: mdotgen, edotgen, tflame, mpkg, genmass, genheight, gendiam, rhosolid, ntabs, voltab, mtab,db,rref,r,n
@@ -145,78 +129,15 @@
 
 
     subroutine addmass(cham,cmb,flo,flg)  ! update mass and energy balance in the chamber
+    use flags_module, only : flags, get_dt
     type(chamber_internal),intent(inout) :: cham
     type(combustion) ,intent(in):: cmb
     type(flow),intent(in) :: flo
     type(flags),intent(in) :: flg
-    cham%M=cham%M+(cmb%mdotgen-flo%mdoto)*flg%dt
-    cham%E=cham%E+(cmb%edotgen-flo%edoto)*flg%dt
+    cham%M=cham%M+(cmb%mdotgen-flo%mdoto)*get_dt(flg)
+    cham%E=cham%E+(cmb%edotgen-flo%edoto)*get_dt(flg)
     end subroutine addmass
 
     ! end contains
 
     end module
-
-
-
-program volfil
-  use kind_parameters, only : DP
-  use subdeclare
-  implicit none
-
-  type(chamber_internal)::cham
-  type(combustion)::comb
-  type(gasprop)::gp
-  type(flags)::flag
-  type(flow)::flo
-
-  integer :: nsteps,i
-  real(DP) :: time
-  open(unit=20,file='volfil.inp')
-  read(20,*);read(20,*)
-  read(20,*) flag%dt,flag%tmax; read(20,*)
-  read(20,*) gp%cp,gp%mw; read(20,*)
-  gp%rgas=gp%cp-gp%cv; gp%cv=gp%cp-Ru/gp%mw ! set a value for rgas
-  gp%g=gp%cp/gp%cv;
-  read(20,*) cham%P,cham%T, cham%vol; read(20,*)
-  read(20,*) flo%diam;read(20,*)
-  read(20,*) comb%tflame,comb%mpkg, comb%genmass, comb%genheight, comb%gendiam, comb%rhosolid, comb%rref, comb%n
-  close(20)
-  nsteps=(flag%tmax)/(flag%dt)
-  comb%db=0.d0 !initialized burn distance to zero
-  cham%T=300;cham%M=.03
-
-  cham%E=cham%M*cham%T*gp%cv
-  call ntabs(comb)
-  call getgasproperties(gp,cham)
-  call calctp(cham,gp)
-  time=0.d0
-
-  block
-    integer, parameter :: skip=50, first=1, num_variables=3
-    integer :: step, last
-    real(DP) :: output(num_variables,nsteps)
-
-    last=nsteps-1
-    do i = first, last
-      time=time+flag%dt
-
-      call calmdotgen(cham, comb, gp,flag)
-      call massflow(cham, gp, flo)
-      call addmass(cham,comb,flo,flag)
-      call getgasproperties(gp,cham)
-      call calctp(cham,gp)
-      print*, [time, cham%P,  cham%T]
-      output(:,i)=[time, cham%P,  cham%T]
-    end do
-
-    open(unit=20,file='volfil.out',status='unknown')
-
-    do step = first, last, skip
-      write(20,'(3e15.5)') output(:,step)
-    end do
-  end block
-  close(20)
-
-  print *,"Test passed."
-end program
