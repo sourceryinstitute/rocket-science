@@ -7,16 +7,14 @@ module flags_module
   private
   public :: flags
   public :: initialize
-  public :: get_temp
   public :: get_dt
   public :: get_tmax
-  public :: set_temp
   public :: set_dt
   public :: set_tmax
 
   type flags
     private
-    real(DP) :: temp, dt, tmax
+    real(DP) :: dt, tmax
   end type
 
 contains
@@ -38,12 +36,6 @@ contains
 
   end subroutine
 
-  function get_temp(this) result(this_temp)
-    type(flags), intent(in) :: this
-    real(DP) :: this_temp
-    this_temp = this%temp
-  end function
-
   function get_dt(this) result(this_dt)
     type(flags), intent(in) :: this
     real(DP) :: this_dt
@@ -55,12 +47,6 @@ contains
     real(DP) :: this_tmax
     this_tmax = this%tmax
   end function
-
-  subroutine set_temp(this, temp)
-    type(flags), intent(inout) :: this
-    real(DP), intent(in) :: temp
-    this%temp = temp
-  end subroutine
 
   subroutine set_dt(this, dt)
     type(flags), intent(inout) :: this
