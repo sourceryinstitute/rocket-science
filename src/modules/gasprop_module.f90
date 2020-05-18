@@ -3,45 +3,53 @@ module gasprop_module
   implicit none
 
   private
-  public :: cp,cv,h,e,mw,rgas,g
+  public :: gasprop
+  public :: define
+  public :: get_cp
+  public :: get_mw
 
-      type gasprop
-          real(DP) :: cp,cv,h,e,mw,rgas,g
-      end type gasprop
+  type gasprop
+    private
+    real(DP) :: cp, mw, cv, Rgas, h, e, g
+  end type gasprop
 
-  contains
+contains
 
+  function get_cp(this) result(this_cp)
+    type(gasprop), intent(in) :: this
+    real(DP) :: this_cp
+    this_cp = this%cp
+  end function
 
-function get_cp(this) result(this_cp)
-      type(gasprop), intent(in) :: this
-      real(DP) :: this_cp
-      this_cp = this%cp_
-    end function
+  function get_mw(this) result(this_mw)
+    type(gasprop), intent(in) :: this
+    real(DP) :: this_mw
+    this_mw = this%mw
+  end function
 
-function get_mw(this) result(this_mw)
-      type(gasprop), intent(in) :: this
-      real(DP) :: this_mw
-      this_mw = this%mw_
-    end function
+  subroutine define(this, input_file, chamber)
+    use internal_chamber_module, only : internal_chamber, get_T
+    type(gasprop), intent(inout) :: this
+    character(len=*), intent(in) :: input_file
+    type(internal_chamber), intent(in) :: chamber
+    real(DP) :: e, h, Rgas, g, T
+    real(DP), parameter :: Ru = 8314._DP !! universal gas constant
 
-function setgp(this) result(this_cv, this_e, this_h, this_rgas, this_g)
-  use chamber_module, only : T, get_T
-  type(gasprop), intent(inout) :: this
-      real(DP) this_cp, this_cv, this_e, this_h, this,_rgas, this_g
+    namelist /gasprop/ cp, mw
 
+    open(newunit=u, file=input_file, status='old')
+    read(u, nml=gasprop)
+    close(u)
 
-block
+    this%cp = cp
+    this%mw = mw
+    this%cv = this%cp - Ru/this%mw
+    this%Rgas = this%cp - this%cv
 
-    subroutine setgasprop(T,cham)  ! all f(T)
-use chamber_module, only : T, get_T
-    type(gasprop),intent(inout)::xp
-    type(chamber_internal),intent(in)::cham
-    real(DP)::T
-    T=cham%T
-    xp%h=xp%cp*T
-    xp%e=xp%cv*T
-    xp%rgas=xp%cp-xp%cv
-    xp%g=xp%cp/xp%cv
-    end subroutine getgasproperties
+    T = get_T(chamber)
+    this%h = this%cp*T
+    this%e = this%cv*T
+    this%g = this%cp/this%cv
+  end subroutine
 
-end block
+end module
