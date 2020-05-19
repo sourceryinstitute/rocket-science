@@ -27,12 +27,11 @@ contains
     this_mw = this%mw
   end function
 
-  subroutine define(this, input_file, chamber)
-    use internal_chamber_module, only : internal_chamber, get_T
+  subroutine define(this, input_file, T)
     type(gasprop), intent(inout) :: this
     character(len=*), intent(in) :: input_file
-    type(internal_chamber), intent(in) :: chamber
-    real(DP) :: e, h, Rgas, g, T
+    real(DP), intent(in) :: T
+    real(DP) :: e, h, Rgas, g
     real(DP), parameter :: Ru = 8314._DP !! universal gas constant
 
     namelist /gasprop/ cp, mw
@@ -46,7 +45,6 @@ contains
     this%cv = this%cp - Ru/this%mw
     this%Rgas = this%cp - this%cv
 
-    T = get_T(chamber)
     this%h = this%cp*T
     this%e = this%cv*T
     this%g = this%cp/this%cv

@@ -1,5 +1,5 @@
 &time       dt=1.E-5, tmax=.1 /
-&gasprop    cp=1000., mw=28 /
-&state      P=101250., T=300., vol=10e-4 /
+&gasprop    cp=1000., mw=28. /
+&state      P=101250., T=300., vol=10.E-4 /
 &orifice    radius=.009 /
-&combustion tflame=2500., mpkg=18., genmass=.08, genheight=.004, gendiam=.007, rhosolid=1850, rref=.035, n=.4 /
+&combustion tflame=2500., mpkg=18., genmass=.08, genheight=.004, gendiam=.007, rhosolid=1850., rref=.035, n=.4 /
