@@ -55,6 +55,20 @@ if(${benchmark})
   set(write_reference_results "--benchmark")
 endif()
 
+# Tests that create individual executable programs
+foreach(integration_test
+  design
+)
+  add_test( NAME "${integration_test}"
+    COMMAND ${CMAKE_BINARY_DIR}/tests/integration/test-${integration_test}
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/integration/${integration_test}"
+  )
+  set_tests_properties(${integration_test}
+     PROPERTIES PASS_REGULAR_EXPRESSION "Test passed."
+  )
+endforeach()
+
+# Tests that run the one volfil executable program on different data sets
 foreach(integration_test
   toy
 )
