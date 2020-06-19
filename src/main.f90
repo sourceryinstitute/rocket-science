@@ -9,7 +9,7 @@ program main
     real :: c_p, MW, T, m
   end type
 
-  type pryo_t
+  type pyro_t
     real :: m, height, diameter, gas_yield, density, flame_temp, burn_rate_ref, burn_rate_exp
     integer num_tablets
   end type
@@ -30,4 +30,4 @@ program main
     type(chamber_t) :: chamber
   end type
 
-end main
+end program main
