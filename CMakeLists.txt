@@ -39,10 +39,44 @@ if(MSVC)
 endif()
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wall")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wall -std=f2018")
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} --standard-semenatics")
+elseif(CMAKE_Fortran_COMPILER_ID MATCHES NAG)
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -f2018")
 endif()
 
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/mod")
+
+include(CheckFortranSourceCompiles)
+
+check_fortran_source_compiles("
+  program main
+  integer :: i
+  i = 0
+  error stop i
+  end program
+"
+  HAVE_NON_CONSTANT_ERROR_STOP
+  SRC_EXT ".f90")
+if(HAVE_NON_CONSTANT_ERROR_STOP)
+  add_definitions(-DHAVE_NON_CONSTANT_ERROR_STOP)
+endif()
+
+check_fortran_source_compiles("
+  program main
+  contains
+  pure function foo() result(res)
+    error stop 'Error stop is supported in pure functions (F2018)'
+  end function
+  end program
+"
+  HAVE_ERROR_STOP_IN_PURE
+  SRC_EXT ".f90"
+  )
+if(HAVE_ERROR_STOP_IN_PURE)
+  add_definitions(-DHAVE_ERROR_STOP_IN_PURE)
+endif()
 
 foreach(directory src tests)
   add_subdirectory("${directory}")
@@ -55,7 +89,7 @@ if(${benchmark})
   set(write_reference_results "--benchmark")
 endif()
 
-# Tests that create individual executable programs
+# Integration tests that create individual executable programs
 foreach(integration_test
   design
 )
@@ -64,6 +98,24 @@ foreach(integration_test
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/integration/${integration_test}"
   )
   set_tests_properties(${integration_test}
+     PROPERTIES PASS_REGULAR_EXPRESSION "Test passed."
+  )
+endforeach()
+
+# Unit tests that create individual executable programs
+foreach(unit_test
+  chamber
+  gas
+  hole
+  inflator
+  numerics
+  pyro
+)
+  add_test( NAME "${unit_test}"
+    COMMAND ${CMAKE_BINARY_DIR}/tests/unit/${unit_test}/test-${unit_test}
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/unit/${unit_test}"
+  )
+  set_tests_properties(${unit_test}
      PROPERTIES PASS_REGULAR_EXPRESSION "Test passed."
   )
 endforeach()
