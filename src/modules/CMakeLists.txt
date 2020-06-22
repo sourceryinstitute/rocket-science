@@ -1,4 +1,9 @@
 add_library(modules
-  flags_module.f90
-  volfil.f90
+  numerics_module.f90
+  chamber_module.f90
+  gas_module.f90
+  hole_module.f90
+  inflator_module.f90
+  numerics_module.f90
+  pyro_module.f90
 )
