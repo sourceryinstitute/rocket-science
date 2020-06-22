@@ -7,14 +7,16 @@ program main
 
   type gas_t
     real :: c_p, MW, T, m
+    real :: c_v, rgas, g  ! cv, gas constant, gamma
   end type
 
   type pyro_t
     real :: m, height, diameter, gas_yield, density, flame_temp, burn_rate_ref, burn_rate_exp
-    integer num_tablets
+    real :: num_tablets
   end type
 
   type hole_t
+   ! real, parameter :: (cd=0.75)
     real :: diameter
   end type
 
