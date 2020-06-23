@@ -1,4 +1,4 @@
-program maingas
+program main
   use gas_module, only :  gas_t, define, get_c_p, get_MW, get_T, get_m
   use kind_parameters, only : DP
   implicit none
