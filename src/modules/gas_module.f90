@@ -2,6 +2,7 @@ module gas_module
   use kind_parameters, only : DP
 
   implicit none
+  real(DP), parameter :: Ru=8314_DP
   private
 
   public :: gas_t
@@ -13,7 +14,7 @@ module gas_module
 
   type gas_t
     private
-    real(DP) :: c_p, T, MW, m
+    real(DP) :: c_p, T, MW, m, c_v, rgas, g
   end type
 
 contains
@@ -29,7 +30,7 @@ contains
     namelist/gas/ c_p, MW, T, m
 
     open(newunit=file_unit, file=file_name, status="old", iostat=io_status, iomsg=error_message)
-    if (io_status /= success) error stop "gas%define: file open failed"
+    if (io_status /= success) error stop "gas%define: file open failed with message "//error_message
 
     read(file_unit, nml=gas)
     close(file_unit)
@@ -38,6 +39,12 @@ contains
     this%MW = MW
     this%T = T
     this%m = m
+    this%rgas=Ru/MW
+    this%c_v=c_p-this%rgas
+    this%g=c_p/this%c_v
+
+   
+    print *, this%c_p, this%rgas, this%c_v, this%g 
   end subroutine define
 
   function get_c_p(this) result(this_c_p)
