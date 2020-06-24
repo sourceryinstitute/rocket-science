@@ -7,7 +7,6 @@ program main
 
   type gas_t
     real :: c_p, MW, T, m
-    real :: c_v, rgas, g  ! cv, gas constant, gamma
   end type
 
   type pyro_t
@@ -16,8 +15,7 @@ program main
   end type
 
   type hole_t
-   ! real, parameter :: (cd=0.75)
-    real :: diameter
+    real :: diameter, area
   end type
 
   type chamber_t
