@@ -9,7 +9,7 @@ module chamber_module
 
   type chamber_t
     private
-    real(DP) :: volume
+    real(DP) :: volume, mgas, E, M, edot, mdot, T, P, diam
   end type
 
 contains
