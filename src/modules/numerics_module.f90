@@ -14,8 +14,8 @@ module numerics_module
   public :: d_dt
 
   type numerics_t
-  private
-  real(DP) dt, tmax, time
+    private
+    real(DP) dt, tmax, time
   end type
 
   interface operator(+)
