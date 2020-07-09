@@ -1,0 +1,12 @@
+&numerics dt=1.E-5 /
+&gas      c_p=1000., MW=28., T=300., m=0.030 /
+&pyro     m=0. height=0. diameter=0. gas_yield=0. density=0. flame_temp=0. burn_rate_ref=0. burn_rate_exp=0. num_tablets=0 /
+&hole     diameter=0. /
+&chamber  volume=10.E-4 /
+&inflator time=0. /
+
+&time       dt=1.E-5, tmax=.1 /
+&gasprop    cp=1000., mw=28. /
+&state      P=101250., T=300., vol=10.E-4 /
+&orifice    radius=.009 /
+&combustion tflame=2500., mpkg=18., genmass=.08, genheight=.004, gendiam=.007, rhosolid=1850., rref=.035, n=.4 /

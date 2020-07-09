@@ -1,33 +1,27 @@
 program main
   implicit none
 
-  type numerics
-    real :: dt
+  type inflator_t
+  end type
+
+
+
+  type numerics_t
+    real :: dt, time, tmax
   end type
 
   type gas_t
-    real :: c_p, MW, T, m
+    real :: c_p, MW, c_v, rgas, g
   end type
 
   type pyro_t
-    real :: m, height, diameter, gas_yield, density, flame_temp, burn_rate_ref, burn_rate_exp
-    integer num_tablets
-  end type
-
-  type hole_t
-    real :: diameter
+    real :: mgen, height, diameter, gas_yield, density, flame_temp, burn_rate_ref, burn_rate_exp
+    real :: num_tablets, burn_dist, mdotgen, edotgen
   end type
 
   type chamber_t
-    real volume
-    type(hole_t), allocatable :: hole(:)
+    real volume, mgas, E, M, edot, mdot, T, P, diam
   end type
 
-  type inflator_t
-    real :: time
-    type(gas_t) :: gas
-    type(pyro_t) :: pyro
-    type(chamber_t) :: chamber
-  end type
 
 end program main
