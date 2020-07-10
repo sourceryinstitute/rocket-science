@@ -15,8 +15,8 @@ module numerics_module
   public :: d_dt
 
   type numerics_t
-  private
-  real(DP) dt, tmax, time
+    private
+    real(DP) dt, tmax, time
   end type
 
   interface operator(+)
@@ -30,22 +30,22 @@ module numerics_module
 contains
 
   subroutine define(this, file_name)
-   use assertions_interface, only : max_errmsg_len
-   type(numerics_t), intent(out) :: this
-   character(len=*), intent(in) :: file_name
-   character(len=max_errmsg_len) error_message
-   real(DP) :: dt, tmax, time
-   integer :: io_status, file_unit
-   integer, parameter :: success =0
-   namelist/numerics_list/ dt, tmax
+     use assertions_interface, only : max_errmsg_len
+     type(numerics_t), intent(out) :: this
+     character(len=*), intent(in) :: file_name
+     character(len=max_errmsg_len) error_message
+     real(DP) :: dt, tmax, time
+     integer :: io_status, file_unit
+     integer, parameter :: success =0
+     namelist/numerics_list/ dt, tmax
 
-   open(newunit=file_unit, file=file_name, status="old", iostat=io_status, iomsg=error_message)
-   call assert(io_status == success, "define(numerics): io_status == success", error_message)
-   read(file_unit, nml=numerics_list)
-   this%dt=dt
-   this%tmax=tmax
+     open(newunit=file_unit, file=file_name, status="old", iostat=io_status, iomsg=error_message)
+     call assert(io_status == success, "define(numerics): io_status == success", error_message)
+     read(file_unit, nml=numerics_list)
+     this%dt=dt
+     this%tmax=tmax
 
-   close(file_unit)
+     close(file_unit)
 
   end subroutine
 
