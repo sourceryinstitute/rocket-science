@@ -73,7 +73,13 @@
     type(flags), intent(in) :: flag
     real(DP) :: surf,dist,h,r
     ! real(DP):: mdotgen, edotgen, tflame, mpkg, genmass, genheight, gendiam, rhosolid, ntabs, voltab, mtab,db,rref,r,n)
+
     comb%r=comb%rref*(chamcond%p/pref)**comb%n ! forget about conditioning temperature for now
+
+    ! Two object-oriented ways to set r using the formula above
+    ! call set_r(comb, get_rref(comb)*(get_p(chamcond)/pref)**get_n(comb))
+    ! call set_r(comb, get_r(comb,chamcond,pref))
+
     comb%db=comb%db+comb%r*get_dt(flag)
     r=comb%gendiam/2.
     dist=comb%db
