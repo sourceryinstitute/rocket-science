@@ -32,13 +32,20 @@ program main
     !! 2. Eliminate one class of mistakes (using the variable in a way that is problematic given its declared type).
     !! 3. Enable compiler optimizations (because t & dt are immutable, expressions like t+dt need be evaluated only once).
 
-    call set_time(numerics, t + dt) !! increment time by dt using setter
-    call assert(abs((get_time(numerics)-(t+dt)))/(t+dt) <= tol, &
-               "abs((get_time(numerics)-(t+dt)))/(t+dt) <= tol")
+    block
+      integer i
+      integer, parameter :: loop_iterations=3
 
-    numerics = numerics + d_dt(numerics)*dt !! increment time by dt using user-defined operators
-    call assert(abs((get_time(numerics)-(t+2*dt)))/(t+2*dt) <= tol, &
-               "abs((get_time(numerics)-(t+2*dt)))/(t+2*dt) <= tol")
+      do i = 1, loop_iterations
+        call set_time(numerics, t + i*dt) !! increment time by dt using setter
+        call assert(abs((get_time(numerics)-(t+i*dt)))/(t+i*dt) <= tol, &
+                   "abs((get_time(numerics)-(t+i*dt)))/(t+i*dt) <= tol")
+
+        numerics = numerics + d_dt(numerics)*dt !! increment time by dt using user-defined operators
+        call assert(abs((get_time(numerics)-(t+(i+1)*dt)))/(t+(i+1)*dt) <= tol, &
+                   "abs((get_time(numerics)-(t+(i+1)*dt)))/(t+(i+1)*dt) <= tol")
+      end do
+    end block
 
   end associate
 
