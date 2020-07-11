@@ -1,7 +1,7 @@
 program main
   !! Test the numerics module's type, procedures, and operators
   use assertions_interface, only : assert, max_errmsg_len
-  use numerics_module, only : numerics_t, define, get_dt, get_tmax, get_time, set_time, operator(+), operator(*), d_dt
+  use numerics_module, only : numerics_t, define, get_dt, get_tmax, get_time, set_time, operator(+), operator(*)
   use kind_parameters, only : DP
   implicit none
   type(numerics_t) numerics
@@ -41,7 +41,7 @@ program main
         call assert(abs((get_time(numerics)-(t+i*dt)))/(t+i*dt) <= tol, &
                    "abs((get_time(numerics)-(t+i*dt)))/(t+i*dt) <= tol")
 
-        numerics = numerics + d_dt(numerics)*dt !! increment time by dt using user-defined operators
+        numerics = numerics + dt !! increment time by dt using user-defined operators
         call assert(abs((get_time(numerics)-(t+(i+1)*dt)))/(t+(i+1)*dt) <= tol, &
                    "abs((get_time(numerics)-(t+(i+1)*dt)))/(t+(i+1)*dt) <= tol")
       end do
