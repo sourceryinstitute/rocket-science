@@ -89,12 +89,12 @@ if(${benchmark})
   set(write_reference_results "--benchmark")
 endif()
 
-# Integration tests that create individual executable programs
+# Integration tests that execute the volfil main program on various input files
 foreach(integration_test
-  design
+  blow_down
 )
   add_test( NAME "${integration_test}"
-    COMMAND ${CMAKE_BINARY_DIR}/tests/integration/${integration_test}/test-${integration_test}
+    COMMAND ${CMAKE_BINARY_DIR}/src/volfil
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/integration/${integration_test}"
   )
   set_tests_properties(${integration_test}

@@ -1,27 +1,22 @@
-program main
+program volfil
+  !! Test composite inflator abstraction
+  use inflator_module, only : inflator_t, define, set_time, get_time, get_tmax, increment_time
+  use kind_parameters, only : DP
   implicit none
+  type(inflator_t) inflator
 
-  type inflator_t
-  end type
+  call define(inflator, input_file = "volfil.inp")
 
+  call set_time(inflator, t=0._DP)
 
+  associate(final_time => get_tmax(inflator))
 
-  type numerics_t
-    real :: dt, time, tmax
-  end type
+    do while(get_time(inflator) < final_time)
 
-  type gas_t
-    real :: c_p, MW, c_v, rgas, g
-  end type
+      call increment_time(inflator)
+    end do
 
-  type pyro_t
-    real :: mgen, height, diameter, gas_yield, density, flame_temp, burn_rate_ref, burn_rate_exp
-    real :: num_tablets, burn_dist, mdotgen, edotgen
-  end type
+  end associate
 
-  type chamber_t
-    real volume, mgas, E, M, edot, mdot, T, P, diam
-  end type
-
-
-end program main
+  print *,"Test passed."
+end program

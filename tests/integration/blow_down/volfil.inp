@@ -1,5 +1,5 @@
 &numerics_list dt=1.E-5, tmax=0.1 /
 &gas           c_p=1000., MW=28. /
 &pyro          T_flame=2500., m_pkg=18., gen_mass=.08, gen_height=.004, gen_dia=.007, rho_solid=1850., r_ref=.035, n=.4 /
-&hole_list     diameter=0.018 /
+&hole          diameter=0.018 /
 &chamber       volume=10.E-4 /
