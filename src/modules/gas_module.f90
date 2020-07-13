@@ -1,4 +1,5 @@
 module gas_module
+  use assertions_interface, only : assert, max_errmsg_len
   use kind_parameters, only : DP
 
   implicit none
@@ -11,16 +12,18 @@ module gas_module
   public :: get_T
   public :: get_MW
   public :: get_m
+  public :: R_gas
+  public :: c_v
+  public :: g
 
   type gas_t
     private
-    real(DP) :: c_p, T, MW, m, c_v, rgas, g
+    real(DP) :: c_p, T, MW, m
   end type
 
 contains
 
   subroutine define(this, file_name)
-    use assertions_interface, only : max_errmsg_len
     type(gas_t), intent(out) :: this
     character(len=*), intent(in) :: file_name
     character(len=max_errmsg_len) error_message
@@ -30,7 +33,7 @@ contains
     namelist/gas/ c_p, MW, T, m
 
     open(newunit=file_unit, file=file_name, status="old", iostat=io_status, iomsg=error_message)
-    if (io_status /= success) error stop "gas%define: file open failed with message "//error_message
+    call assert(io_status == success, "gas%define: io_status == success", diagnostic_data=error_message)
 
     read(file_unit, nml=gas)
     close(file_unit)
@@ -39,12 +42,6 @@ contains
     this%MW = MW
     this%T = T
     this%m = m
-    this%rgas=Ru/MW
-    this%c_v=c_p-this%rgas
-    this%g=c_p/this%c_v
-
-   
-    print *, this%c_p, this%rgas, this%c_v, this%g 
   end subroutine define
 
   function get_c_p(this) result(this_c_p)
@@ -53,20 +50,18 @@ contains
     this_c_p = this%c_p
   end function
 
-  function get_MW(this) result(this_MW)
-    type(gas_t), intent(in) :: this
-    real(DP) :: this_MW
-
-    this_MW = this%MW
-
-  end function
-
   function get_T(this) result(this_T)
     type(gas_t), intent(in) :: this
     real(DP) :: this_T
 
     this_T = this%T
+  end function
 
+  function get_MW(this) result(this_MW)
+    type(gas_t), intent(in) :: this
+    real(DP) :: this_MW
+
+    this_MW = this%MW
   end function
 
   function get_m(this) result(this_m)
@@ -74,7 +69,28 @@ contains
     real(DP) :: this_m
 
     this_m = this%m
+  end function
 
+  function R_gas(this) result(Rgas)
+    type(gas_t), intent(in) :: this
+    real(DP) Rgas
+    real(DP), parameter :: R_universal = 8.31446261815324_DP
+
+    Rgas = R_universal/this%MW
+  end function
+
+  function c_v(this) result(this_c_v)
+    type(gas_t), intent(in) :: this
+    real(DP) this_c_v
+
+    this_c_v = R_gas(this) - this%c_p
+  end function
+
+  function g(this) result(gamma)
+    type(gas_t), intent(in) :: this
+    real(DP) gamma
+
+    gamma = this%c_p/c_v(this)
   end function
 
 end module gas_module
