@@ -3,10 +3,9 @@ program volfil
   use inflator_module, only : inflator_t, define, set_time, get_time, get_tmax, increment_time
   use kind_parameters, only : DP
   implicit none
-  character(len=*), parameter :: input_file = "volfil.inp"
   type(inflator_t) inflator
 
-  call define(inflator, input_file)
+  call define(inflator, input_file = "volfil.inp")
 
   call set_time(inflator, t=0._DP)
 
