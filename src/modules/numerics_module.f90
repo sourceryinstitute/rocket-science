@@ -46,16 +46,16 @@ module numerics_module
 
 contains
 
-  subroutine define_numerics(this, file_name)
+  subroutine define_numerics(this, input_file)
      use assertions_interface, only : max_errmsg_len
      type(numerics_t), intent(out) :: this
-     character(len=*), intent(in) :: file_name
+     character(len=*), intent(in) :: input_file
      character(len=max_errmsg_len) error_message
      integer io_status, file_unit
      integer, parameter :: success =0
      namelist/numerics_list/ dt, tmax
 
-     open(newunit=file_unit, file=file_name, status="old", iostat=io_status, iomsg=error_message)
+     open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
      call assert(io_status == success, "define(numerics): io_status == success", error_message)
      read(file_unit, nml=numerics_list) ! set dt, tmax
      close(file_unit)

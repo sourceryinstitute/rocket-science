@@ -20,16 +20,16 @@ module chamber_module
 
 contains
 
-  subroutine define_chamber(this, file_name)
+  subroutine define_chamber(this, input_file)
     type(chamber_t), intent(out) :: this
-    character(len=*), intent(in) :: file_name
+    character(len=*), intent(in) :: input_file
     character(len=max_errmsg_len) error_message
     real(DP) :: volume, pressure
     integer :: io_status, file_unit
     integer, parameter :: success = 0
     namelist/chamber/ volume, pressure
 
-    open(newunit=file_unit, file=file_name, status="old", iostat=io_status, iomsg=error_message)
+    open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
     call assert(io_status == success, "chamber%define: io_status == success", diagnostic_data = error_message)
     read(file_unit, nml=chamber)
     close(file_unit)

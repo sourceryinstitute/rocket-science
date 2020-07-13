@@ -8,6 +8,7 @@ module pyro_module
   public :: define
 
   type pyro_t
+    private
     real(DP) T_flame, m_pkg, gen_mass, gen_height, gen_dia, rho_solid, r_ref, n
     !real(DP) :: m_gen, height, diameter, gas_yield, density, flame_temp, burn_rate_ref, burn_rate_exp
     !real(DP) :: num_tablets, burn_dist, m_dot_gen, e_dot_gen
@@ -19,16 +20,16 @@ module pyro_module
 
 contains
 
-  subroutine define_pyro(this, file_name)
+  subroutine define_pyro(this, input_file)
     type(pyro_t), intent(out) :: this
-    character(len=*), intent(in) :: file_name
+    character(len=*), intent(in) :: input_file
     character(len=max_errmsg_len) error_message
     integer :: io_status, file_unit
     integer, parameter :: success = 0
     real(DP)       T_flame, m_pkg, gen_mass, gen_height, gen_dia, rho_solid, r_ref, n
     namelist/pyro/ T_flame, m_pkg, gen_mass, gen_height, gen_dia, rho_solid, r_ref, n
 
-    open(newunit=file_unit, file=file_name, status="old", iostat=io_status, iomsg=error_message)
+    open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
     call assert(io_status == success, "pyro%define: io_status == success ", diagnostic_data = error_message)
     read(file_unit, nml=pyro)
     close(file_unit)

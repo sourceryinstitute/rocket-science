@@ -21,16 +21,16 @@ module hole_module
 
 contains
 
-   subroutine define_hole(this, file_name)
+   subroutine define_hole(this, input_file)
       type(hole_t), intent(out) :: this
-      character(len=*), intent(in) :: file_name
+      character(len=*), intent(in) :: input_file
       character(len=max_errmsg_len) error_message
       real(DP) :: diameter
       integer :: io_status, file_unit
       integer, parameter :: success = 0
       namelist/hole/ diameter
 
-      open(newunit=file_unit, file=file_name, status="old", iostat=io_status, iomsg=error_message)
+      open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
       call assert(io_status == success, "hole%define: io_status == success ", diagnostic_data = error_message)
       read(file_unit, nml=hole)
       close(file_unit)
