@@ -1,4 +1,5 @@
 module hole_module
+  use assertions_interface, only : assert, max_errmsg_len
   use kind_parameters, only : DP
 
   implicit none
@@ -14,34 +15,33 @@ module hole_module
     real(DP) :: diameter
   end type
 
+  interface define
+    module procedure define_hole
+  end interface
+
 contains
 
-   subroutine define(this, file_name)
-      use assertions_interface, only : max_errmsg_len
+   subroutine define_hole(this, file_name)
       type(hole_t), intent(out) :: this
       character(len=*), intent(in) :: file_name
       character(len=max_errmsg_len) error_message
-      real(DP) :: diameter, area
+      real(DP) :: diameter
       integer :: io_status, file_unit
       integer, parameter :: success = 0
       namelist/hole/ diameter
 
       open(newunit=file_unit, file=file_name, status="old", iostat=io_status, iomsg=error_message)
-      if (io_status /= success) error stop "hole%define: file open failed with message "//error_message
-
+      call assert(io_status == success, "hole%define: io_status == success ", diagnostic_data = error_message)
       read(file_unit, nml=hole)
       close(file_unit)
-
-      this%diameter=diameter
-
-      print *, this%diameter
-
-   end subroutine define
+      this%diameter = diameter
+   end subroutine
 
    function get_diameter(this) result(this_diameter)
      type(hole_t), intent(in) :: this
      real(DP) this_diameter
-     this_diameter=this%diameter
-   end function   
+
+     this_diameter = this%diameter
+   end function
 
 end module hole_module

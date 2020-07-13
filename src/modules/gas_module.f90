@@ -21,9 +21,13 @@ module gas_module
     real(DP) :: c_p, T, MW, m
   end type
 
+  interface define
+    module procedure define_gas
+  end interface
+
 contains
 
-  subroutine define(this, file_name)
+  subroutine define_gas(this, file_name)
     type(gas_t), intent(out) :: this
     character(len=*), intent(in) :: file_name
     character(len=max_errmsg_len) error_message
@@ -34,7 +38,6 @@ contains
 
     open(newunit=file_unit, file=file_name, status="old", iostat=io_status, iomsg=error_message)
     call assert(io_status == success, "gas%define: io_status == success", diagnostic_data=error_message)
-
     read(file_unit, nml=gas)
     close(file_unit)
 
@@ -42,7 +45,7 @@ contains
     this%MW = MW
     this%T = T
     this%m = m
-  end subroutine define
+  end subroutine
 
   function get_c_p(this) result(this_c_p)
     type(gas_t), intent(in) :: this

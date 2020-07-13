@@ -20,6 +20,10 @@ module numerics_module
 
   real(DP) dt, tmax
 
+  interface define
+    module procedure define_numerics
+  end interface
+
   interface operator(+)
     module procedure add_real_scalar
   end interface
@@ -30,7 +34,7 @@ module numerics_module
 
 contains
 
-  subroutine define(this, file_name)
+  subroutine define_numerics(this, file_name)
      use assertions_interface, only : max_errmsg_len
      type(numerics_t), intent(out) :: this
      character(len=*), intent(in) :: file_name
@@ -44,7 +48,6 @@ contains
      call assert(io_status == success, "define(numerics): io_status == success", error_message)
      read(file_unit, nml=numerics_list) ! set dt, tmax
      close(file_unit)
-
   end subroutine
 
    function get_dt(this) result(module_dt)
