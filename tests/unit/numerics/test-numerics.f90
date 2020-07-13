@@ -1,7 +1,7 @@
 program main
   !! Test the numerics module's type, procedures, and operators
   use assertions_interface, only : assert, max_errmsg_len
-  use numerics_module, only : numerics_t, define, get_dt, get_tmax, get_time, set_time, operator(+), operator(*)
+  use numerics_module, only : numerics_t, define, get_dt, get_tmax, get_time, set_time, operator(+)
   use kind_parameters, only : DP
   implicit none
   type(numerics_t) numerics
