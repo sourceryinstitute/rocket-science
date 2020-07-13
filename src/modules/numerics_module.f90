@@ -20,6 +20,18 @@ module numerics_module
 
   real(DP) dt, tmax
 
+  interface set_time
+    module procedure set_time_numerics
+  end interface
+
+  interface get_time
+    module procedure get_time_numerics
+  end interface
+
+  interface get_tmax
+    module procedure get_tmax_numerics
+  end interface
+
   interface define
     module procedure define_numerics
   end interface
@@ -39,7 +51,6 @@ contains
      type(numerics_t), intent(out) :: this
      character(len=*), intent(in) :: file_name
      character(len=max_errmsg_len) error_message
-     real(DP) time
      integer io_status, file_unit
      integer, parameter :: success =0
      namelist/numerics_list/ dt, tmax
@@ -56,19 +67,19 @@ contains
      module_dt = dt
    end function
 
-   function get_tmax(this) result(module_tmax)
+   function get_tmax_numerics(this) result(module_tmax)
      type(numerics_t), intent(in) :: this
      real(DP) module_tmax
      module_tmax = tmax
    end function
 
-   function get_time(this) result(this_time)
+   function get_time_numerics(this) result(this_time)
      type(numerics_t), intent(in) :: this
      real(DP) this_time
      this_time = this%time
    end function
 
-   subroutine set_time(this, time)
+   subroutine set_time_numerics(this, time)
      type(numerics_t), intent(inout) :: this
      real(DP), intent(in) :: time
      this%time = time
