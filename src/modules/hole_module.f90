@@ -9,10 +9,11 @@ module hole_module
   public :: hole_t
   public :: define
   public :: get_diameter
+  public :: area
 
   type hole_t
     private
-    real(DP) :: diameter
+    real(DP) diameter
   end type
 
   interface define
@@ -42,6 +43,14 @@ contains
      real(DP) this_diameter
 
      this_diameter = this%diameter
+   end function
+
+   function area(this) result(hole_area)
+     type(hole_t), intent(in) :: this
+     real(DP) hole_area
+     real(DP), parameter :: pi = 3.141592654_DP
+
+     hole_area = pi*(this%diameter**2)/4.
    end function
 
 end module hole_module
