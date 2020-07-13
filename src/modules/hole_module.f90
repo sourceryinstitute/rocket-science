@@ -29,11 +29,11 @@ contains
       real(DP) :: diameter
       integer :: io_status, file_unit
       integer, parameter :: success = 0
-      namelist/hole/ diameter
+      namelist/hole_list/ diameter
 
       open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
       call assert(io_status == success, "hole%define: io_status == success ", diagnostic_data = error_message)
-      read(file_unit, nml=hole)
+      read(file_unit, nml=hole_list)
       close(file_unit)
       this%diameter = diameter
    end subroutine
