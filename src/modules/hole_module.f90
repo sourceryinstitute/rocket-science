@@ -3,7 +3,6 @@ module hole_module
   use kind_parameters, only : DP
 
   implicit none
-  real(DP), parameter :: pi=3.1415916539_DP
   private
 
   public :: hole_t
@@ -41,15 +40,13 @@ contains
    function get_diameter(this) result(this_diameter)
      type(hole_t), intent(in) :: this
      real(DP) this_diameter
-
      this_diameter = this%diameter
    end function
 
    function area(this) result(hole_area)
+     use math_constants, only : pi
      type(hole_t), intent(in) :: this
      real(DP) hole_area
-     real(DP), parameter :: pi = 3.141592654_DP
-
      hole_area = pi*(this%diameter**2)/4.
    end function
 
