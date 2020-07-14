@@ -10,6 +10,7 @@ module pyro_module
   public :: gen_dia
   public :: gen_mass
   public :: rho_solid
+  public :: ntabs
 
   type pyro_t
     private
@@ -21,6 +22,18 @@ module pyro_module
   end interface
 
 contains
+
+  function ntabs(this) result(num_tablets)
+    use math_constants, only : pi
+    type(pyro_t), intent(in) :: this
+    real(DP) num_tablets
+
+    associate(voltab => this%gen_height*pi*0.25_DP*this%gen_dia**2)
+      associate(mtab => voltab*this%rho_solid)
+        num_tablets = this%gen_mass/mtab
+      end associate
+    end associate
+  end function
 
   subroutine define_pyro(this, input_file)
     type(pyro_t), intent(out) :: this
