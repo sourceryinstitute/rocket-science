@@ -7,8 +7,8 @@ module gas_module
 
   public :: gas_t
   public :: define
-  public :: get_c_p
-  public :: get_MW
+  public :: c_p
+  public :: MW
   public :: R_gas
   public :: c_v
   public :: g
@@ -42,13 +42,13 @@ contains
     this%MW = MW
   end subroutine
 
-  function get_c_p(this) result(this_c_p)
+  function c_p(this) result(this_c_p)
     type(gas_t), intent(in) :: this
     real(DP) :: this_c_p
     this_c_p = this%c_p
   end function
 
-  function get_MW(this) result(this_MW)
+  function MW(this) result(this_MW)
     type(gas_t), intent(in) :: this
     real(DP) :: this_MW
     this_MW = this%MW
@@ -58,21 +58,18 @@ contains
     type(gas_t), intent(in) :: this
     real(DP) Rgas
     real(DP), parameter :: R_universal = 8314._DP ! 8.31446261815324_DP
-
     Rgas = R_universal/this%MW
   end function
 
   function c_v(this) result(this_c_v)
     type(gas_t), intent(in) :: this
     real(DP) this_c_v
-
     this_c_v = this%c_p - R_gas(this)
   end function
 
   function g(this) result(gamma)
     type(gas_t), intent(in) :: this
     real(DP) gamma
-
     gamma = this%c_p/c_v(this)
   end function
 
