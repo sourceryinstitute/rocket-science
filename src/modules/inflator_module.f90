@@ -17,7 +17,6 @@ module inflator_module
 
   type inflator_t
     private
-    type(gas_t) gas
     type(numerics_t) numerics
     type(chamber_t) chamber
     type(pyro_t) pyro
@@ -46,7 +45,6 @@ contains
     type(inflator_t), intent(inout) :: this
     character(len=*), intent(in) :: input_file
 
-    call define(this%gas, input_file)
     call define(this%numerics, input_file)
     call define(this%chamber, input_file)
     call define(this%pyro, input_file)

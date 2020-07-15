@@ -18,7 +18,7 @@ program main
   read(file_unit, nml=hole_list)
   close(file_unit)
 
-  ! Test defintion of hole from input file:
+  ! Define hole from input file:
   call define(hole, "volfil.inp")
 
   ! Test getter:
