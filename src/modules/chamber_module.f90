@@ -8,12 +8,15 @@ module chamber_module
   public :: chamber_t
   public :: define
   public :: get_volume
-  public :: get_pressure
+  public :: get_mass
   public :: get_temperature
+  public :: get_pressure
+  public :: get_internal_energy
+  public :: get_gas
 
   type chamber_t
     private
-    real(DP) V, M !E , m_gas, e_dot, m_dot, dia
+    real(DP)  M, V ! m_gas, e_dot, m_dot, dia
     type(gas_t) gas
   end type
 
@@ -46,28 +49,42 @@ contains
     call define(this%gas, input_file)
   end subroutine
 
-  function get_energy(this) result(this_energy)
-    type(chamber_t), intent(in) :: this
-    real(DP) this_energy
-    this_energy = this%M*c_v(this%gas)*T(this%gas)
-  end function
-
   function get_volume(this) result(this_volume)
     type(chamber_t), intent(in) :: this
     real(DP) :: this_volume
     this_volume = this%V
   end function
 
-  function get_pressure(this) result(this_pressure)
+  function get_mass(this) result(this_mass)
     type(chamber_t), intent(in) :: this
-    real(DP) :: this_pressure
-    this_pressure = this%M*R_gas(this%gas)*T(this%gas)/this%V
+    real(DP) :: this_mass
+    this_mass = this%M
   end function
 
   function get_temperature(this) result(this_temperature)
     type(chamber_t), intent(in) :: this
     real(DP) :: this_temperature
-    this_temperature = T(this%gas)
+    this_temperature= T(this%gas)
+  end function
+
+  function get_pressure(this) result(this_pressure)
+    type(chamber_t), intent(in) :: this
+    real(DP) :: this_pressure
+    associate(rho => this%M/this%V, R => R_gas(this%gas))
+      this_pressure = rho*R*T(this%gas)
+    end associate
+  end function
+
+  function get_internal_energy(this) result(this_energy)
+    type(chamber_t), intent(in) :: this
+    real(DP) this_energy
+    this_energy = this%M*c_v(this%gas)*T(this%gas)
+  end function
+
+  function get_gas(this) result(this_gas)
+    type(chamber_t), intent(in) :: this
+    type(gas_t) this_gas
+    this_gas = this%gas
   end function
 
 end module chamber_module

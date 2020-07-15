@@ -18,6 +18,8 @@ program main
              "abs((c_p(gas) - c_p_expected)/c_p_expected) <= tolerance)")
   call assert(abs((MW(gas)  - MW_expected )/MW_expected ) <= tolerance, &
              "abs((MW(gas)  - MW_expected )/MW_expected ) <= tolerance)")
+  call assert(abs((T(gas)  - T_expected )/T_expected ) <= tolerance, &
+             "abs((T(gas)  - T_expected )/T_expected ) <= tolerance)")
 
   associate(h_expected => c_p(gas)*T(gas))
     call assert(abs((h(gas)  - h_expected )/h_expected ) <= tolerance, &
