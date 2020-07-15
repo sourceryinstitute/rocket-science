@@ -16,6 +16,7 @@ module gas_module
   public :: R_gas  !! gas constant
   public :: c_v    !! specific heart at constant volume
   public :: g      !! ratio of specific heat capacities
+  public :: p      !! absolute pressure
 
   type gas_t
     !! encapsulate gas thermodynamic state
@@ -104,6 +105,16 @@ contains
     type(gas_t), intent(in) :: this
     real(DP) internal_energy
     internal_energy = c_v(this)*this%T
+  end function
+
+  function p(this,mass,volume) result(pressure)
+    type(gas_t), intent(in) :: this
+    real(DP), intent(in) :: mass, volume
+    real(DP) pressure
+
+    associate(rho => mass/volume)
+      pressure = rho*R_gas(this)*T(this)
+    end associate
   end function
 
 end module gas_module

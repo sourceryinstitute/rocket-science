@@ -1,7 +1,7 @@
 module chamber_module
   use assertions_interface, only : assert, max_errmsg_len
   use kind_parameters, only : DP
-  use gas_module, only : gas_t, define, c_v, R_gas, T
+  use gas_module, only : gas_t, define, c_v, R_gas, T, p
   implicit none
 
   private
@@ -69,10 +69,8 @@ contains
 
   function get_pressure(this) result(this_pressure)
     type(chamber_t), intent(in) :: this
-    real(DP) :: this_pressure
-    associate(rho => this%M/this%V, R => R_gas(this%gas))
-      this_pressure = rho*R*T(this%gas)
-    end associate
+    real(DP) this_pressure
+    this_pressure = p(this%gas, this%M, this%V)
   end function
 
   function get_internal_energy(this) result(this_energy)
