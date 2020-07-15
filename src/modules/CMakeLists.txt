@@ -6,6 +6,7 @@ add_library(modules
   inflator_module.f90
   numerics_module.f90
   pyro_module.f90
+  math_constants.f90
 )
 
 target_link_libraries(modules

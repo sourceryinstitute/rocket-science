@@ -12,6 +12,8 @@ module gas_module
   public :: R_gas
   public :: c_v
   public :: g
+  public :: h
+  public :: e
 
   type gas_t
     private
@@ -71,6 +73,20 @@ contains
     type(gas_t), intent(in) :: this
     real(DP) gamma
     gamma = this%c_p/c_v(this)
+  end function
+
+  function h(this,T) result(enthalpy)
+    type(gas_t), intent(in) :: this
+    real(DP), intent(in) :: T
+    real(DP) enthalpy
+    enthalpy = this%c_p*T
+  end function
+
+  function e(this,T) result(internal_energy)
+    type(gas_t), intent(in) :: this
+    real(DP), intent(in) :: T
+    real(DP) internal_energy
+    internal_energy = c_v(this)*T
   end function
 
 end module gas_module
