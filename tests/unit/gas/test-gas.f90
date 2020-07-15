@@ -1,6 +1,6 @@
 program main
   !! Test gas_module procedures
-  use gas_module, only :  gas_t, define, c_p, MW, R_gas, c_v, g
+  use gas_module, only :  gas_t, define, c_p, MW, R_gas, c_v, g, h, e
     !! Type and procedures to be tested
   use assertions_interface, only : assert
   use kind_parameters, only : DP
@@ -18,6 +18,19 @@ program main
              "abs((c_p(gas) - c_p_expected)/c_p_expected) <= tolerance)")
   call assert(abs((MW(gas)  - MW_expected )/MW_expected ) <= tolerance, &
              "abs((MW(gas)  - MW_expected )/MW_expected ) <= tolerance)")
+
+  block
+    real(DP), parameter :: T=300._DP
+
+    associate(h_expected => c_p(gas)*T)
+      call assert(abs((h(gas,T)  - h_expected )/h_expected ) <= tolerance, &
+                 "abs((h(gas,T)  - h_expected )/h_expected ) <= tolerance")
+    end associate
+    associate(e_expected => c_v(gas)*T)
+      call assert(abs((e(gas,T)  - e_expected )/e_expected ) <= tolerance, &
+                 "abs((e(gas,T)  - e_expected )/e_expected ) <= tolerance")
+    end associate
+  end block
 
   associate(R_gas_expected => R_universal/MW_expected)
 
