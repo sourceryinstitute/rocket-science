@@ -1,6 +1,6 @@
 program main
   !! Test gas_module procedures
-  use gas_module, only :  gas_t, define, c_p, MW, R_gas, c_v, g, h, e
+  use gas_module, only :  gas_t, define, c_p, MW, R_gas, c_v, g, h, e, T
     !! Type and procedures to be tested
   use assertions_interface, only : assert
   use kind_parameters, only : DP
@@ -8,9 +8,9 @@ program main
   type (gas_t) gas
   character(len=*), parameter :: input_file = "volfil.inp"
   real(DP), parameter :: tolerance=1.E-6_DP, R_universal=8314_DP
-  real(DP) c_p_expected, MW_expected
+  real(DP) c_p_expected, MW_expected, T_expected
 
-  call read_test_data(input_file, c_p_expected, MW_expected)
+  call read_test_data(input_file, c_p_expected, MW_expected, T_expected)
 
   call define(gas, input_file)
 
@@ -19,18 +19,15 @@ program main
   call assert(abs((MW(gas)  - MW_expected )/MW_expected ) <= tolerance, &
              "abs((MW(gas)  - MW_expected )/MW_expected ) <= tolerance)")
 
-  block
-    real(DP), parameter :: T=300._DP
+  associate(h_expected => c_p(gas)*T(gas))
+    call assert(abs((h(gas)  - h_expected )/h_expected ) <= tolerance, &
+               "abs((h(gas)  - h_expected )/h_expected ) <= tolerance")
+  end associate
 
-    associate(h_expected => c_p(gas)*T)
-      call assert(abs((h(gas,T)  - h_expected )/h_expected ) <= tolerance, &
-                 "abs((h(gas,T)  - h_expected )/h_expected ) <= tolerance")
-    end associate
-    associate(e_expected => c_v(gas)*T)
-      call assert(abs((e(gas,T)  - e_expected )/e_expected ) <= tolerance, &
-                 "abs((e(gas,T)  - e_expected )/e_expected ) <= tolerance")
-    end associate
-  end block
+  associate(e_expected => c_v(gas)*T(gas))
+    call assert(abs((e(gas)  - e_expected )/e_expected ) <= tolerance, &
+               "abs((e(gas)  - e_expected )/e_expected ) <= tolerance")
+  end associate
 
   associate(R_gas_expected => R_universal/MW_expected)
 
@@ -55,16 +52,16 @@ program main
 
 contains
 
-  subroutine read_test_data(file_name, c_p, MW)
+  subroutine read_test_data(file_name, c_p, MW, temperature)
     use assertions_interface, only : assert, max_errmsg_len
     use kind_parameters, only : DP
     !! Read c_p & MW from namelist in the named file
     character(len=*), intent(in) :: file_name
-    real(DP), intent(out) :: c_p, MW
+    real(DP), intent(out) :: c_p, MW, temperature
     integer, parameter :: success = 0
     integer io_status, file_unit
     character(len=max_errmsg_len) error_message
-    namelist/gas/ c_p, MW
+    namelist/gas/ c_p, MW, temperature
 
     open(newunit=file_unit, file=file_name, status="old", iostat=io_status, iomsg=error_message)
     call assert(io_status == success, "gas read_test_data: io_status == success", diagnostic_data=error_message)

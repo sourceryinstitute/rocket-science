@@ -3,12 +3,13 @@ module gas_module
   use kind_parameters, only : DP
 
   implicit none
-  private
 
+  private
   public :: gas_t
   public :: define
   public :: c_p
   public :: MW
+  public :: T
   public :: R_gas
   public :: c_v
   public :: g
@@ -17,7 +18,7 @@ module gas_module
 
   type gas_t
     private
-    real(DP) c_p, MW
+    real(DP) c_p, MW, T
   end type
 
   interface define
@@ -30,10 +31,10 @@ contains
     type(gas_t), intent(out) :: this
     character(len=*), intent(in) :: input_file
     character(len=max_errmsg_len) error_message
-    real(DP) :: c_p, MW
+    real(DP) :: c_p, MW, temperature
     integer :: io_status, file_unit
     integer, parameter :: success = 0
-    namelist/gas/ c_p, MW
+    namelist/gas/ c_p, MW, temperature
 
     open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
     call assert(io_status == success, "gas%define: io_status == success", diagnostic_data=error_message)
@@ -42,6 +43,7 @@ contains
 
     this%c_p = c_p
     this%MW = MW
+    this%T = temperature
   end subroutine
 
   function c_p(this) result(this_c_p)
@@ -75,18 +77,22 @@ contains
     gamma = this%c_p/c_v(this)
   end function
 
-  function h(this,T) result(enthalpy)
+  function h(this) result(enthalpy)
     type(gas_t), intent(in) :: this
-    real(DP), intent(in) :: T
     real(DP) enthalpy
-    enthalpy = this%c_p*T
+    enthalpy = this%c_p*this%T
   end function
 
-  function e(this,T) result(internal_energy)
+  function e(this) result(internal_energy)
     type(gas_t), intent(in) :: this
-    real(DP), intent(in) :: T
     real(DP) internal_energy
-    internal_energy = c_v(this)*T
+    internal_energy = c_v(this)*this%T
+  end function
+
+  function T(this) result(this_temperature)
+    type(gas_t), intent(in) :: this
+    real(DP) this_temperature
+    this_temperature = this%T
   end function
 
 end module gas_module

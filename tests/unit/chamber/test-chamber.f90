@@ -1,6 +1,6 @@
 program main
   use assertions_interface, only : assert
-  use chamber_module, only : chamber_t, define, get_volume
+  use chamber_module, only : chamber_t, define, get_volume, get_pressure, get_temperature
   use kind_parameters, only : DP
   implicit none
   type(chamber_t) chamber
