@@ -16,6 +16,9 @@ module chamber_module
   public :: get_pressure
   public :: get_gas
   public :: m_dot_gen
+  public :: m_dot_o
+  public :: e_dot_gen
+  public :: e_dot_o
 
   type chamber_t
     private
@@ -33,13 +36,47 @@ module chamber_module
     module procedure m_dot_gen_chamber
   end interface
 
+  interface m_dot_o
+    module procedure m_dot_o_chamber
+  end interface
+
+  interface e_dot_gen
+    module procedure e_dot_gen_chamber
+  end interface
+
+  interface e_dot_o
+    module procedure e_dot_o_chamber
+  end interface
+
 contains
 
-  function m_dot_gen_chamber(this, dt) result(this_m_dot)
+  function m_dot_gen_chamber(this, dt) result(this_m_dot_gen)
     type(chamber_t), intent(in) :: this
     real(DP), intent(in) :: dt
-    real(DP) this_m_dot
+    real(DP) this_m_dot_gen
+    this_m_dot_gen = 0._DP*dt
     !this_m_dot = m_dot_gen(this%combustion, MW(this%gas), p(this%gas), dt)
+  end function
+
+  function m_dot_o_chamber(this, dt) result(this_m_dot_o)
+    type(chamber_t), intent(in) :: this
+    real(DP), intent(in) :: dt
+    real(DP) this_m_dot_o
+    this_m_dot_o = 0._DP*dt
+  end function
+
+  function e_dot_gen_chamber(this, dt) result(this_e_dot_gen)
+    type(chamber_t), intent(in) :: this
+    real(DP), intent(in) :: dt
+    real(DP) this_e_dot_gen
+    this_e_dot_gen = 0._DP*dt
+  end function
+
+  function e_dot_o_chamber(this, dt) result(this_e_dot_o)
+    type(chamber_t), intent(in) :: this
+    real(DP), intent(in) :: dt
+    real(DP) this_e_dot_o
+    this_e_dot_o = 0._DP*dt
   end function
 
   subroutine define_chamber(this, input_file)

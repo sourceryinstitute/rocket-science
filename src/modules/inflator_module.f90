@@ -1,6 +1,6 @@
 module inflator_module
   use gas_module, only : gas_t, define
-  use chamber_module, only : chamber_t, define, m_dot_gen
+  use chamber_module, only : chamber_t, define, m_dot_gen, m_dot_o, e_dot_gen, e_dot_o
   use numerics_module, only : numerics_t, define, dt, t_max
   use kind_parameters, only : DP
   implicit none
@@ -62,11 +62,10 @@ contains
       call set_time(delta_state, dt)
       call set_burn_depth(delta_state, 0._DP)
       call set_mass(delta_state, 0._DP)
-      call set_energy(delta_state, 0._DP )
+      call set_mass(delta_state, dt*(m_dot_gen(this%chamber, dt) - m_dot_o(this%chamber, dt)))
+      call set_energy(delta_state, dt*(e_dot_gen(this%chamber, dt) - e_dot_o(this%chamber, dt)))
     end associate
 
-    !call set_energy(delta_state, (e_dot_gen(combustion) - e_dot_o(flow))*dt )
-    !call set_mass(delta_state, (m_dot_gen(combustion) - m_dot_o(flow))*dt )
   end function
 
 end module inflator_module
