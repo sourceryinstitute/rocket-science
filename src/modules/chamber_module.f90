@@ -1,7 +1,7 @@
 module chamber_module
   use assertions_interface, only : assert, max_errmsg_len
   use kind_parameters, only : DP
-  use gas_module, only : gas_t, define, c_v, R_gas, T, p, define
+  use gas_module, only : gas_t, define, c_v, R_gas, T, p, define, MW
   use combustion_module, only : combustion_t, define
   use hole_module, only : hole_t, define
   implicit none
@@ -15,10 +15,11 @@ module chamber_module
   public :: get_pressure
   public :: get_internal_energy
   public :: get_gas
+  public :: m_dot_gen
 
   type chamber_t
     private
-    real(DP)  M, V ! m_gas, e_dot, m_dot, dia
+    real(DP) M, V
     type(gas_t) gas
     type(combustion_t) combustion
     type(hole_t) hole
@@ -28,7 +29,18 @@ module chamber_module
     module procedure define_chamber
   end interface
 
+  interface m_dot_gen
+    module procedure m_dot_gen_chamber
+  end interface
+
 contains
+
+  function m_dot_gen_chamber(this, dt) result(this_m_dot)
+    type(chamber_t), intent(in) :: this
+    real(DP), intent(in) :: dt
+    real(DP) this_m_dot
+    !this_m_dot = m_dot_gen(this%combustion, MW(this%gas), p(this%gas), dt)
+  end function
 
   subroutine define_chamber(this, input_file)
     type(chamber_t), intent(out) :: this

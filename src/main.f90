@@ -1,21 +1,19 @@
 program volfil
   !! Test composite inflator abstraction
-  use inflator_module, only : inflator_t, define, set_time, get_time, get_tmax, increment_time
+  use inflator_module, only : inflator_t, define, t_max, step
+  use persistent_state_module, only : persistent_state_t, define, time
   use kind_parameters, only : DP
   implicit none
   type(inflator_t) inflator
+  type(persistent_state_t) state
 
   call define(inflator, input_file = "volfil.inp")
+  call define(state, time = 0._DP, burn_depth = 0._DP)
 
-  call set_time(inflator, t=0._DP)
-
-  associate(final_time => get_tmax(inflator))
-
-    do while(get_time(inflator) < final_time)
-
-      call increment_time(inflator)
+  associate(final_time => t_max(inflator))
+    do while(time(state) < final_time)
+      state = step(inflator, state)
     end do
-
   end associate
 
   print *,"Test passed."

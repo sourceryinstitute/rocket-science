@@ -7,6 +7,7 @@ add_library(modules
   numerics_module.f90
   combustion_module.f90
   math_constants.f90
+  persistent_state_module.f90
 )
 
 target_link_libraries(modules

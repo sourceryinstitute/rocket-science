@@ -11,6 +11,8 @@ module combustion_module
   public :: gen_mass
   public :: rho_solid
   public :: ntabs
+  public :: m_dot_gen
+  public :: e_dot_gen
 
   type combustion_t
     private
@@ -21,9 +23,57 @@ module combustion_module
     module procedure define_combustion
   end interface
 
+  interface m_dot_gen
+    module procedure m_dot_gen_combustion
+  end interface
+
 contains
 
+  function burn_rate(this, p) result(rate)
+    !! Result is the mass burn rate
+    type(combustion_t), intent(in) :: this
+    real(DP), intent(in) :: p                 !! pressure
+    real(DP) rate
+    real(DP), parameter :: p_ref = 20.7E6_DP  !! reference pressure
+    rate = this%r_ref*(p/p_ref)**this%n ! (ref. rate) * (chamber pressure / ref. pressure)**(rate_exponent)
+  end function
+
+  function m_dot_gen_combustion(this, MW, p, dt, burn_depth) result(m_dot)
+    !! Result is the mass loss rate
+    use math_constants, only : pi
+    type(combustion_t), intent(in) :: this
+    real(DP), intent(in) :: MW !! molecular weight
+    real(DP), intent(in) :: p  !! gas pressure
+    real(DP), intent(in) :: dt !! time step
+    real(DP), intent(in) :: burn_depth !! surface-normal burn depth
+    real(DP) m_dot             !! mass loss rate
+
+    !associate(r => 0.5*this%gen_dia, h => (this%gen_height)) ! original radius & height
+    !  associate(br => burn_rate(this,p))
+    !    associate(dn => br*dt)
+    !     del_n = del_n + dn !! cumulative surface-normal burn distance
+    !     associate(surface => merge(0._DP, ntabs(this) * (2*pi*(r-del_n)*(h-2*del_n) + 2*pi*(r-del_n)**2), any(del_n > [r, h/2])))
+    !       !                { 0 if dn exceeds tablet thickness radially (measured from axis of symmetry)
+    !       ! surface area = { 0 if dn exceeds tablet thickness axially (measured from center)
+    !       !                { # tablets * (area of cylinder shrunken by dn in all directions) otherwise
+    !      m_dot = br*surface*this%rho_solid     ! mass release rate = burn rate x surface area x density
+    !      m_dot = m_dot*this%m_pkg*MW/1000._DP  ! amount of gas created vs solids, factoring in the gas yield
+    !     end associate
+    !   end associate
+    !end associate
+  end function
+
+  function e_dot_gen(this, m_dot, c_p) result(e_dot)
+    !! Result is the enthalpy flow rate
+    type(combustion_t), intent(in) :: this
+    real(DP), intent(in) :: m_dot !! mass liberation rate
+    real(DP), intent(in) :: c_p   !! specific heat at constant pressure
+    real(DP) e_dot                !! internal energy release rate
+    e_dot = m_dot*c_p*this%T_flame
+  end function
+
   function ntabs(this) result(num_tablets)
+    !! Result is the number of tablets
     use math_constants, only : pi
     type(combustion_t), intent(in) :: this
     real(DP) num_tablets
@@ -36,6 +86,7 @@ contains
   end function
 
   subroutine define_combustion(this, input_file)
+    !! Define this combustion object by reading values from an input file
     type(combustion_t), intent(out) :: this
     character(len=*), intent(in) :: input_file
     character(len=max_errmsg_len) error_message
@@ -83,6 +134,3 @@ contains
   end function
 
 end module combustion_module
-
-!real(DP) :: m_gen, height, diameter, gas_yield, density, flame_temp, burn_rate_ref, burn_rate_exp
-!real(DP) :: num_tablets, burn_dist, m_dot_gen, e_dot_gen
