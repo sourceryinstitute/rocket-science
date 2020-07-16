@@ -9,11 +9,11 @@ module chamber_module
   private
   public :: chamber_t
   public :: define
+  public :: mass
+  public :: energy
   public :: get_volume
-  public :: get_mass
   public :: get_temperature
   public :: get_pressure
-  public :: get_internal_energy
   public :: get_gas
   public :: m_dot_gen
 
@@ -73,7 +73,7 @@ contains
     this_volume = this%V
   end function
 
-  function get_mass(this) result(this_mass)
+  function mass(this) result(this_mass)
     type(chamber_t), intent(in) :: this
     real(DP) :: this_mass
     this_mass = this%M
@@ -91,7 +91,7 @@ contains
     this_pressure = p(this%gas, this%M, this%V)
   end function
 
-  function get_internal_energy(this) result(this_energy)
+  function energy(this) result(this_energy)
     type(chamber_t), intent(in) :: this
     real(DP) this_energy
     this_energy = this%M*c_v(this%gas)*T(this%gas)

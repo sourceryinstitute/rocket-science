@@ -29,6 +29,22 @@ module combustion_module
 
 contains
 
+  function state_increment(this) result(delta_state)
+    use persistent_state_module, only : persistent_state_t
+    type(combustion_t), intent(in) :: this
+    type(persistent_state_t) delta_state
+
+    !type(chamber_internal),intent(inout) :: cham
+    !type(combustion) ,intent(in):: cmb
+    !type(flow),intent(in) :: flo
+    !type(flags),intent(in) :: flg
+
+    !set_time(delta_state, time = 0._DP . !(cmb%mdotgen-flo%mdoto)*get_dt(flg)
+    !delta_state%E = 0._DP !(cmb%edotgen-flo%edoto)*get_dt(flg)
+    !delta_state%M = 0._DP . !(cmb%mdotgen-flo%mdoto)*get_dt(flg)
+    !delta_state%E = 0._DP !(cmb%edotgen-flo%edoto)*get_dt(flg)
+  end function
+
   function burn_rate(this, p) result(rate)
     !! Result is the mass burn rate
     type(combustion_t), intent(in) :: this

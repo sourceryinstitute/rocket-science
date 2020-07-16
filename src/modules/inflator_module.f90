@@ -9,7 +9,8 @@ module inflator_module
   public :: inflator_t
   public :: define
   public :: t_max
-  public :: step
+  public :: chamber
+  public :: state_increment
 
   type inflator_t
     private
@@ -23,6 +24,10 @@ module inflator_module
 
   interface t_max
     module procedure t_max_inflator
+  end interface
+
+  interface chamber
+    module procedure inflator_chamber
   end interface
 
 contains
@@ -41,16 +46,27 @@ contains
     this_t_max = t_max(this%numerics)
   end function
 
-  function step(this, state) result(next_state)
-    use persistent_state_module, only : persistent_state_t, set_burn_depth, burn_depth, set_time, time
+  function inflator_chamber(this) result(this_chamber)
+    type(inflator_t), intent(in) :: this
+    type(chamber_t) this_chamber
+    this_chamber = this%chamber
+  end function
+
+  function state_increment(this, state) result(delta_state)
+    use persistent_state_module, only : persistent_state_t, set_time, set_burn_depth, set_mass, set_energy
     type(inflator_t), intent(in) :: this
     type(persistent_state_t), intent(in) :: state
-    type(persistent_state_t) next_state
+    type(persistent_state_t) delta_state
 
-    !associate(m_dot => m_dot_gen(this%chamber, dt))
-    !end associate
-    call set_burn_depth(next_state, burn_depth(state))
-    call set_time(next_state, time(state) + dt(this%numerics))
+    associate(dt => dt(this%numerics))
+      call set_time(delta_state, dt)
+      call set_burn_depth(delta_state, 0._DP)
+      call set_mass(delta_state, 0._DP)
+      call set_energy(delta_state, 0._DP )
+    end associate
+
+    !call set_energy(delta_state, (e_dot_gen(combustion) - e_dot_o(flow))*dt )
+    !call set_mass(delta_state, (m_dot_gen(combustion) - m_dot_o(flow))*dt )
   end function
 
 end module inflator_module

@@ -1,6 +1,6 @@
 program main
   use assertions_interface, only : assert
-  use chamber_module, only : chamber_t, define, get_volume, get_mass, get_pressure, get_temperature, get_gas
+  use chamber_module, only : chamber_t, define, get_volume, mass, get_pressure, get_temperature, get_gas
   use gas_module, only : R_gas
   use kind_parameters, only : DP
   implicit none
@@ -16,10 +16,10 @@ program main
 
   call assert(abs((get_volume(chamber) - volume_expected)/volume_expected) <= tolerance, &
              "abs((get_volume(chamber) - volume_expected)/volume_expected) <= tolerance")
-  call assert(abs((get_mass(chamber) - mass_expected)/mass_expected) <= tolerance, &
-             "abs((get_mass(chamber) - mass_expected)/mass_expected) <= tolerance")
+  call assert(abs((mass(chamber) - mass_expected)/mass_expected) <= tolerance, &
+             "abs((mass(chamber) - mass_expected)/mass_expected) <= tolerance")
 
-  associate(rho => get_mass(chamber)/get_volume(chamber), T => get_temperature(chamber))
+  associate(rho => mass(chamber)/get_volume(chamber), T => get_temperature(chamber))
     associate( chamber_gas => get_gas(chamber))
       associate(pressure_expected => rho*R_gas(chamber_gas)*T )
         call assert(abs((get_pressure(chamber) - pressure_expected)/pressure_expected) <= tolerance, &
