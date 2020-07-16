@@ -4,7 +4,7 @@ foreach( dir
   hole
   inflator
   numerics
-  pyro
+  combustion
 )
   add_subdirectory(${dir})
 endforeach()
