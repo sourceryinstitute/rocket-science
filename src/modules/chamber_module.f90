@@ -1,7 +1,9 @@
 module chamber_module
   use assertions_interface, only : assert, max_errmsg_len
   use kind_parameters, only : DP
-  use gas_module, only : gas_t, define, c_v, R_gas, T, p
+  use gas_module, only : gas_t, define, c_v, R_gas, T, p, define
+  use pyro_module, only : pyro_t, define
+  use hole_module, only : hole_t, define
   implicit none
 
   private
@@ -18,6 +20,8 @@ module chamber_module
     private
     real(DP)  M, V ! m_gas, e_dot, m_dot, dia
     type(gas_t) gas
+    type(pyro_t) pyro
+    type(hole_t) hole
   end type
 
   interface define
@@ -47,6 +51,8 @@ contains
     this%M = mass
 
     call define(this%gas, input_file)
+    call define(this%pyro, input_file)
+    call define(this%hole, input_file)
   end subroutine
 
   function get_volume(this) result(this_volume)
