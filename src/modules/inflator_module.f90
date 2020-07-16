@@ -1,9 +1,7 @@
 module inflator_module
   use gas_module, only : gas_t, define
-  use pyro_module, only : pyro_t, define
   use chamber_module, only : chamber_t, define
   use numerics_module, only : numerics_t, define, set_time, get_time, operator(+), get_tmax, get_dt
-  use hole_module, only : hole_t, define
   use kind_parameters, only : DP
   implicit none
   private
@@ -17,11 +15,8 @@ module inflator_module
 
   type inflator_t
     private
-    type(gas_t) gas
     type(numerics_t) numerics
     type(chamber_t) chamber
-    type(pyro_t) pyro
-    type(hole_t) hole
   end type
 
   interface get_tmax
@@ -46,11 +41,8 @@ contains
     type(inflator_t), intent(inout) :: this
     character(len=*), intent(in) :: input_file
 
-    call define(this%gas, input_file)
     call define(this%numerics, input_file)
     call define(this%chamber, input_file)
-    call define(this%pyro, input_file)
-    call define(this%hole, input_file)
   end subroutine
 
   subroutine set_time_inflator(this, t)

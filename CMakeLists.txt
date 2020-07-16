@@ -109,7 +109,7 @@ foreach(unit_test
   hole
   inflator
   numerics
-  pyro
+  combustion
 )
   add_test( NAME "${unit_test}"
     COMMAND ${CMAKE_BINARY_DIR}/tests/unit/${unit_test}/test-${unit_test}
