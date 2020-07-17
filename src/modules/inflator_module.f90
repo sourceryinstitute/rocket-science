@@ -1,6 +1,6 @@
 module inflator_module
   use gas_module, only : gas_t, define
-  use chamber_module, only : chamber_t, define, m_dot_gen, m_dot_o, e_dot_gen, e_dot_o
+  use chamber_module, only : chamber_t, define, m_dot_gen, e_dot_gen, efflux
   use numerics_module, only : numerics_t, define, dt, t_max
   use kind_parameters, only : DP
   implicit none
@@ -54,6 +54,7 @@ contains
 
   function state_increment(this, state) result(delta_state)
     use persistent_state_module, only : persistent_state_t, set_time, set_burn_depth, set_mass, set_energy
+    use flow_rate_module, only : m_dot_out, e_dot_out
     type(inflator_t), intent(in) :: this
     type(persistent_state_t), intent(in) :: state
     type(persistent_state_t) delta_state
@@ -61,9 +62,10 @@ contains
     associate(dt => dt(this%numerics))
       call set_time(delta_state, dt)
       call set_burn_depth(delta_state, 0._DP)
-      call set_mass(delta_state, 0._DP)
-      call set_mass(delta_state, dt*(m_dot_gen(this%chamber, dt) - m_dot_o(this%chamber, dt)))
-      call set_energy(delta_state, dt*(e_dot_gen(this%chamber, dt) - e_dot_o(this%chamber, dt)))
+      associate(outflow => efflux(this%chamber))
+        call set_mass(delta_state, dt*m_dot_gen(this%chamber, dt) - dt*m_dot_out(outflow))
+        call set_energy(delta_state, dt*e_dot_gen(this%chamber, dt) - dt*e_dot_out(outflow))
+      end associate
     end associate
 
   end function

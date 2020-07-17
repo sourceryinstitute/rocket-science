@@ -56,7 +56,7 @@ contains
 
   function m_dot_gen_combustion(this, MW, p, dt, burn_depth) result(m_dot)
     !! Result is the mass loss rate
-    use math_constants, only : pi
+    use universal_constants, only : pi
     type(combustion_t), intent(in) :: this
     real(DP), intent(in) :: MW !! molecular weight
     real(DP), intent(in) :: p  !! gas pressure
@@ -90,7 +90,7 @@ contains
 
   function ntabs(this) result(num_tablets)
     !! Result is the number of tablets
-    use math_constants, only : pi
+    use universal_constants, only : pi
     type(combustion_t), intent(in) :: this
     real(DP) num_tablets
 

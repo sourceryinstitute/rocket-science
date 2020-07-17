@@ -1,9 +1,9 @@
 module chamber_module
   use assertions_interface, only : assert, max_errmsg_len
-  use kind_parameters, only : DP
-  use gas_module, only : gas_t, define, c_v, R_gas, T, p, define, MW
+  use gas_module, only : gas_t, define, c_v, R_gas, T, p, g, h
   use combustion_module, only : combustion_t, define
-  use hole_module, only : hole_t, define
+  use hole_module, only : hole_t, define, area
+  use kind_parameters, only : DP
   implicit none
 
   private
@@ -16,9 +16,8 @@ module chamber_module
   public :: get_pressure
   public :: get_gas
   public :: m_dot_gen
-  public :: m_dot_o
   public :: e_dot_gen
-  public :: e_dot_o
+  public :: efflux
 
   type chamber_t
     private
@@ -32,51 +31,59 @@ module chamber_module
     module procedure define_chamber
   end interface
 
-  interface m_dot_gen
-    module procedure m_dot_gen_chamber
-  end interface
-
-  interface m_dot_o
-    module procedure m_dot_o_chamber
-  end interface
-
-  interface e_dot_gen
-    module procedure e_dot_gen_chamber
-  end interface
-
-  interface e_dot_o
-    module procedure e_dot_o_chamber
-  end interface
-
 contains
 
-  function m_dot_gen_chamber(this, dt) result(this_m_dot_gen)
+  function m_dot_gen(this, dt) result(this_m_dot_gen)
     type(chamber_t), intent(in) :: this
     real(DP), intent(in) :: dt
     real(DP) this_m_dot_gen
     this_m_dot_gen = 0._DP*dt
-    !this_m_dot = m_dot_gen(this%combustion, MW(this%gas), p(this%gas), dt)
   end function
 
-  function m_dot_o_chamber(this, dt) result(this_m_dot_o)
-    type(chamber_t), intent(in) :: this
-    real(DP), intent(in) :: dt
-    real(DP) this_m_dot_o
-    this_m_dot_o = 0._DP*dt
-  end function
-
-  function e_dot_gen_chamber(this, dt) result(this_e_dot_gen)
+  function e_dot_gen(this, dt) result(this_e_dot_gen)
     type(chamber_t), intent(in) :: this
     real(DP), intent(in) :: dt
     real(DP) this_e_dot_gen
     this_e_dot_gen = 0._DP*dt
   end function
 
-  function e_dot_o_chamber(this, dt) result(this_e_dot_o)
+  function efflux(this) result(flow_rate)
+    use universal_constants, only : atmospheric_pressure
+    use flow_rate_module, only : flow_rate_t, define
     type(chamber_t), intent(in) :: this
-    real(DP), intent(in) :: dt
-    real(DP) this_e_dot_o
-    this_e_dot_o = 0._DP*dt
+    type(flow_rate_t) flow_rate
+    real(dp) mdtx
+
+    associate( &
+      gx => g(this%gas), &
+      px => p(this%gas, mass = this%M, volume = this%V), &
+      tx => T(this%gas), &
+      rx => R_gas(this%gas), &
+      ax => area(this%hole) &
+    )
+      associate( &
+        p_ratio => px/atmospheric_pressure, &
+        p_crit  => (2._DP/(gx+1._DP))**(gx/(gx-1._DP)) &
+       )
+       call assert(p_ratio <= 1._DP, "p_ratio <= 1._DP") ! assert positive flow
+
+       associate(choked_flow => (1._DP / p_ratio) < p_crit)
+         if (choked_flow) then
+           associate(cstar => sqrt((1._DP / gx) * ((gx + 1._DP) / 2._DP) ** ((gx + 1._DP) / (gx - 1._DP)) * rx * tx))
+             mdtx = px * ax / cstar
+           end associate
+         else
+           associate(facx => p_ratio ** ((gx - 1._DP) / gx))
+             associate(term1 => sqrt(gx * rx * tx / facx), term2 => sqrt((facx - 1._DP) / (gx - 1._DP)))
+               mdtx = SQRT(2._DP) * px / p_ratio / rx / tx * facx * term1 * term2 * ax
+             end associate
+           end associate
+         endif
+       end associate
+     end associate
+    end associate
+
+    call define(flow_rate, mass_outflow_rate = mdtx, energy_outflow_rate = mdtx*h(this%gas))
   end function
 
   subroutine define_chamber(this, input_file)
