@@ -7,10 +7,7 @@ program main
   type(hole_t) hole
   real(DP), parameter :: tolerance=1.E-6_DP
   character(len=*), parameter :: input_file = "volfil.inp"
-  character(len=max_errmsg_len) error_message
   real(DP) :: diameter_expected
-  integer :: io_status, file_unit
-  integer, parameter :: success = 0
 
   call read_test_data(input_file, diameter_expected)
 
