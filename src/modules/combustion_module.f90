@@ -2,8 +2,8 @@ module combustion_module
   use assertions_interface, only : assert, max_errmsg_len
   use kind_parameters, only : DP
   implicit none
-  private
 
+  private
   public :: combustion_t
   public :: define
   public :: gen_height
@@ -11,11 +11,16 @@ module combustion_module
   public :: gen_mass
   public :: rho_solid
   public :: ntabs
+  public :: burn_rate
 
   type combustion_t
     private
     real(DP) T_flame, m_pkg, gen_mass, gen_height, gen_dia, rho_solid, r_ref, n
   end type
+
+  interface burn_rate
+    module procedure combustion_burn_rate
+  end interface
 
   interface define
     module procedure define_combustion
@@ -23,39 +28,13 @@ module combustion_module
 
 contains
 
-  function burn_rate(this, p) result(rate)
-    !! Result is the mass burn rate
+  function combustion_burn_rate(this, p) result(rate)
+    !! Result is the rate of surface-normal depth loss
     type(combustion_t), intent(in) :: this
-    real(DP), intent(in) :: p                 !! pressure
+    real(DP), intent(in) :: p
     real(DP) rate
     real(DP), parameter :: p_ref = 20.7E6_DP  !! reference pressure
     rate = this%r_ref*(p/p_ref)**this%n ! (ref. rate) * (chamber pressure / ref. pressure)**(rate_exponent)
-  end function
-
-  function m_dot_gen(this, MW, p, dt, burn_depth) result(generation_rate)
-    !! Result is the mass loss rate
-    use generation_rate_module, only : generation_rate_t
-    use universal_constants, only : pi
-    type(combustion_t), intent(in) :: this
-    real(DP), intent(in) :: MW !! molecular weight
-    real(DP), intent(in) :: p  !! gas pressure
-    real(DP), intent(in) :: dt !! time step
-    real(DP), intent(in) :: burn_depth !! surface-normal burn depth
-    type(generation_rate_t) generation_rate
-
-    !associate(r => 0.5*this%gen_dia, h => (this%gen_height)) ! original radius & height
-    !  associate(br => burn_rate(this,p))
-    !    associate(dn => br*dt)
-    !     del_n = del_n + dn !! cumulative surface-normal burn distance
-    !     associate(surface => merge(0._DP, ntabs(this) * (2*pi*(r-del_n)*(h-2*del_n) + 2*pi*(r-del_n)**2), any(del_n > [r, h/2])))
-    !       !                { 0 if dn exceeds tablet thickness radially (measured from axis of symmetry)
-    !       ! surface area = { 0 if dn exceeds tablet thickness axially (measured from center)
-    !       !                { # tablets * (area of cylinder shrunken by dn in all directions) otherwise
-    !      m_dot = br*surface*this%rho_solid     ! mass release rate = burn rate x surface area x density
-    !      m_dot = m_dot*this%m_pkg*MW/1000._DP  ! amount of gas created vs solids, factoring in the gas yield
-    !     end associate
-    !   end associate
-    !end associate
   end function
 
   function e_dot_gen(this, m_dot, c_p) result(e_dot)

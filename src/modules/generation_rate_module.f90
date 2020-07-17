@@ -5,11 +5,13 @@ module generation_rate_module
   private
   public :: generation_rate_t
   public :: define
+  public :: delta_surface_normal
   public :: e_dot_gen
   public :: m_dot_gen
 
   type generation_rate_t
     private
+    real(DP) delta_sn !! change in surface-normal depth
     real(DP) e_dot_g
     real(DP) m_dot_g
   end type
@@ -26,6 +28,12 @@ contains
     this%m_dot_g = mass_generation_rate
     this%e_dot_g = energy_generation_rate
   end subroutine
+
+  function delta_surface_normal(this) result(delta)
+    type(generation_rate_t), intent(in) :: this
+    real(DP) delta
+    delta = this%delta_sn
+  end function
 
   function m_dot_gen(this) result(m_dot)
     type(generation_rate_t), intent(in) :: this

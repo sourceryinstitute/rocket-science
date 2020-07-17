@@ -53,22 +53,25 @@ contains
   end function
 
   function state_increment(this, state) result(delta_state)
-    use persistent_state_module, only : persistent_state_t, set_time, set_burn_depth, set_mass, set_energy
+    use persistent_state_module, only : persistent_state_t, set_time, set_burn_depth, set_mass, set_energy, burn_depth
     use flow_rate_module,        only : m_dot_out, e_dot_out
-    use generation_rate_module,  only : m_dot_gen, e_dot_gen
+    use generation_rate_module,  only : m_dot_gen, e_dot_gen, delta_surface_normal
     type(inflator_t), intent(in) :: this
     type(persistent_state_t), intent(in) :: state
     type(persistent_state_t) delta_state
 
     associate(dt => dt(this%numerics))
+
       call set_time(delta_state, dt)
-      call set_burn_depth(delta_state, 0._DP)
-      associate(outflow => efflux(this%chamber), generation_rate => generate(this%chamber))
-        call set_mass(  delta_state, dt*(m_dot_gen(generation_rate) - m_dot_out(outflow)))
-        call set_energy(delta_state, dt*(e_dot_gen(generation_rate) - e_dot_out(outflow)))
+
+      associate(generation_rate => generate(this%chamber, burn_depth(state)), outflow => efflux(this%chamber))
+
+        call set_burn_depth(delta_state, delta_surface_normal(generation_rate))
+        call set_mass(      delta_state, dt*(m_dot_gen(generation_rate) - m_dot_out(outflow)))
+        call set_energy(    delta_state, dt*(e_dot_gen(generation_rate) - e_dot_out(outflow)))
+
       end associate
     end associate
-
   end function
 
 end module inflator_module
