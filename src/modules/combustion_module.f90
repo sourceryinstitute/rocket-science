@@ -11,8 +11,6 @@ module combustion_module
   public :: gen_mass
   public :: rho_solid
   public :: ntabs
-  public :: m_dot_gen
-  public :: e_dot_gen
 
   type combustion_t
     private
@@ -23,27 +21,7 @@ module combustion_module
     module procedure define_combustion
   end interface
 
-  interface m_dot_gen
-    module procedure m_dot_gen_combustion
-  end interface
-
 contains
-
-  function state_increment(this) result(delta_state)
-    use persistent_state_module, only : persistent_state_t
-    type(combustion_t), intent(in) :: this
-    type(persistent_state_t) delta_state
-
-    !type(chamber_internal),intent(inout) :: cham
-    !type(combustion) ,intent(in):: cmb
-    !type(flow),intent(in) :: flo
-    !type(flags),intent(in) :: flg
-
-    !set_time(delta_state, time = 0._DP . !(cmb%mdotgen-flo%mdoto)*get_dt(flg)
-    !delta_state%E = 0._DP !(cmb%edotgen-flo%edoto)*get_dt(flg)
-    !delta_state%M = 0._DP . !(cmb%mdotgen-flo%mdoto)*get_dt(flg)
-    !delta_state%E = 0._DP !(cmb%edotgen-flo%edoto)*get_dt(flg)
-  end function
 
   function burn_rate(this, p) result(rate)
     !! Result is the mass burn rate
@@ -54,15 +32,16 @@ contains
     rate = this%r_ref*(p/p_ref)**this%n ! (ref. rate) * (chamber pressure / ref. pressure)**(rate_exponent)
   end function
 
-  function m_dot_gen_combustion(this, MW, p, dt, burn_depth) result(m_dot)
+  function m_dot_gen(this, MW, p, dt, burn_depth) result(generation_rate)
     !! Result is the mass loss rate
+    use generation_rate_module, only : generation_rate_t
     use universal_constants, only : pi
     type(combustion_t), intent(in) :: this
     real(DP), intent(in) :: MW !! molecular weight
     real(DP), intent(in) :: p  !! gas pressure
     real(DP), intent(in) :: dt !! time step
     real(DP), intent(in) :: burn_depth !! surface-normal burn depth
-    real(DP) m_dot             !! mass loss rate
+    type(generation_rate_t) generation_rate
 
     !associate(r => 0.5*this%gen_dia, h => (this%gen_height)) ! original radius & height
     !  associate(br => burn_rate(this,p))

@@ -11,12 +11,7 @@ module chamber_module
   public :: define
   public :: mass
   public :: energy
-  public :: get_volume
-  public :: get_temperature
-  public :: get_pressure
-  public :: get_gas
-  public :: m_dot_gen
-  public :: e_dot_gen
+  public :: generate
   public :: efflux
 
   type chamber_t
@@ -33,18 +28,72 @@ module chamber_module
 
 contains
 
-  function m_dot_gen(this, dt) result(this_m_dot_gen)
+  function mass(this) result(this_mass)
     type(chamber_t), intent(in) :: this
-    real(DP), intent(in) :: dt
-    real(DP) this_m_dot_gen
-    this_m_dot_gen = 0._DP*dt
+    real(DP) this_mass
+    this_mass = this%M
   end function
 
-  function e_dot_gen(this, dt) result(this_e_dot_gen)
+  function energy(this) result(this_energy)
     type(chamber_t), intent(in) :: this
-    real(DP), intent(in) :: dt
-    real(DP) this_e_dot_gen
-    this_e_dot_gen = 0._DP*dt
+    real(DP) this_energy
+    this_energy = this%M*c_v(this%gas)*T(this%gas)
+  end function
+
+  function generate(this) result(generation_rate)
+    use generation_rate_module, only : generation_rate_t, define
+    type(chamber_t), intent(in) :: this
+    type(generation_rate_t) generation_rate
+
+  !    combustion_model%r=comb%rref*(chamcond%p/pref)**comb%n ! forget about conditioning temperature for now
+  !    ! burn rate =  (reference burn rate)(chamber pressure/reference pressure)**(burn rate exponent)
+
+  !  !call define(generationw_rate, mass_generation_rate = , energy_generation_rate = )
+
+  !contains
+
+  !  subroutine calmdotgen(chamcond,comb,gp,flag)
+  !  use flags_module, only : flags, get_dt
+  !  type(gasprop),intent(in) :: gp
+  !  type(chamber_internal), intent(in):: chamcond
+  !  type(combustion), intent(inout) :: comb
+  !  type(flags), intent(in) :: flag
+  !  real(DP) :: surf,dist,h,r
+  !  ! real(DP):: mdotgen, edotgen, tflame, mpkg, genmass, genheight, gendiam, rhosolid, ntabs, voltab, mtab,db,rref,r,n)
+
+
+  !  ! Two object-oriented ways to set r using the formula above
+  !  ! call set_r(comb, get_rref(comb)*(get_p(chamcond)/pref)**get_n(comb))
+  !  ! call set_r(comb, get_r(comb,chamcond,pref))
+
+  !  comb%db=comb%db+comb%r*get_dt(flag)
+  !    ! cumulative burn distance = burn distance + burn rate x dt
+  !  r=comb%gendiam/2.
+  !    ! original radius
+  !  dist=comb%db
+  !    ! burn distance
+  !  h=comb%genheight
+  !    ! original height
+  !  surf=comb%ntabs*(2*pi*(r-dist)*(h-2*dist)+2*pi*(r-dist)**2)
+  !    ! num. tablets x (surface area of cylider shrunken by radial distance "dist")
+  !  if(dist>r) surf=0.
+  !    ! no tablet if burn distance exceeds radius
+  !  if(dist>h/2) surf=0.
+  !    ! no tablet if burn distance exceeds height of half vertically (burning from top and bottom)
+  !  comb%mdotgen=comb%r*surf*comb%rhosolid ! amount of solid combusted
+  !    ! mass generation rate = burn rate x surface area x density
+  !  comb%summ=comb%summ+comb%mdotgen*get_dt(flag) ! keepting track of how much has burned
+  !    ! cumulative mass burned
+  !  if(comb%summ>comb%genmass) comb%mdotgen=0.
+  !    ! if comulative mass burned exceeds original generant mass, burning stops
+  ! ! now factor in the gas yield
+  !  !1real(DP):: mdotgen, edotgen, tflame, mpkg, genmass, genheight, gendiam, rhosolid, ntabs, voltab, mtab,db,rref,r,n
+  !  comb%mdotgen=comb%mdotgen*comb%mpkg*gp%mw/1d3 ! amount of gas created vs solids
+  !    ! mass generation rate = mass burn rate x moles per kg * mol. weight / 1000. (mw = moles / g)
+  !  comb%edotgen=comb%mdotgen*gp%cp*comb%tflame ! ENTHALPY
+  !    ! enthalpy flow rate = mass generation rate * c_p * T
+  !  end subroutine calmdotgen
+
   end function
 
   function efflux(this) result(flow_rate)
@@ -84,7 +133,7 @@ contains
     end associate
 
     call define(flow_rate, mass_outflow_rate = mdtx, energy_outflow_rate = mdtx*h(this%gas))
-  end function
+  end function efflux
 
   subroutine define_chamber(this, input_file)
     type(chamber_t), intent(out) :: this
@@ -110,41 +159,5 @@ contains
     call define(this%combustion, input_file)
     call define(this%hole, input_file)
   end subroutine
-
-  function get_volume(this) result(this_volume)
-    type(chamber_t), intent(in) :: this
-    real(DP) :: this_volume
-    this_volume = this%V
-  end function
-
-  function mass(this) result(this_mass)
-    type(chamber_t), intent(in) :: this
-    real(DP) :: this_mass
-    this_mass = this%M
-  end function
-
-  function get_temperature(this) result(this_temperature)
-    type(chamber_t), intent(in) :: this
-    real(DP) :: this_temperature
-    this_temperature= T(this%gas)
-  end function
-
-  function get_pressure(this) result(this_pressure)
-    type(chamber_t), intent(in) :: this
-    real(DP) this_pressure
-    this_pressure = p(this%gas, this%M, this%V)
-  end function
-
-  function energy(this) result(this_energy)
-    type(chamber_t), intent(in) :: this
-    real(DP) this_energy
-    this_energy = this%M*c_v(this%gas)*T(this%gas)
-  end function
-
-  function get_gas(this) result(this_gas)
-    type(chamber_t), intent(in) :: this
-    type(gas_t) this_gas
-    this_gas = this%gas
-  end function
 
 end module chamber_module
