@@ -40,29 +40,30 @@ contains
     this_energy = this%M*c_v(this%gas)*T(this%gas)
   end function
 
-  function generate(this, depth) result(generation_rate)
+  function generate(this, depth, dt) result(generation_rate)
     use generation_rate_module, only : generation_rate_t, define
     use universal_constants, only : pi
     type(chamber_t), intent(in) :: this
     type(generation_rate_t) generation_rate
     real(DP), intent(in) :: depth
+    real(DP), intent(in) :: dt
 
-   !associate(br => dt*burn_rate(this%combustion, p(this%gas, mass=this%M, volume=this%V)))
-   !  associate(dn => dt*br)
-   !   associate( &
-   !     r => 0.5*gen_dia(this%combustion), & ! original radius
-   !     h => gen_height(this%combustion),       & ! original height
-   !     depth = depth + dn                & ! cumulative surface-normal burn distance
-   !   )
-   !     associate(surface => merge(0._DP, ntabs(this)*2*pi*((r-delta_sn)*(h-2*delta_sn) + (r-delta_sn)**2), any(del_n > [r, h/2])))
+   !associate( &
+   !     r => 0.5*gen_dia(this%combustion), &    ! original radius
+   !     h => gen_height(this%combustion),  & ! original height
+   !     br => burn_rate(this%combustion, p(this%gas, mass=this%M, volume=this%V)), &
+   ! )
+   !  associate(dn => dt*br, num_tablets => ntabs(this%combustion))
+   !    associate(dn_sum = depth + dn) ! cumulative surface-normal burn distance
+   !     associate(surface => merge(0._DP, num_tablets*2*pi*((r-dn_sum)*(h-2*dn_sum) + (r-dn_sum)**2), any(dn_sum > [r, h/2])))
    !        !                { 0 if dn exceeds tablet thickness radially (measured from axis of symmetry)
    !        ! surface area = { 0 if dn exceeds tablet thickness axially (measured from center)
    !        !                { # tablets * (area of cylinder shrunken by dn in all directions) otherwise
    !       associate(m_dot => (br*surface*this%rho_solid) * (this%m_pkg*MW/1000._DP  )) !! (burn rate * area * density) *  gas yield
    !         associate(e_dot => m_dot*c_p(this%gas)*T_flame(this%combustion))
    !           call define(generation_rate, delta_sn = dn, mass_gen_rate = m_dot , energy_gen_rate = e_dot)
-   !      end associate
-   !    end associate
+   !         end associate
+   !       end associate
    !  end associate
    !end associate
   end function

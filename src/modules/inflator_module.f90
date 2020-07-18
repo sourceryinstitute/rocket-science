@@ -64,12 +64,13 @@ contains
 
       call set_time(delta_state, dt)
 
-      associate(generation_rate => generate(this%chamber, burn_depth(state)), outflow => efflux(this%chamber))
-
+      associate( &
+        generation_rate => generate(this%chamber, burn_depth(state), dt), &
+        outflow => efflux(this%chamber) &
+      )
         call set_burn_depth(delta_state, delta_surface_normal(generation_rate))
         call set_mass(      delta_state, dt*(m_dot_gen(generation_rate) - m_dot_out(outflow)))
         call set_energy(    delta_state, dt*(e_dot_gen(generation_rate) - e_dot_out(outflow)))
-
       end associate
     end associate
   end function
