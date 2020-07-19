@@ -4,4 +4,5 @@ add_library(utilities
   kind_parameters.f90
   assertions_implementation.F90
   assertions_interface.F90
+  universal_constants.f90
 )
