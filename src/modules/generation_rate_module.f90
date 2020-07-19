@@ -1,4 +1,8 @@
 module generation_rate_module
+  !! Encapsulate mass and energy generation rates to facilitate functional programming:
+  !! because the energy generation rate depends on the mass generation rate, calculating
+  !! both in one function avoids redundancy. Functions can have only one result so a
+  !! generation_rate_t object captures both results in one object.
   use kind_parameters, only : DP
   implicit none
 

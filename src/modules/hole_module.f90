@@ -1,4 +1,5 @@
 module hole_module
+  !! Encapsulate hole geometry and geometrical calculations
   use assertions_interface, only : assert, max_errmsg_len
   use kind_parameters, only : DP
 

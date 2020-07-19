@@ -1,4 +1,6 @@
 module chamber_module
+  !! Encapsulate the chamber gas extensive properties (mass & volume, the gas intensive properties,
+  !! the combustion model, and the hole geometry.
   use assertions_interface, only : assert, max_errmsg_len
   use gas_module, only : gas_t, define, c_v, R_gas, T, p, g, h, MW, c_p
   use combustion_module, only : combustion_t, define, burn_rate, gen_height, gen_dia, ntabs, rho_solid, m_pkg, T_flame
@@ -11,9 +13,9 @@ module chamber_module
   public :: define
   public :: mass
   public :: energy
+  public :: burn_rate
   public :: generate
   public :: efflux
-  public :: burn_rate
 
   type chamber_t
     private
@@ -33,25 +35,55 @@ module chamber_module
 
 contains
 
+  subroutine define_chamber(this, input_file)
+    !! Set all chamber components
+    type(chamber_t), intent(out) :: this
+    character(len=*), intent(in) :: input_file
+    real(DP) :: volume, mass
+    namelist/chamber/ volume, mass
+
+    block
+      integer, parameter :: success = 0
+      character(len=max_errmsg_len) error_message
+      integer :: io_status, file_unit
+
+      open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
+      call assert(io_status == success, "chamber%define: io_status == success", diagnostic_data = error_message)
+      read(file_unit, nml=chamber)
+      close(file_unit)
+    end block
+
+    this%V = volume
+    this%M = mass
+
+    call define(this%gas, input_file)
+    call define(this%combustion, input_file)
+    call define(this%hole, input_file)
+  end subroutine
+
   function mass(this) result(this_mass)
+    !! Result is the gas mass
     type(chamber_t), intent(in) :: this
     real(DP) this_mass
     this_mass = this%M
   end function
 
   function energy(this) result(this_energy)
+    !! Result is the gas internal energy
     type(chamber_t), intent(in) :: this
     real(DP) this_energy
     this_energy = this%M*c_v(this%gas)*T(this%gas)
   end function
 
   function chamber_burn_rate(this) result(this_burn_rate)
+    !! Result is the rate of surface-normal depth loss for the burning tablets
     type(chamber_t), intent(in) :: this
     real(DP) this_burn_rate
     this_burn_rate = burn_rate(this%combustion, p(this%gas, mass=this%M, volume=this%V))
   end function
 
   function generate(this, depth, dt) result(generation_rate)
+    !! Result contains the burn rate, mass generation rate, and energy generation rate
     use generation_rate_module, only : generation_rate_t, define
     use universal_constants, only : pi
     type(chamber_t), intent(in) :: this
@@ -81,6 +113,7 @@ contains
   end function
 
   function efflux(this) result(flow_rate)
+    !! Result contains the flow rates of mass and energy exiting the chamber through the hole
     use universal_constants, only : atmospheric_pressure
     use flow_rate_module, only : flow_rate_t, define
     type(chamber_t), intent(in) :: this
@@ -118,30 +151,5 @@ contains
 
     call define(flow_rate, mass_outflow_rate = mdtx, energy_outflow_rate = mdtx*h(this%gas))
   end function efflux
-
-  subroutine define_chamber(this, input_file)
-    type(chamber_t), intent(out) :: this
-    character(len=*), intent(in) :: input_file
-    real(DP) :: volume, mass
-    namelist/chamber/ volume, mass
-
-    block
-      integer, parameter :: success = 0
-      character(len=max_errmsg_len) error_message
-      integer :: io_status, file_unit
-
-      open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
-      call assert(io_status == success, "chamber%define: io_status == success", diagnostic_data = error_message)
-      read(file_unit, nml=chamber)
-      close(file_unit)
-    end block
-
-    this%V = volume
-    this%M = mass
-
-    call define(this%gas, input_file)
-    call define(this%combustion, input_file)
-    call define(this%hole, input_file)
-  end subroutine
 
 end module chamber_module

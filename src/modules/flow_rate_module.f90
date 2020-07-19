@@ -1,4 +1,8 @@
 module flow_rate_module
+  !! Encapsulate mass and energy flow rates to facilitate functional programming:
+  !! because the energy flow rate depends on the mass flow rate, calculating both
+  !! in one function avoids redundancy, functions can have only one result so a
+  !! flow_rate_t object captures both results in one object.
   use kind_parameters, only : DP
   implicit none
 

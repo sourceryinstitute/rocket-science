@@ -1,4 +1,5 @@
 module numerics_module
+  !! Encapsulate simulation numerical parameters: time step and final time.
   use assertions_interface, only : assert
   use kind_parameters, only : DP
   implicit none
