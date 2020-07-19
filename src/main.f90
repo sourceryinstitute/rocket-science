@@ -1,7 +1,7 @@
 program volfil
   !! Test composite inflator abstraction
-  use inflator_module, only : inflator_t, define, chamber, t_max, state_increment
-  use persistent_state_module, only : persistent_state_t, define, time, operator(+)
+  use inflator_module, only : inflator_t, define, chamber, t_max, dt, dState_dt
+  use persistent_state_module, only : persistent_state_t, define, time, operator(+), operator(*)
   use chamber_module, only : mass, energy
   use kind_parameters, only : DP
   implicit none
@@ -14,9 +14,9 @@ program volfil
     call define(state, mass(chamber_state), energy(chamber_state), time = 0._DP, burn_depth = 0._DP)
   end associate
 
-  associate(final_time => t_max(inflator))
+  associate(final_time => t_max(inflator), dt => dt(inflator))
     do while(time(state) < final_time)
-      state = state + state_increment(inflator, state)
+      state = state + dt*dState_dt(inflator, state)
     end do
   end associate
 

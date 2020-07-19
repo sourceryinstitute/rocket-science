@@ -13,17 +13,22 @@ module persistent_state_module
   public :: time
   public :: burn_depth
   public :: operator(+)
+  public :: operator(*)
 
   type persistent_state_t
     private
-    real(DP) time       !! simulated time
-    real(DP) burn_depth !! surface-normal burn distance
     real(DP) mass       !! mass contained in chamber
     real(DP) energy     !! internal energy contained in chamber
+    real(DP) time       !! simulated time
+    real(DP) burn_depth !! surface-normal burn distance
   end type
 
   interface define
     module procedure define_persistent_state
+  end interface
+
+  interface operator(*)
+    module procedure multiply
   end interface
 
   interface operator(+)
@@ -95,6 +100,17 @@ contains
     total%burn_depth = lhs%burn_depth + rhs%burn_depth
     total%mass       = lhs%mass       + rhs%mass
     total%energy     = lhs%energy    + rhs%energy
+  end function
+
+  function multiply(lhs, rhs) result(product)
+    !! result has components computed from multiply each rhs component by lhs
+    real(DP), intent(in) :: lhs
+    type(persistent_state_t), intent(in) :: rhs
+    type(persistent_state_t) product
+    product%time       = lhs*rhs%time
+    product%burn_depth = lhs*rhs%burn_depth
+    product%mass       = lhs*rhs%mass
+    product%energy     = lhs*rhs%energy
   end function
 
 end module

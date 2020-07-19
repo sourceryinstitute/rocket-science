@@ -1,7 +1,7 @@
 module chamber_module
   use assertions_interface, only : assert, max_errmsg_len
-  use gas_module, only : gas_t, define, c_v, R_gas, T, p, g, h
-  use combustion_module, only : combustion_t, define, burn_rate, gen_height, gen_dia
+  use gas_module, only : gas_t, define, c_v, R_gas, T, p, g, h, MW, c_p
+  use combustion_module, only : combustion_t, define, burn_rate, gen_height, gen_dia, ntabs, rho_solid, m_pkg, T_flame
   use hole_module, only : hole_t, define, area
   use kind_parameters, only : DP
   implicit none
@@ -13,6 +13,7 @@ module chamber_module
   public :: energy
   public :: generate
   public :: efflux
+  public :: burn_rate
 
   type chamber_t
     private
@@ -24,6 +25,10 @@ module chamber_module
 
   interface define
     module procedure define_chamber
+  end interface
+
+  interface burn_rate
+    module procedure chamber_burn_rate
   end interface
 
 contains
@@ -40,6 +45,12 @@ contains
     this_energy = this%M*c_v(this%gas)*T(this%gas)
   end function
 
+  function chamber_burn_rate(this) result(this_burn_rate)
+    type(chamber_t), intent(in) :: this
+    real(DP) this_burn_rate
+    this_burn_rate = burn_rate(this%combustion, p(this%gas, mass=this%M, volume=this%V))
+  end function
+
   function generate(this, depth, dt) result(generation_rate)
     use generation_rate_module, only : generation_rate_t, define
     use universal_constants, only : pi
@@ -48,24 +59,25 @@ contains
     real(DP), intent(in) :: depth
     real(DP), intent(in) :: dt
 
-   !associate( &
-   !     r => 0.5*gen_dia(this%combustion), &    ! original radius
-   !     h => gen_height(this%combustion),  & ! original height
-   !     br => burn_rate(this%combustion, p(this%gas, mass=this%M, volume=this%V)), &
-   ! )
-   !  associate(dn => dt*br, num_tablets => ntabs(this%combustion))
-   !    associate(dn_sum = depth + dn) ! cumulative surface-normal burn distance
-   !     associate(surface => merge(0._DP, num_tablets*2*pi*((r-dn_sum)*(h-2*dn_sum) + (r-dn_sum)**2), any(dn_sum > [r, h/2])))
-   !        !                { 0 if dn exceeds tablet thickness radially (measured from axis of symmetry)
-   !        ! surface area = { 0 if dn exceeds tablet thickness axially (measured from center)
-   !        !                { # tablets * (area of cylinder shrunken by dn in all directions) otherwise
-   !       associate(m_dot => (br*surface*this%rho_solid) * (this%m_pkg*MW/1000._DP  )) !! (burn rate * area * density) *  gas yield
-   !         associate(e_dot => m_dot*c_p(this%gas)*T_flame(this%combustion))
-   !           call define(generation_rate, delta_sn = dn, mass_gen_rate = m_dot , energy_gen_rate = e_dot)
-   !         end associate
-   !       end associate
-   !  end associate
-   !end associate
+    associate( &
+        r => 0.5*gen_dia(this%combustion), & ! original radius
+        h => gen_height(this%combustion), & ! original height
+        br => burn_rate(this) &
+    )
+      associate(dn => dt*br, num_tablets => ntabs(this%combustion))
+        associate(dn_sum => depth + dn) ! cumulative surface-normal burn distance
+          associate(surface => merge(0._DP, num_tablets*2*pi*((r-dn_sum)*(h-2*dn_sum) + (r-dn_sum)**2), any(dn_sum > [r, h/2])))
+                ! surface area = { 0 if dn_sum exceeds either (tablet radius or tablet half-height
+                !                { # tablets * (area of cylinder shrunken by dn in all directions) otherwise
+            associate(m_dot => (br*surface*rho_solid(this%combustion)) * (m_pkg(this%combustion)*MW(this%gas)/1000._DP  )) !! (burn rate * area * density) *  gas yield
+              associate(e_dot => m_dot*c_p(this%gas)*T_flame(this%combustion))
+                 call define(generation_rate, burn_rate = br, mass_generation_rate = m_dot , energy_generation_rate = e_dot)
+              end associate
+            end associate
+          end associate
+        end associate
+      end associate
+    end associate
   end function
 
   function efflux(this) result(flow_rate)

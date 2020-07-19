@@ -10,8 +10,10 @@ module combustion_module
   public :: gen_dia
   public :: gen_mass
   public :: rho_solid
+  public :: m_pkg
   public :: ntabs
   public :: burn_rate
+  public :: T_flame
 
   type combustion_t
     private
@@ -105,6 +107,18 @@ contains
     type(combustion_t), intent(in) :: this
     real(DP) this_rho_solid
     this_rho_solid = this%rho_solid
+  end function
+
+  function m_pkg(this) result(this_m_pkg)
+    type(combustion_t), intent(in) :: this
+    real(DP) this_m_pkg
+    this_m_pkg = this%m_pkg
+  end function
+
+  function T_flame(this) result(this_T_flame)
+    type(combustion_t), intent(in) :: this
+    real(DP) this_T_flame
+    this_T_flame = this%T_flame
   end function
 
 end module combustion_module
