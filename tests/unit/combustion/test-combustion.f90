@@ -2,7 +2,7 @@ program main
   use assertions_interface, only : assert
   use combustion_module, only : combustion_t, define, gen_height, gen_dia, gen_mass, rho_solid, ntabs
   use kind_parameters, only : DP
-  use math_constants, only : pi
+  use universal_constants, only : pi
   implicit none
   type(combustion_t) combustion
   real(DP), parameter :: tolerance=1.E-06_DP

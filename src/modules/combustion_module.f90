@@ -2,20 +2,27 @@ module combustion_module
   use assertions_interface, only : assert, max_errmsg_len
   use kind_parameters, only : DP
   implicit none
-  private
 
+  private
   public :: combustion_t
   public :: define
   public :: gen_height
   public :: gen_dia
   public :: gen_mass
   public :: rho_solid
+  public :: m_pkg
   public :: ntabs
+  public :: burn_rate
+  public :: T_flame
 
   type combustion_t
     private
     real(DP) T_flame, m_pkg, gen_mass, gen_height, gen_dia, rho_solid, r_ref, n
   end type
+
+  interface burn_rate
+    module procedure combustion_burn_rate
+  end interface
 
   interface define
     module procedure define_combustion
@@ -23,8 +30,18 @@ module combustion_module
 
 contains
 
+  function combustion_burn_rate(this, p) result(rate)
+    !! Result is the rate of surface-normal depth loss
+    type(combustion_t), intent(in) :: this
+    real(DP), intent(in) :: p
+    real(DP) rate
+    real(DP), parameter :: p_ref = 20.7E6_DP  !! reference pressure
+    rate = this%r_ref*(p/p_ref)**this%n ! (ref. rate) * (chamber pressure / ref. pressure)**(rate_exponent)
+  end function
+
   function ntabs(this) result(num_tablets)
-    use math_constants, only : pi
+    !! Result is the number of tablets
+    use universal_constants, only : pi
     type(combustion_t), intent(in) :: this
     real(DP) num_tablets
 
@@ -36,6 +53,7 @@ contains
   end function
 
   subroutine define_combustion(this, input_file)
+    !! Define this combustion object by reading values from an input file
     type(combustion_t), intent(out) :: this
     character(len=*), intent(in) :: input_file
     character(len=max_errmsg_len) error_message
@@ -82,7 +100,16 @@ contains
     this_rho_solid = this%rho_solid
   end function
 
-end module combustion_module
+  function m_pkg(this) result(this_m_pkg)
+    type(combustion_t), intent(in) :: this
+    real(DP) this_m_pkg
+    this_m_pkg = this%m_pkg
+  end function
 
-!real(DP) :: m_gen, height, diameter, gas_yield, density, flame_temp, burn_rate_ref, burn_rate_exp
-!real(DP) :: num_tablets, burn_dist, m_dot_gen, e_dot_gen
+  function T_flame(this) result(this_T_flame)
+    type(combustion_t), intent(in) :: this
+    real(DP) this_T_flame
+    this_T_flame = this%T_flame
+  end function
+
+end module combustion_module

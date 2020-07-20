@@ -6,7 +6,9 @@ add_library(modules
   inflator_module.f90
   numerics_module.f90
   combustion_module.f90
-  math_constants.f90
+  persistent_state_module.f90
+  flow_rate_module.f90
+  generation_rate_module.f90
 )
 
 target_link_libraries(modules

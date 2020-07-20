@@ -107,7 +107,7 @@ contains
     internal_energy = c_v(this)*this%T
   end function
 
-  function p(this,mass,volume) result(pressure)
+  function p(this, mass, volume) result(pressure)
     type(gas_t), intent(in) :: this
     real(DP), intent(in) :: mass, volume
     real(DP) pressure
