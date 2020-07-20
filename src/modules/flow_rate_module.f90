@@ -8,7 +8,6 @@ module flow_rate_module
 
   private
   public :: flow_rate_t
-  public :: define
   public :: e_dot_out
   public :: m_dot_out
 
@@ -18,18 +17,18 @@ module flow_rate_module
     real(DP) m_dot_o
   end type
 
-  interface define
+  interface flow_rate_t
     module procedure define_flow_rate
   end interface
 
 contains
 
-  subroutine define_flow_rate(this, mass_outflow_rate, energy_outflow_rate)
-    type(flow_rate_t), intent(out) :: this
+  function define_flow_rate(mass_outflow_rate, energy_outflow_rate) result(rate)
     real(DP), intent(in) :: mass_outflow_rate, energy_outflow_rate
-    this%m_dot_o = mass_outflow_rate
-    this%e_dot_o = energy_outflow_rate
-  end subroutine
+    type(flow_rate_t) rate
+    rate%m_dot_o = mass_outflow_rate
+    rate%e_dot_o = energy_outflow_rate
+  end function
 
   function m_dot_out(this) result(m_dot)
     type(flow_rate_t), intent(in) :: this

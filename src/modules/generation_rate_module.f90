@@ -8,7 +8,6 @@ module generation_rate_module
 
   private
   public :: generation_rate_t
-  public :: define
   public :: burn_rate
   public :: e_dot_gen
   public :: m_dot_gen
@@ -20,19 +19,19 @@ module generation_rate_module
     real(DP) m_dot_gen
   end type
 
-  interface define
+  interface generation_rate_t
     module procedure define_generation_rate
   end interface
 
 contains
 
-  subroutine define_generation_rate(this, burn_rate, mass_generation_rate, energy_generation_rate)
-    type(generation_rate_t), intent(out) :: this
+  function define_generation_rate(burn_rate, mass_generation_rate, energy_generation_rate) result(rate)
     real(DP), intent(in) :: burn_rate, mass_generation_rate, energy_generation_rate
-    this%burn_rate = burn_rate
-    this%m_dot_gen = mass_generation_rate
-    this%e_dot_gen = energy_generation_rate
-  end subroutine
+    type(generation_rate_t) rate
+    rate%burn_rate = burn_rate
+    rate%m_dot_gen = mass_generation_rate
+    rate%e_dot_gen = energy_generation_rate
+  end function
 
   function burn_rate(this) result(rate)
     type(generation_rate_t), intent(in) :: this

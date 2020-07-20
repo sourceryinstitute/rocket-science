@@ -82,12 +82,12 @@ contains
     this_burn_rate = burn_rate(this%combustion, p(this%gas, mass=this%M, volume=this%V))
   end function
 
-  function generate(this, depth, dt) result(generation_rate)
+  function generate(this, depth, dt) result(rate)
     !! Result contains the burn rate, mass generation rate, and energy generation rate
-    use generation_rate_module, only : generation_rate_t, define
+    use generation_rate_module, only : generation_rate_t
     use universal_constants, only : pi
     type(chamber_t), intent(in) :: this
-    type(generation_rate_t) generation_rate
+    type(generation_rate_t) rate
     real(DP), intent(in) :: depth
     real(DP), intent(in) :: dt
 
@@ -101,9 +101,10 @@ contains
           associate(surface => merge(0._DP, num_tablets*2*pi*((r-dn_sum)*(h-2*dn_sum) + (r-dn_sum)**2), any(dn_sum > [r, h/2])))
                 ! surface area = { 0 if dn_sum exceeds either (tablet radius or tablet half-height
                 !                { # tablets * (area of cylinder shrunken by dn in all directions) otherwise
-            associate(m_dot => (br*surface*rho_solid(this%combustion)) * (m_pkg(this%combustion)*MW(this%gas)/1000._DP  )) !! (burn rate * area * density) *  gas yield
+            associate(m_dot => (br*surface*rho_solid(this%combustion)) * (m_pkg(this%combustion)*MW(this%gas)/1000._DP))
+                ! (burn rate * area * density) *  gas yield
               associate(e_dot => m_dot*c_p(this%gas)*T_flame(this%combustion))
-                 call define(generation_rate, burn_rate = br, mass_generation_rate = m_dot , energy_generation_rate = e_dot)
+                 rate = generation_rate_t(burn_rate = br, mass_generation_rate = m_dot , energy_generation_rate = e_dot)
               end associate
             end associate
           end associate
@@ -112,12 +113,12 @@ contains
     end associate
   end function
 
-  function efflux(this) result(flow_rate)
+  function efflux(this) result(rate)
     !! Result contains the flow rates of mass and energy exiting the chamber through the hole
     use universal_constants, only : atmospheric_pressure
-    use flow_rate_module, only : flow_rate_t, define
+    use flow_rate_module, only : flow_rate_t
     type(chamber_t), intent(in) :: this
-    type(flow_rate_t) flow_rate
+    type(flow_rate_t) rate
     real(dp) mdtx
 
     associate( &
@@ -149,7 +150,7 @@ contains
      end associate
     end associate
 
-    call define(flow_rate, mass_outflow_rate = mdtx, energy_outflow_rate = mdtx*h(this%gas))
+    rate = flow_rate_t(mass_outflow_rate = mdtx, energy_outflow_rate = mdtx*h(this%gas))
   end function efflux
 
 end module chamber_module
