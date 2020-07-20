@@ -1,6 +1,5 @@
 module numerics_module
   !! Encapsulate simulation numerical parameters: time step and final time.
-  use assertions_interface, only : assert
   use kind_parameters, only : DP
   implicit none
   private
@@ -30,7 +29,7 @@ module numerics_module
 contains
 
   subroutine define_numerics(this, input_file)
-     use assertions_interface, only : max_errmsg_len
+     use assertions_interface, only : assert, max_errmsg_len
      type(numerics_t), intent(out) :: this
      character(len=*), intent(in) :: input_file
      character(len=max_errmsg_len) error_message
