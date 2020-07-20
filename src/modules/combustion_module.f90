@@ -39,15 +39,6 @@ contains
     rate = this%r_ref*(p/p_ref)**this%n ! (ref. rate) * (chamber pressure / ref. pressure)**(rate_exponent)
   end function
 
-  function e_dot_gen(this, m_dot, c_p) result(e_dot)
-    !! Result is the enthalpy flow rate
-    type(combustion_t), intent(in) :: this
-    real(DP), intent(in) :: m_dot !! mass liberation rate
-    real(DP), intent(in) :: c_p   !! specific heat at constant pressure
-    real(DP) e_dot                !! internal energy release rate
-    e_dot = m_dot*c_p*this%T_flame
-  end function
-
   function ntabs(this) result(num_tablets)
     !! Result is the number of tablets
     use universal_constants, only : pi
