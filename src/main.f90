@@ -1,7 +1,7 @@
 program volfil
   !! Test inflator burn
-  use inflator_module, only : inflator_t, define, chamber, t_max, dt, dState_dt
-  use persistent_state_module, only : persistent_state_t, define, time, operator(+), operator(*)
+  use inflator_module, only : inflator_t, define, output, chamber, t_max, dt, dState_dt
+  use persistent_state_module, only : persistent_state_t, define, time, operator(+), operator(*), output
   use chamber_module, only : mass, energy
   use kind_parameters, only : DP
   implicit none
@@ -10,6 +10,7 @@ program volfil
   type(persistent_state_t) state
     !! state variables that need to be updated at each time step to allow for
     !! accumulation of values for mass, energy, time, and burn depth.
+   integer file_unit
 
   call define(inflator, input_file = "volfil.inp")
 
@@ -17,9 +18,15 @@ program volfil
     call define(state, mass(chamber_state), energy(chamber_state), time = 0._DP, burn_depth = 0._DP)
   end associate
 
+  open(newunit=file_unit, file="volfil.out", status="unknown")
+
   associate(dt => dt(inflator))
     do while(time(state) < t_max(inflator))
-      state = state + dt*dState_dt(inflator, state)
+      associate(dState_dt => dState_dt(inflator, state))
+        call output(dState_dt, file_unit)
+        !call output(inflator, time(state), file_unit)
+        state = state + dt*dState_dt
+      end associate
     end do
   end associate
 

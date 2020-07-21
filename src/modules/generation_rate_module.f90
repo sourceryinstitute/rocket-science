@@ -25,12 +25,12 @@ module generation_rate_module
 
 contains
 
-  function define_generation_rate(burn_rate, mass_generation_rate, energy_generation_rate) result(rate)
-    real(DP), intent(in) :: burn_rate, mass_generation_rate, energy_generation_rate
+  function define_generation_rate(burn_rate, mass_generation_rate, enthalpy_generation_rate) result(rate)
+    real(DP), intent(in) :: burn_rate, mass_generation_rate, enthalpy_generation_rate
     type(generation_rate_t) rate
     rate%burn_rate = burn_rate
     rate%m_dot_gen = mass_generation_rate
-    rate%e_dot_gen = energy_generation_rate
+    rate%e_dot_gen = enthalpy_generation_rate
   end function
 
   function burn_rate(this) result(rate)

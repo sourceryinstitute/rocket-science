@@ -1,8 +1,8 @@
 module inflator_module
   !! Composite physics abstraction encapsulating a chamber and numerical algorithm
   !! parameters
-  use gas_module, only : gas_t, define
-  use chamber_module, only : chamber_t, define, generate, efflux, burn_rate
+  use assertions_interface, only : assert, max_errmsg_len
+  use chamber_module, only : chamber_t, define, generate, efflux, burn_rate, p, T
   use numerics_module, only : numerics_t, define, dt, t_max
   use kind_parameters, only : DP
   implicit none
@@ -10,6 +10,7 @@ module inflator_module
 
   public :: inflator_t
   public :: define
+  public :: output
   public :: t_max
   public :: chamber
   public :: dt
@@ -23,6 +24,10 @@ module inflator_module
 
   interface define
     module procedure define_inflator
+  end interface
+
+  interface output
+    module procedure output_inflator
   end interface
 
   interface t_max
@@ -42,6 +47,14 @@ contains
 
     call define(this%numerics, input_file)
     call define(this%chamber, input_file)
+  end subroutine
+
+  subroutine output_inflator(this, time, file_unit)
+    !! Set all inflator components
+    type(inflator_t), intent(in) :: this
+    real(DP), intent(in) :: time
+    integer, intent(in) :: file_unit
+    write(file_unit,*) time, p(this%chamber), T(this%chamber)
   end subroutine
 
   function t_max_inflator(this) result(this_t_max)

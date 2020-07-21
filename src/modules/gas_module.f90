@@ -28,6 +28,14 @@ module gas_module
     module procedure define_gas
   end interface
 
+  interface p
+    module procedure gas_pressure
+  end interface
+
+  interface T
+    module procedure gas_temperature
+  end interface
+
 contains
 
   subroutine define_gas(this, input_file)
@@ -64,7 +72,7 @@ contains
     this_MW = this%MW
   end function
 
-  function T(this) result(this_temperature)
+  function gas_temperature(this) result(this_temperature)
     !! Result is the gas temperature
     type(gas_t), intent(in) :: this
     real(DP) this_temperature
@@ -107,14 +115,11 @@ contains
     internal_energy = c_v(this)*this%T
   end function
 
-  function p(this, mass, volume) result(pressure)
+  function gas_pressure(this, rho) result(pressure)
     type(gas_t), intent(in) :: this
-    real(DP), intent(in) :: mass, volume
+    real(DP), intent(in) :: rho ! density
     real(DP) pressure
-
-    associate(rho => mass/volume)
-      pressure = rho*R_gas(this)*T(this)
-    end associate
+    pressure = rho*R_gas(this)*T(this)
   end function
 
 end module gas_module

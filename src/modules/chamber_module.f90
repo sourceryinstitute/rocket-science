@@ -16,6 +16,8 @@ module chamber_module
   public :: burn_rate
   public :: generate
   public :: efflux
+  public :: p
+  public :: T
 
   type chamber_t
     private
@@ -31,6 +33,14 @@ module chamber_module
 
   interface burn_rate
     module procedure chamber_burn_rate
+  end interface
+
+  interface p
+    module procedure chamber_pressure
+  end interface
+
+  interface T
+    module procedure chamber_temperature
   end interface
 
 contains
@@ -75,11 +85,23 @@ contains
     this_energy = this%M*c_v(this%gas)*T(this%gas)
   end function
 
+  function chamber_pressure(this) result(pressure)
+    type(chamber_t), intent(in) :: this
+    real(DP) pressure
+    pressure = p(this%gas, rho=this%M/this%V)
+  end function
+
+  function chamber_temperature(this) result(this_temperature)
+    type(chamber_t), intent(in) :: this
+    real(DP) this_temperature
+    this_temperature = T(this%gas)
+  end function
+
   function chamber_burn_rate(this) result(this_burn_rate)
     !! Result is the rate of surface-normal depth loss for the burning tablets
     type(chamber_t), intent(in) :: this
     real(DP) this_burn_rate
-    this_burn_rate = burn_rate(this%combustion, p(this%gas, mass=this%M, volume=this%V))
+    this_burn_rate = burn_rate(this%combustion, p(this%gas, rho=this%M/this%V))
   end function
 
   function generate(this, depth, dt) result(rate)
@@ -103,8 +125,8 @@ contains
                 !                { # tablets * (area of cylinder shrunken by dn in all directions) otherwise
             associate(m_dot => (br*surface*rho_solid(this%combustion)) * (m_pkg(this%combustion)*MW(this%gas)/1000._DP))
                 ! (burn rate * area * density) *  gas yield
-              associate(e_dot => m_dot*c_p(this%gas)*T_flame(this%combustion))
-                 rate = generation_rate_t(burn_rate = br, mass_generation_rate = m_dot , energy_generation_rate = e_dot)
+              associate(h_dot => m_dot*c_p(this%gas)*T_flame(this%combustion))
+                 rate = generation_rate_t(burn_rate = br, mass_generation_rate = m_dot , enthalpy_generation_rate = h_dot)
               end associate
             end associate
           end associate
@@ -123,7 +145,7 @@ contains
 
     associate( &
       gx => g(this%gas), &
-      px => p(this%gas, mass = this%M, volume = this%V), &
+      px => p(this%gas, rho = this%M/this%V), &
       tx => T(this%gas), &
       rx => R_gas(this%gas), &
       ax => area(this%hole) &
@@ -132,8 +154,6 @@ contains
         p_ratio => px/atmospheric_pressure, &
         p_crit  => (2._DP/(gx+1._DP))**(gx/(gx-1._DP)) &
        )
-       call assert(p_ratio <= 1._DP, "p_ratio <= 1._DP") ! assert positive flow
-
        associate(choked_flow => (1._DP / p_ratio) < p_crit)
          if (choked_flow) then
            associate(cstar => sqrt((1._DP / gx) * ((gx + 1._DP) / 2._DP) ** ((gx + 1._DP) / (gx - 1._DP)) * rx * tx))
