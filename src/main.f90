@@ -1,6 +1,6 @@
 program volfil
   !! Test inflator burn
-  use inflator_module, only : inflator_t, define, chamber, t_max, dt, dState_dt
+  use inflator_module, only : inflator_t, define, output, chamber, t_max, dt, dState_dt
   use persistent_state_module, only : persistent_state_t, define, time, operator(+), operator(*)
   use chamber_module, only : mass, energy
   use kind_parameters, only : DP
@@ -19,6 +19,7 @@ program volfil
 
   associate(dt => dt(inflator))
     do while(time(state) < t_max(inflator))
+      call output(inflator, time(state), "volfil.out")
       state = state + dt*dState_dt(inflator, state)
     end do
   end associate
