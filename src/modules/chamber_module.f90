@@ -103,8 +103,8 @@ contains
                 !                { # tablets * (area of cylinder shrunken by dn in all directions) otherwise
             associate(m_dot => (br*surface*rho_solid(this%combustion)) * (m_pkg(this%combustion)*MW(this%gas)/1000._DP))
                 ! (burn rate * area * density) *  gas yield
-              associate(e_dot => m_dot*c_p(this%gas)*T_flame(this%combustion))
-                 rate = generation_rate_t(burn_rate = br, mass_generation_rate = m_dot , energy_generation_rate = e_dot)
+              associate(h_dot => m_dot*c_p(this%gas)*T_flame(this%combustion))
+                 rate = generation_rate_t(burn_rate = br, mass_generation_rate = m_dot , enthalpy_generation_rate = h_dot)
               end associate
             end associate
           end associate
