@@ -49,23 +49,12 @@ contains
     call define(this%chamber, input_file)
   end subroutine
 
-  subroutine output_inflator(this, time, output_file)
+  subroutine output_inflator(this, time, file_unit)
     !! Set all inflator components
     type(inflator_t), intent(in) :: this
-    character(len=*), intent(in) :: output_file
     real(DP), intent(in) :: time
-
-    block
-      integer, parameter :: success = 0
-      character(len=max_errmsg_len) error_message
-      integer io_status, file_unit
-      logical file_open
-
-      inquire(file=output_file, opened=file_open)
-      if (.not. file_open) open(newunit=file_unit, file=output_file, status="unknown", iostat=io_status, iomsg=error_message)
-      call assert(io_status == success, "chamber%output: io_status == success", diagnostic_data = error_message)
-      write(file_unit,*) time, p(this%chamber), T(this%chamber)
-    end block
+    integer, intent(in) :: file_unit
+    write(file_unit,*) time, p(this%chamber), T(this%chamber)
   end subroutine
 
   function t_max_inflator(this) result(this_t_max)

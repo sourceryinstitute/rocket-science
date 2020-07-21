@@ -1,5 +1,6 @@
 module persistent_state_module
   !! Encapsulate state variables that must persist throughught execution for purposes of accumulation
+  use assertions_interface, only : assert, max_errmsg_len
   use kind_parameters, only : DP
   implicit none
 
@@ -14,6 +15,7 @@ module persistent_state_module
   public :: burn_depth
   public :: operator(+)
   public :: operator(*)
+  public :: output
 
   type persistent_state_t
     private
@@ -25,6 +27,10 @@ module persistent_state_module
 
   interface define
     module procedure define_persistent_state
+  end interface
+
+  interface output
+    module procedure output_persistent_state
   end interface
 
   interface operator(*)
@@ -48,6 +54,12 @@ contains
     this%burn_depth = burn_depth
     this%mass = mass
     this%energy = energy
+  end subroutine
+
+  subroutine output_persistent_state(this, file_unit)
+    type(persistent_state_t), intent(in) :: this
+    integer, intent(in) :: file_unit
+    write(file_unit,*) this%time, this%mass, this%energy, this%burn_depth
   end subroutine
 
   subroutine set_time(this, time)

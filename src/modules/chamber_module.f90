@@ -154,8 +154,6 @@ contains
         p_ratio => px/atmospheric_pressure, &
         p_crit  => (2._DP/(gx+1._DP))**(gx/(gx-1._DP)) &
        )
-       call assert(p_ratio <= 1._DP, "p_ratio <= 1._DP") ! assert positive flow
-
        associate(choked_flow => (1._DP / p_ratio) < p_crit)
          if (choked_flow) then
            associate(cstar => sqrt((1._DP / gx) * ((gx + 1._DP) / 2._DP) ** ((gx + 1._DP) / (gx - 1._DP)) * rx * tx))
