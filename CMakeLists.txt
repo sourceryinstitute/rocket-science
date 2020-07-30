@@ -94,7 +94,7 @@ foreach(integration_test
   blow_down
 )
   add_test( NAME "${integration_test}"
-    COMMAND ${CMAKE_BINARY_DIR}/src/volfil
+    COMMAND ${CMAKE_BINARY_DIR}/src/volfil/volfil
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/integration/${integration_test}"
   )
   set_tests_properties(${integration_test}
