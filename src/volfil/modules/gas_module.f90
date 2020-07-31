@@ -1,7 +1,7 @@
 module gas_module
   !! Encapsulate gas thermodynamic state and state relations
   use assertions_interface, only : assert, max_errmsg_len
-  use kind_parameters, only : DP
+  use kind_parameters, only : rkind
 
   implicit none
 
@@ -21,7 +21,7 @@ module gas_module
   type gas_t
     !! encapsulate gas thermodynamic state
     private
-    real(DP) c_p, MW, T
+    real(rkind) c_p, MW, T
   end type
 
   interface define
@@ -43,7 +43,7 @@ contains
     type(gas_t), intent(out) :: this
     character(len=*), intent(in) :: input_file
     character(len=max_errmsg_len) error_message
-    real(DP) :: c_p, MW, temperature
+    real(rkind) :: c_p, MW, temperature
     integer :: io_status, file_unit
     integer, parameter :: success = 0
     namelist/gas/ c_p, MW, temperature
@@ -61,64 +61,64 @@ contains
   function c_p(this) result(this_c_p)
     !! Result is the specific heat capacity at constant pressure
     type(gas_t), intent(in) :: this
-    real(DP) :: this_c_p
+    real(rkind) :: this_c_p
     this_c_p = this%c_p
   end function
 
   function MW(this) result(this_MW)
     !! Result is the gas molecular weight
     type(gas_t), intent(in) :: this
-    real(DP) :: this_MW
+    real(rkind) :: this_MW
     this_MW = this%MW
   end function
 
   function gas_temperature(this) result(this_temperature)
     !! Result is the gas temperature
     type(gas_t), intent(in) :: this
-    real(DP) this_temperature
+    real(rkind) this_temperature
     this_temperature = this%T
   end function
 
   function R_gas(this) result(Rgas)
     !! Result is the gas constant
     type(gas_t), intent(in) :: this
-    real(DP) Rgas
-    real(DP), parameter :: R_universal = 8314._DP ! 8.31446261815324_DP
+    real(rkind) Rgas
+    real(rkind), parameter :: R_universal = 8314._rkind ! 8.31446261815324_rkind
     Rgas = R_universal/this%MW
   end function
 
   function c_v(this) result(this_c_v)
     !! Result is the specific heat capacity at constant volume
     type(gas_t), intent(in) :: this
-    real(DP) this_c_v
+    real(rkind) this_c_v
     this_c_v = this%c_p - R_gas(this)
   end function
 
   function g(this) result(gamma)
     !! Result is the ratio of specific heat capacities
     type(gas_t), intent(in) :: this
-    real(DP) gamma
+    real(rkind) gamma
     gamma = this%c_p/c_v(this)
   end function
 
   function h(this) result(enthalpy)
     !! Result is the specific enthalpy
     type(gas_t), intent(in) :: this
-    real(DP) enthalpy
+    real(rkind) enthalpy
     enthalpy = this%c_p*this%T
   end function
 
   function e(this) result(internal_energy)
     !! Result is the specific internal energy
     type(gas_t), intent(in) :: this
-    real(DP) internal_energy
+    real(rkind) internal_energy
     internal_energy = c_v(this)*this%T
   end function
 
   function gas_pressure(this, rho) result(pressure)
     type(gas_t), intent(in) :: this
-    real(DP), intent(in) :: rho ! density
-    real(DP) pressure
+    real(rkind), intent(in) :: rho ! density
+    real(rkind) pressure
     pressure = rho*R_gas(this)*T(this)
   end function
 

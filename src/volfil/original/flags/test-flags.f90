@@ -1,10 +1,10 @@
 program test_flags
-  use kind_parameters, only : DP
+  use kind_parameters, only : rkind
   use flags_module, only : flags, initialize, get_dt, get_tmax, set_dt, set_tmax
   implicit none
 
-  real(DP), parameter :: tolerance = 1.0E-05_DP
-  real(DP), parameter :: dt_expected=1.E-5_DP, tmax_expected=.1_DP
+  real(rkind), parameter :: tolerance = 1.0E-05_rkind
+  real(rkind), parameter :: dt_expected=1.E-5_rkind, tmax_expected=.1_rkind
   type(flags) :: flag
 
   call initialize(flag, input_file='volfil.inp')

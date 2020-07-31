@@ -1,6 +1,6 @@
 module combustion_module
   use assertions_interface, only : assert, max_errmsg_len
-  use kind_parameters, only : DP
+  use kind_parameters, only : rkind
   implicit none
 
   private
@@ -17,7 +17,7 @@ module combustion_module
 
   type combustion_t
     private
-    real(DP) T_flame, m_pkg, gen_mass, gen_height, gen_dia, rho_solid, r_ref, n
+    real(rkind) T_flame, m_pkg, gen_mass, gen_height, gen_dia, rho_solid, r_ref, n
   end type
 
   interface burn_rate
@@ -33,9 +33,9 @@ contains
   function combustion_burn_rate(this, p) result(rate)
     !! Result is the rate of surface-normal depth loss
     type(combustion_t), intent(in) :: this
-    real(DP), intent(in) :: p
-    real(DP) rate
-    real(DP), parameter :: p_ref = 20.7E6_DP  !! reference pressure
+    real(rkind), intent(in) :: p
+    real(rkind) rate
+    real(rkind), parameter :: p_ref = 20.7E6_rkind  !! reference pressure
     rate = this%r_ref*(p/p_ref)**this%n ! (ref. rate) * (chamber pressure / ref. pressure)**(rate_exponent)
   end function
 
@@ -43,9 +43,9 @@ contains
     !! Result is the number of tablets
     use universal_constants, only : pi
     type(combustion_t), intent(in) :: this
-    real(DP) num_tablets
+    real(rkind) num_tablets
 
-    associate(voltab => this%gen_height*pi*0.25_DP*this%gen_dia**2)
+    associate(voltab => this%gen_height*pi*0.25_rkind*this%gen_dia**2)
       associate(mtab => voltab*this%rho_solid)
         num_tablets = this%gen_mass/mtab
       end associate
@@ -59,7 +59,7 @@ contains
     character(len=max_errmsg_len) error_message
     integer :: io_status, file_unit
     integer, parameter :: success = 0
-    real(DP)       T_flame, m_pkg, gen_mass, gen_height, gen_dia, rho_solid, r_ref, n
+    real(rkind)       T_flame, m_pkg, gen_mass, gen_height, gen_dia, rho_solid, r_ref, n
     namelist/combustion/ T_flame, m_pkg, gen_mass, gen_height, gen_dia, rho_solid, r_ref, n
 
     open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
@@ -78,37 +78,37 @@ contains
 
   function gen_dia(this) result(this_gen_dia)
     type(combustion_t), intent(in) :: this
-    real(DP) this_gen_dia
+    real(rkind) this_gen_dia
     this_gen_dia = this%gen_dia
   end function
 
   function gen_height(this) result(this_gen_height)
     type(combustion_t), intent(in) :: this
-    real(DP) this_gen_height
+    real(rkind) this_gen_height
     this_gen_height = this%gen_height
   end function
 
   function gen_mass(this) result(this_gen_mass)
     type(combustion_t), intent(in) :: this
-    real(DP) this_gen_mass
+    real(rkind) this_gen_mass
     this_gen_mass = this%gen_mass
   end function
 
   function rho_solid(this) result(this_rho_solid)
     type(combustion_t), intent(in) :: this
-    real(DP) this_rho_solid
+    real(rkind) this_rho_solid
     this_rho_solid = this%rho_solid
   end function
 
   function m_pkg(this) result(this_m_pkg)
     type(combustion_t), intent(in) :: this
-    real(DP) this_m_pkg
+    real(rkind) this_m_pkg
     this_m_pkg = this%m_pkg
   end function
 
   function T_flame(this) result(this_T_flame)
     type(combustion_t), intent(in) :: this
-    real(DP) this_T_flame
+    real(rkind) this_T_flame
     this_T_flame = this%T_flame
   end function
 

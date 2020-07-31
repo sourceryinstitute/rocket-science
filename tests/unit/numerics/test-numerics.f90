@@ -2,12 +2,12 @@ program main
   !! Test the numerics module's type, procedures, and operators
   use assertions_interface, only : assert, max_errmsg_len
   use numerics_module, only : numerics_t, define, dt, t_max
-  use kind_parameters, only : DP
+  use kind_parameters, only : rkind
   implicit none
   type(numerics_t) numerics
-  real(DP), parameter :: tol=1.e-6_DP
+  real(rkind), parameter :: tol=1.e-6_rkind
   character(len=*), parameter :: file_name="volfil.inp"
-  real(DP) :: dt_main, t_max_main
+  real(rkind) :: dt_main, t_max_main
 
   call read_numerics(file_name, dt_main, t_max_main)
 
@@ -23,7 +23,7 @@ contains
 
   subroutine read_numerics(input_file, dt, t_max)
     character(len=*), intent(in) :: input_file
-    real(DP), intent(out) ::  dt, t_max
+    real(rkind), intent(out) ::  dt, t_max
     integer io_status, file_unit
     integer, parameter :: success =0
     character(len=max_errmsg_len) error_message

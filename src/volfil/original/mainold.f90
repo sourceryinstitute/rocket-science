@@ -1,5 +1,5 @@
 program volfil
-  use kind_parameters, only : DP
+  use kind_parameters, only : rkind
   use subdeclare
   use command_line_interface, only : command_line
   use flags_module, only : flags, initialize
@@ -13,8 +13,8 @@ program volfil
   type(flow)::flo
 
   integer :: nsteps,i
-  real(DP) :: time
-  real(DP) :: dt, tmax
+  real(rkind) :: time
+  real(rkind) :: dt, tmax
 
   namelist /gasprop/    cp=1000., mw=28
   namelist /state/      P=101250., T=300., vol=10e-4
@@ -45,9 +45,9 @@ program volfil
   block
     integer, parameter :: skip=50, first=1, num_variables=3
     integer :: step, last
-    real(DP) :: output(num_variables,nsteps)
-    real(DP) :: reference(num_variables)
-    real(DP), parameter :: tolerance=1.E-3_DP
+    real(rkind) :: output(num_variables,nsteps)
+    real(rkind) :: reference(num_variables)
+    real(rkind), parameter :: tolerance=1.E-3_rkind
 
     last=nsteps-1
     do i = first, last

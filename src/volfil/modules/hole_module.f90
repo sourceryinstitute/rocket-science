@@ -1,7 +1,7 @@
 module hole_module
   !! Encapsulate hole geometry and geometrical calculations
   use assertions_interface, only : assert, max_errmsg_len
-  use kind_parameters, only : DP
+  use kind_parameters, only : rkind
 
   implicit none
   private
@@ -13,7 +13,7 @@ module hole_module
 
   type hole_t
     private
-    real(DP) diameter
+    real(rkind) diameter
   end type
 
   interface define
@@ -30,7 +30,7 @@ contains
       type(hole_t), intent(out) :: this
       character(len=*), intent(in) :: input_file
       character(len=max_errmsg_len) error_message
-      real(DP) :: diameter
+      real(rkind) :: diameter
       integer :: io_status, file_unit
       integer, parameter :: success = 0
       namelist/hole/ diameter
@@ -44,15 +44,15 @@ contains
 
    function hole_diameter(this) result(this_diameter)
      type(hole_t), intent(in) :: this
-     real(DP) this_diameter
+     real(rkind) this_diameter
      this_diameter = this%diameter
    end function
 
    function area(this) result(hole_area)
      use universal_constants, only : pi
      type(hole_t), intent(in) :: this
-     real(DP) hole_area
-     hole_area = pi*(this%diameter**2)/4._DP
+     real(rkind) hole_area
+     hole_area = pi*(this%diameter**2)/4._rkind
    end function
 
 end module hole_module

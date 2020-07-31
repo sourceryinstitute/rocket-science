@@ -1,30 +1,30 @@
     module subdeclare
       !! this probram calculates a simple, single chamber blowdown/combustion simulation.
       !! conservation of Mass/Momentum using modern fortran fortran 95/2003 techniques
-      use kind_parameters, only : DP
+      use kind_parameters, only : rkind
 
       implicit none
 
-      real(DP), parameter:: Ru=8314._DP
-      real(DP), parameter:: pamb=101325._DP
-      real(DP), parameter:: tamb=300._DP
-      real(DP), parameter:: pi=3.14159_DP
-      real(DP), parameter:: pref=20.7E6_DP
+      real(rkind), parameter:: Ru=8314._rkind
+      real(rkind), parameter:: pamb=101325._rkind
+      real(rkind), parameter:: tamb=300._rkind
+      real(rkind), parameter:: pi=3.14159_rkind
+      real(rkind), parameter:: pref=20.7E6_rkind
 
       type gasprop
-          real(DP) :: cp,cv,h,e,mw,rgas,g
+          real(rkind) :: cp,cv,h,e,mw,rgas,g
       end type gasprop
 
       type chamber_internal
-          real(DP) :: M, E,P,T,vol
+          real(rkind) :: M, E,P,T,vol
       end type chamber_internal
 
       type flow
-          real(DP):: diam, mdoto, edoto
+          real(rkind):: diam, mdoto, edoto
       end type flow
 
       type combustion
-          real(DP):: mdotgen, edotgen, tflame, mpkg, genmass, genheight, gendiam, rhosolid, ntabs, voltab, mtab,db,rref,r,n,summ
+          real(rkind):: mdotgen, edotgen, tflame, mpkg, genmass, genheight, gendiam, rhosolid, ntabs, voltab, mtab,db,rref,r,n,summ
       end type combustion
 
     contains
@@ -46,7 +46,7 @@
     subroutine getgasproperties(xp,cham)  ! all f(T)
     type(gasprop),intent(inout)::xp
     type(chamber_internal),intent(in)::cham
-    real(DP)::T
+    real(rkind)::T
     T=cham%T
     xp%h=xp%cp*T
     xp%e=xp%cv*T
@@ -71,8 +71,8 @@
     type(chamber_internal), intent(in):: chamcond
     type(combustion), intent(inout) :: comb
     type(flags), intent(in) :: flag
-    real(DP) :: surf,dist,h,r
-    ! real(DP):: mdotgen, edotgen, tflame, mpkg, genmass, genheight, gendiam, rhosolid, ntabs, voltab, mtab,db,rref,r,n)
+    real(rkind) :: surf,dist,h,r
+    ! real(rkind):: mdotgen, edotgen, tflame, mpkg, genmass, genheight, gendiam, rhosolid, ntabs, voltab, mtab,db,rref,r,n)
 
     comb%r=comb%rref*(chamcond%p/pref)**comb%n ! forget about conditioning temperature for now
       ! burn rate =  (reference burn rate)(chamber pressure/reference pressure)**(burn rate exponent)
@@ -102,7 +102,7 @@
     if(comb%summ>comb%genmass) comb%mdotgen=0.
       ! if comulative mass burned exceeds original generant mass, burning stops
    ! now factor in the gas yield
-    !1real(DP):: mdotgen, edotgen, tflame, mpkg, genmass, genheight, gendiam, rhosolid, ntabs, voltab, mtab,db,rref,r,n
+    !1real(rkind):: mdotgen, edotgen, tflame, mpkg, genmass, genheight, gendiam, rhosolid, ntabs, voltab, mtab,db,rref,r,n
     comb%mdotgen=comb%mdotgen*comb%mpkg*gp%mw/1d3 ! amount of gas created vs solids
       ! mass generation rate = mass burn rate x moles per kg * mol. weight / 1000. (mw = moles / g)
     comb%edotgen=comb%mdotgen*gp%cp*comb%tflame ! ENTHALPY
@@ -115,7 +115,7 @@
     type(chamber_internal),intent(in)::ch
     type(gasprop), intent(in)::gas
     type(flow), intent(out) :: flo
-    real(dp) :: pcrit,pratio,p1,p2,ax,tx,gx,rx,px,cstar,facx,term1,term2,mdtx
+    real(rkind) :: pcrit,pratio,p1,p2,ax,tx,gx,rx,px,cstar,facx,term1,term2,mdtx
     gx=gas%g
     pcrit=(2/(gx+1))**(gx/(gx-1))
     p1 = ch%P

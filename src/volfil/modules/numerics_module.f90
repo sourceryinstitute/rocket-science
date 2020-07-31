@@ -1,6 +1,6 @@
 module numerics_module
   !! Encapsulate simulation numerical parameters: time step and final time.
-  use kind_parameters, only : DP
+  use kind_parameters, only : rkind
   implicit none
   private
 
@@ -11,7 +11,7 @@ module numerics_module
 
   type numerics_t
     private
-    real(DP) :: dt, t_max
+    real(rkind) :: dt, t_max
   end type
 
   interface define
@@ -35,7 +35,7 @@ contains
      character(len=max_errmsg_len) error_message
      integer io_status, file_unit
      integer, parameter :: success =0
-     real(DP) dt, t_max
+     real(rkind) dt, t_max
      namelist/numerics_list/ dt, t_max
 
      open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
@@ -48,13 +48,13 @@ contains
 
    function dt_numerics(this) result(this_dt)
      type(numerics_t), intent(in) :: this
-     real(DP) this_dt
+     real(rkind) this_dt
      this_dt = this%dt
    end function
 
    function t_max_numerics(this) result(this_t_max)
      type(numerics_t), intent(in) :: this
-     real(DP) this_t_max
+     real(rkind) this_t_max
      this_t_max = this%t_max
    end function
 

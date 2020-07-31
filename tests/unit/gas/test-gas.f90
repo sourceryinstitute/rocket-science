@@ -3,12 +3,12 @@ program main
   use gas_module, only :  gas_t, define, c_p, MW, R_gas, c_v, g, h, e, T
     !! Type and procedures to be tested
   use assertions_interface, only : assert
-  use kind_parameters, only : DP
+  use kind_parameters, only : rkind
   implicit none
   type (gas_t) gas
   character(len=*), parameter :: input_file = "volfil.inp"
-  real(DP), parameter :: tolerance=1.E-6_DP, R_universal=8314_DP
-  real(DP) c_p_expected, MW_expected, T_expected
+  real(rkind), parameter :: tolerance=1.E-6_rkind, R_universal=8314_rkind
+  real(rkind) c_p_expected, MW_expected, T_expected
 
   call read_test_data(input_file, c_p_expected, MW_expected, T_expected)
 
@@ -56,10 +56,10 @@ contains
 
   subroutine read_test_data(file_name, c_p, MW, temperature)
     use assertions_interface, only : assert, max_errmsg_len
-    use kind_parameters, only : DP
+    use kind_parameters, only : rkind
     !! Read c_p & MW from namelist in the named file
     character(len=*), intent(in) :: file_name
-    real(DP), intent(out) :: c_p, MW, temperature
+    real(rkind), intent(out) :: c_p, MW, temperature
     integer, parameter :: success = 0
     integer io_status, file_unit
     character(len=max_errmsg_len) error_message
