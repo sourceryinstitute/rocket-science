@@ -3,7 +3,7 @@ program volfil
   use inflator_module, only : inflator_t, define, output, chamber, t_max, dt, dState_dt
   use persistent_state_module, only : persistent_state_t, define, time, operator(+), operator(*), output
   use chamber_module, only : mass, energy
-  use kind_parameters, only : DP
+  use kind_parameters, only : rkind
   implicit none
   type(inflator_t) inflator
     !! Composite abstraction encapsulating all of the relevant physics
@@ -15,7 +15,7 @@ program volfil
   call define(inflator, input_file = "volfil.inp")
 
   associate( chamber_state => chamber(inflator))
-    call define(state, mass(chamber_state), energy(chamber_state), time = 0._DP, burn_depth = 0._DP)
+    call define(state, mass(chamber_state), energy(chamber_state), time = 0._rkind, burn_depth = 0._rkind)
   end associate
 
   open(newunit=file_unit, file="volfil.out", status="unknown")

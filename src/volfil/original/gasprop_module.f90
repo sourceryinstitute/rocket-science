@@ -10,29 +10,29 @@ module gasprop_module
 
   type gasprop
     private
-    real(DP) :: cp, mw, cv, Rgas, h, e, g
+    real(rkind) :: cp, mw, cv, Rgas, h, e, g
   end type gasprop
 
 contains
 
   function get_cp(this) result(this_cp)
     type(gasprop), intent(in) :: this
-    real(DP) :: this_cp
+    real(rkind) :: this_cp
     this_cp = this%cp
   end function
 
   function get_mw(this) result(this_mw)
     type(gasprop), intent(in) :: this
-    real(DP) :: this_mw
+    real(rkind) :: this_mw
     this_mw = this%mw
   end function
 
   subroutine define(this, input_file, T)
     type(gasprop), intent(inout) :: this
     character(len=*), intent(in) :: input_file
-    real(DP), intent(in) :: T
-    real(DP) :: e, h, Rgas, g
-    real(DP), parameter :: Ru = 8314._DP !! universal gas constant
+    real(rkind), intent(in) :: T
+    real(rkind) :: e, h, Rgas, g
+    real(rkind), parameter :: Ru = 8314._rkind !! universal gas constant
 
     namelist /gasprop/ cp, mw
 

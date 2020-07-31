@@ -1,6 +1,6 @@
 module flags_module
   !! This module encapsulates flags.
-  use kind_parameters, only : DP
+  use kind_parameters, only : rkind
 
   implicit none
 
@@ -14,7 +14,7 @@ module flags_module
 
   type flags
     private
-    real(DP) :: dt, tmax
+    real(rkind) :: dt, tmax
   end type
 
 contains
@@ -23,7 +23,7 @@ contains
     type(flags), intent(out) :: this
     character(len=*), intent(in) :: input_file
     integer u
-    real(DP) :: dt, tmax
+    real(rkind) :: dt, tmax
 
     namelist /time/ dt, tmax
 
@@ -38,25 +38,25 @@ contains
 
   function get_dt(this) result(this_dt)
     type(flags), intent(in) :: this
-    real(DP) :: this_dt
+    real(rkind) :: this_dt
     this_dt = this%dt
   end function
 
   function get_tmax(this) result(this_tmax)
     type(flags), intent(in) :: this
-    real(DP) :: this_tmax
+    real(rkind) :: this_tmax
     this_tmax = this%tmax
   end function
 
   subroutine set_dt(this, dt)
     type(flags), intent(inout) :: this
-    real(DP), intent(in) :: dt
+    real(rkind), intent(in) :: dt
     this%dt = dt
   end subroutine
 
   subroutine set_tmax(this, tmax)
     type(flags), intent(inout) :: this
-    real(DP), intent(in) :: tmax
+    real(rkind), intent(in) :: tmax
     this%tmax = tmax
   end subroutine
 

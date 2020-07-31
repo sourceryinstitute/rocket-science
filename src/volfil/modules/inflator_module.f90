@@ -4,7 +4,7 @@ module inflator_module
   use assertions_interface, only : assert, max_errmsg_len
   use chamber_module, only : chamber_t, define, generate, efflux, burn_rate, p, T
   use numerics_module, only : numerics_t, define, dt, t_max
-  use kind_parameters, only : DP
+  use kind_parameters, only : rkind
   implicit none
   private
 
@@ -52,7 +52,7 @@ contains
   subroutine output_inflator(this, time, file_unit)
     !! Set all inflator components
     type(inflator_t), intent(in) :: this
-    real(DP), intent(in) :: time
+    real(rkind), intent(in) :: time
     integer, intent(in) :: file_unit
     write(file_unit,*) time, p(this%chamber), T(this%chamber)
   end subroutine
@@ -60,7 +60,7 @@ contains
   function t_max_inflator(this) result(this_t_max)
     !! Result is the desired simulation end time
     type(inflator_t), intent(in) :: this
-    real(DP) this_t_max
+    real(rkind) this_t_max
     this_t_max = t_max(this%numerics)
   end function
 
@@ -74,7 +74,7 @@ contains
   function dt_inflator(this) result(this_dt)
     !! Result is the simulation time step
     type(inflator_t), intent(in) :: this
-    real(DP) this_dt
+    real(rkind) this_dt
     this_dt = dt(this%numerics)
   end function
 
@@ -87,7 +87,7 @@ contains
     type(persistent_state_t), intent(in) :: state
     type(persistent_state_t) this_dState_dt
 
-    call set_time(this_dState_dt, 1._DP)
+    call set_time(this_dState_dt, 1._rkind)
     call set_burn_depth(this_dState_dt, burn_rate(this%chamber))
 
     associate( &

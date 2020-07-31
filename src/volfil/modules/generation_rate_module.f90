@@ -3,7 +3,7 @@ module generation_rate_module
   !! because the energy generation rate depends on the mass generation rate, calculating
   !! both in one function avoids redundancy. Functions can have only one result so a
   !! generation_rate_t object captures both results in one object.
-  use kind_parameters, only : DP
+  use kind_parameters, only : rkind
   implicit none
 
   private
@@ -14,9 +14,9 @@ module generation_rate_module
 
   type generation_rate_t
     private
-    real(DP) burn_rate
-    real(DP) e_dot_gen
-    real(DP) m_dot_gen
+    real(rkind) burn_rate
+    real(rkind) e_dot_gen
+    real(rkind) m_dot_gen
   end type
 
   interface generation_rate_t
@@ -80,7 +80,7 @@ module generation_rate_module
 contains
 
   function define_generation_rate(burn_rate, mass_generation_rate, enthalpy_generation_rate) result(rate)
-    real(DP), intent(in) :: burn_rate, mass_generation_rate, enthalpy_generation_rate
+    real(rkind), intent(in) :: burn_rate, mass_generation_rate, enthalpy_generation_rate
     type(generation_rate_t) rate
     rate%burn_rate = burn_rate
     rate%m_dot_gen = mass_generation_rate
@@ -89,19 +89,19 @@ contains
 
   function burn_rate(this) result(rate)
     type(generation_rate_t), intent(in) :: this
-    real(DP) rate
+    real(rkind) rate
     rate = this%burn_rate
   end function
 
   function m_dot_gen(this) result(m_dot)
     type(generation_rate_t), intent(in) :: this
-    real(DP) m_dot
+    real(rkind) m_dot
     m_dot = this%m_dot_gen
   end function
 
   function e_dot_gen(this) result(e_dot)
     type(generation_rate_t), intent(in) :: this
-    real(DP) e_dot
+    real(rkind) e_dot
     e_dot = this%e_dot_gen
   end function
 
