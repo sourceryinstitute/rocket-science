@@ -1,5 +1,5 @@
 program main
-  use iso_fortran_env, only : real64
+  use kind_parameters, only : rkind
   implicit none
 
   integer i
@@ -7,7 +7,8 @@ program main
   interface
 
     function reference_rocket() result(output)
-      real(8), allocatable :: output(:,:)
+      import rkind
+      real(rkind), allocatable :: output(:,:)
     end function
 
   end interface

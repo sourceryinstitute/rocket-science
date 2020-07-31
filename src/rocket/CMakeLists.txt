@@ -6,4 +6,5 @@ add_executable(rocket_science
 )
 target_link_libraries(rocket_science
   PRIVATE reference_rocket
+  PRIVATE utilities
 )
