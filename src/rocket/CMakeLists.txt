@@ -1,10 +1,9 @@
 add_subdirectory(original)
-add_subdirectory(modules)
+add_subdirectory(reference)
 
-add_executable(rocket
+add_executable(rocket_science
   main.f90
 )
-
-target_link_libraries(rocket
-  PRIVATE rocketscience
+target_link_libraries(rocket_science
+  PRIVATE reference_rocket
 )
