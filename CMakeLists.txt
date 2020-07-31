@@ -91,7 +91,7 @@ endif()
 
 # Integration tests that execute the volfil main program on various input files
 foreach(integration_test
-  blow_down
+  volfil
 )
   add_test( NAME "${integration_test}"
     COMMAND ${CMAKE_BINARY_DIR}/src/volfil/volfil
