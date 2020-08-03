@@ -1,4 +1,4 @@
-BRIAN LAUBACHER rocket-science
+rocket-science
 ==============
 
 Welcome to Fortran 2018!
