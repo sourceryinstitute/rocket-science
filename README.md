@@ -1,4 +1,4 @@
-rocket-science
+BRIANrocket-science
 ==============
 
 A mini-app for simulating solid rocket motors.
