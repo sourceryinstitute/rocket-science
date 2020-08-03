@@ -12,7 +12,7 @@ atom .
 ```
 Then select the `.bashrc` file and add the following lines at the bottom:
 ```bash
-lias pbcopy='xclip -selection clipboard'
+alias pbcopy='xclip -selection clipboard'
 alias pbpaste='xclip -selection clipboard -o'
 
 export sourcerer_bashrc=/home/sourcerer/.bashrc
