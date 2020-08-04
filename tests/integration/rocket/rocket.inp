@@ -1,3 +1,4 @@
+-- this file is currently not used; it's here as a placeholder for future use ---
 &numerics_list dt=1.E-6, t_max=0.1 /
 &gas           c_p=1000., MW=28., temperature=300. /
 &combustion    T_flame=2500., m_pkg=18., gen_mass=.08, gen_height=.004, gen_dia=.007, rho_solid=1850., r_ref=.035, n=.4 /

@@ -1,5 +1,5 @@
 foreach( input_file
-  volfil.inp
+  rocket.inp
 )
   configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/${input_file}"

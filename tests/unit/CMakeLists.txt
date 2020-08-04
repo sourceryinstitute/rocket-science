@@ -1,10 +1,5 @@
 foreach( dir
-  chamber
-  gas
-  hole
-  inflator
-  numerics
-  combustion
+  thrust
 )
   add_subdirectory(${dir})
 endforeach()

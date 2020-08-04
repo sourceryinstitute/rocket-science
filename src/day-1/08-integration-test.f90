@@ -1,6 +1,5 @@
 program main
-  !! Test the refactored rocket program against the original
-  use assertions_interface, only : assert
+  use assertion_utility, only : assert
   implicit none
   real, parameter :: tolerance=1.E-6
 
