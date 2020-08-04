@@ -91,10 +91,10 @@ endif()
 
 # Integration tests that execute the volfil main program on various input files
 foreach(integration_test
-  volfil
+  rocket
 )
   add_test( NAME "${integration_test}"
-    COMMAND ${CMAKE_BINARY_DIR}/src/volfil/volfil
+    COMMAND ${CMAKE_BINARY_DIR}/src/rocket/rocket_science
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/integration/${integration_test}"
   )
   set_tests_properties(${integration_test}
@@ -104,12 +104,7 @@ endforeach()
 
 # Unit tests that create individual executable programs
 foreach(unit_test
-  chamber
-  gas
-  hole
-  inflator
-  numerics
-  combustion
+  thrust
 )
   add_test( NAME "${unit_test}"
     COMMAND ${CMAKE_BINARY_DIR}/tests/unit/${unit_test}/test-${unit_test}

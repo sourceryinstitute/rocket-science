@@ -1,3 +1,4 @@
-add_library(reference_rocket
-  reference_rocket.f90
+add_library(reference
+  mod1.f90
+  rocket.f90
 )

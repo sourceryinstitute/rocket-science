@@ -1,22 +1,30 @@
 program main
-  use kind_parameters, only : rkind
+  !! Test the refactored rocket program against the original
+  use assertions_interface, only : assert
   implicit none
+  real, parameter :: tolerance=1.E-6
 
-  integer i
+  interface  !interface block
 
-  interface
+    ! interface body
+    function rocket() result(output)
+      implicit none
+      real, allocatable :: output(:,:)
+    end function
 
-    function reference_rocket() result(output)
-      import rkind
-      real(rkind), allocatable :: output(:,:)
+    function refurbished_rocket() result(output)
+      implicit none
+      real, allocatable :: output(:,:)
     end function
 
   end interface
 
-  associate(reference_data => reference_rocket())
-    do i=1,size(reference_data,1)
-      print *,reference_data(i,1), reference_data(i,2)
-    end do
+  associate( &
+    reference_data => rocket(), &
+    refurbished_data => refurbished_rocket() &
+  )
+    call assert(maxval(abs(refurbished_data - reference_data))<= tolerance, &
+         "main: maxval(abs(refurbished_data - reference_data))<= tolerance")
   end associate
-
+  print *,"Test passed."
 end program
