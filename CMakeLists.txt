@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-set (VOLFIL_VERSION "1.0.0")
+set (ROCKET_VERSION "1.0.0")
 set (ALLOWED_BUILD_TYPES "Debug" "Release")
 
 get_property(multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
@@ -11,10 +11,10 @@ else()
   set_property (CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${ALLOWED_BUILD_TYPES})
 endif()
 
-project(volfil
-  VERSION "${VOLFILP_VERSION}"
+project(rocket
+  VERSION "${ROCKET_VERSION}"
   LANGUAGES Fortran
-  DESCRIPTION "Basic Volume Filling Program"
+  DESCRIPTION "Basic Rocket Motor Simuator"
 )
 
 if ("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
@@ -89,7 +89,7 @@ if(${benchmark})
   set(write_reference_results "--benchmark")
 endif()
 
-# Integration tests that execute the volfil main program on various input files
+# Integration tests that execute the rocket main program on various input files
 foreach(integration_test
   rocket
 )
