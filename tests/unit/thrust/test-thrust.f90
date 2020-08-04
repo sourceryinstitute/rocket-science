@@ -8,6 +8,7 @@ program main
   cf=1.0
 
   call calcthrust
+
   call assert(thrust==p*area*cf, "main: thrust==thrust_expected")
 
   print *,"Test passed."

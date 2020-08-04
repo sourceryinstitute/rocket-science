@@ -1,10 +1,11 @@
-function rocket() result(output)
+function rocket() result(rocket_output)
 
 use mod1
+use kind_parameters, only : rkind
 
 implicit none
 
-real, allocatable :: output(:,:)
+real(rkind), allocatable :: rocket_output(:,:)
 integer  i
 ! this is a basic program of a single stage
 ! rocket motor flowing out of a nozzle, assuming
@@ -42,8 +43,8 @@ integer  i
   tmax=15.0d0 ! time to stop calculating performance
   nsteps=nint(tmax/dt) ! number of time steps
 ! preallocate an output file for simulation infomration
-  allocate(output(nsteps,4))
-  output=0d0 ! initialize to zero
+  allocate(rocket_output(nsteps,4))
+  rocket_output=0d0 ! initialize to zero
 
   thrust=0d0
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
@@ -73,13 +74,10 @@ integer  i
    call calct
    call calcp
    call calcthrust
-   output(i,:)=[time,p,t, thrust]
+   rocket_output(i,:)=[time,p,t, thrust]
    time=time+dt
   enddo
 
-  do i=1,nsteps-1
-    print *, output(i,:)
-  enddo
 end function
 
 

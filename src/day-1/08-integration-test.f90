@@ -1,11 +1,11 @@
 program main
-  use assertion_utility, only : assert
-  implicit none
+  use assertion_utility, only : assert  ! only clause documents the location of imported entities
+  implicit none                         ! and prevents unnecessary name clashes and mistaken use of entitites
   real, parameter :: tolerance=1.E-6
 
   interface  !interface block
 
-    ! interface body
+    ! interface body required for array function result
     function rocket() result(output)
       implicit none
       real, allocatable :: output(:,:)
@@ -18,9 +18,9 @@ program main
 
   end interface
 
-  associate( &
-    reference_data => rocket(), &
-    refurbished_data => refurbished_rocket() &
+  associate( &                                 ! Fortran 2003 feature
+    reference_data => rocket(), &              ! an associate name that is associated with a function result or expression
+    refurbished_data => refurbished_rocket() & ! is immutable
   )
     call assert(maxval(abs(refurbished_data - reference_data))<= tolerance, &
          "main: maxval(abs(refurbished_data - reference_data))<= tolerance")
