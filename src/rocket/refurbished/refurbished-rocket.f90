@@ -1,10 +1,10 @@
-function refurbished_rocket() result(rocket_output)
+function refurbished_rocket() result(output)
 
 use module_variables
 use kind_parameters, only : rkind
 
 implicit none
-real(rkind), allocatable :: rocket_output(:,:)
+real(rkind), allocatable :: output(:,:)
 integer  i
 ! this is a basic program of a single stage
 ! rocket motor flowing out of a nozzle, assuming
@@ -42,8 +42,8 @@ integer  i
   tmax=15.0d0 ! time to stop calculating performance
   nsteps=nint(tmax/dt) ! number of time steps
 ! preallocate an output file for simulation infomration
-  allocate(rocket_output(nsteps,4))
-  rocket_output=0d0 ! initialize to zero
+  allocate(output(nsteps,4))
+  output=0d0 ! initialize to zero
 
   thrust=0d0
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
@@ -73,7 +73,7 @@ integer  i
    call calc_t
    call calc_p
    call calc_thrust
-   rocket_output(i,:)=[time,p,t, thrust]
+   output(i,:)=[time,p,t, thrust]
    time=time+dt
   enddo
 
