@@ -1,4 +1,4 @@
-function rocket() result(rocket_output)
+function legacy_rocket() result(rocket_output)
 
 use mod1
 use kind_parameters, only : rkind
