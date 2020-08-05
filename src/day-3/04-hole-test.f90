@@ -1,5 +1,11 @@
 ! Compile and run:
 !
+! cp 02-object_interface.f90 05-hole_interface.f90
+! cp 03-object_implementation.f90 06-hole_implementation.f90
+!
+! Edit 05-hole_interface.f90
+! Edit 06-hole_implementation.f90
+!
 ! gfortran -c 05-hole_interface.f90
 ! gfortran -c 06-hole_implementation.f90
 ! gfortran -c 04-hole-test.f90
