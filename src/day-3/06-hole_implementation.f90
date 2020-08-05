@@ -1,15 +1,13 @@
-submodule(object_interface) object_implementation
-  !! Define the object type-bound procedures
-  implicit none
+submodule (hole_interface) hole_implementation
+    implicit none
 
+    real, parameter :: pi=3.141592654
 contains
-
-    module procedure user_defined
-      me_defined = me%defined
+    module procedure set_diameter
+        this%radius = diameter/2.0
     end procedure
 
-    module procedure mark_as_defined
-      me%defined = .true.
+    module procedure area
+        area = this%radius**2 * pi
     end procedure
-
-end submodule object_implementation
+end submodule
