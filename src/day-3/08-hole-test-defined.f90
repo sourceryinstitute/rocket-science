@@ -21,6 +21,7 @@ program main
   type(hole_t) hole
 
   call hole%set_diameter( diameter=dia )
+  call print_area()
 
   call assert(hole%area() == pi*(dia**2)/4.)
 
@@ -32,5 +33,10 @@ contains
     if (.not. assertion) error stop "Test failed."
   end subroutine
 
-end program
+  subroutine print_area(some_hole)
+    type(hole_t), intent(in) :: some_hole
+    call assert(some_hole%user_defined())
+    print *,some_hole%area()
+  end subroutine
 
+end program
