@@ -1,4 +1,4 @@
-module inflator_module
+module motor_module
   !! Composite physics abstraction encapsulating a chamber and numerical algorithm
   !! parameters
   use assertions_interface, only : assert, max_errmsg_len
@@ -8,9 +8,9 @@ module inflator_module
   implicit none
   private
 
-  public :: inflator_t
+  public :: motor_t
 
-  type inflator_t
+  type motor_t
     private
     type(numerics_t) numerics_
     type(chamber_t) chamber_
@@ -22,24 +22,24 @@ module inflator_module
     procedure :: d_dt
   end type
 
-  interface inflator_t
-    module procedure construct_inflator_t
+  interface motor_t
+    module procedure construct_motor_t
   end interface
 
 contains
 
-  function construct_inflator_t(input_file) result(new_inflator_t)
-    !! result ia a newly constructed inflator_t object
+  function construct_motor_t(input_file) result(new_motor_t)
+    !! result ia a newly constructed motor_t object
     character(len=*), intent(in) :: input_file
-    type(inflator_t) new_inflator_t
+    type(motor_t) new_motor_t
 
-    new_inflator_t%numerics_ = numerics_t(input_file)
-    new_inflator_t%chamber_ = chamber_t(input_file)
+    new_motor_t%numerics_ = numerics_t(input_file)
+    new_motor_t%chamber_ = chamber_t(input_file)
   end function
 
   subroutine output(this, time, file_unit)
-    !! write all inflator components to the specified file unit
-    class(inflator_t), intent(in) :: this
+    !! write all motor components to the specified file unit
+    class(motor_t), intent(in) :: this
     real(rkind), intent(in) :: time
     integer, intent(in) :: file_unit
     write(file_unit,*) time, this%chamber_%p(), this%chamber_%T()
@@ -47,21 +47,21 @@ contains
 
   pure function t_max(this) result(this_t_max)
     !! Result is the desired simulation end time
-    class(inflator_t), intent(in) :: this
+    class(motor_t), intent(in) :: this
     real(rkind) this_t_max
     this_t_max = this%numerics_%t_max()
   end function
 
   pure function chamber(this) result(this_chamber)
-    !! Result is the chamber_t component of this inflator
-    class(inflator_t), intent(in) :: this
+    !! Result is the chamber_t component of this motor
+    class(motor_t), intent(in) :: this
     type(chamber_t) this_chamber
     this_chamber = this%chamber_
   end function
 
   pure function dt(this) result(this_dt)
     !! Result is the simulation time step
-    class(inflator_t), intent(in) :: this
+    class(motor_t), intent(in) :: this
     real(rkind) this_dt
     this_dt = this%numerics_%dt()
   end function
@@ -71,7 +71,7 @@ contains
     use persistent_state_module, only : persistent_state_t
     use flow_rate_module,        only : flow_rate_t
     use generation_rate_module,  only : generation_rate_t
-    class(inflator_t), intent(in) :: this
+    class(motor_t), intent(in) :: this
     type(persistent_state_t), intent(in) :: state
     type(persistent_state_t) this_dState_dt
 
@@ -87,4 +87,4 @@ contains
     end associate
   end function
 
-end module inflator_module
+end module motor_module
