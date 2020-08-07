@@ -23,6 +23,7 @@ module motor_module
   end type
 
   interface motor_t
+    !! generic name for user-defined structure consructors
     module procedure construct_motor_t
   end interface
 

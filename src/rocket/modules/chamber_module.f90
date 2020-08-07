@@ -1,22 +1,28 @@
 module chamber_module
   !! Encapsulate the chamber gas extensive properties (mass & volume, the gas intensive properties,
-  !! the combustion model, and the hole geometry.
+  !! the combustion model, and the nozzle geometry.
   use assertions_interface, only : assert, max_errmsg_len
   use gas_module, only : gas_t
   use combustion_module, only : combustion_t
-  use hole_module, only : hole_t
+  use nozzle_module, only : nozzle_t
   use kind_parameters, only : rkind
   implicit none
 
   private
   public :: chamber_t
 
+  type grain_t
+    !! Encapsulate propellent abstraction in a friend of the chamber_t
+    real(rkind) id_, od_, length_, rho_solid_
+  end type
+
   type chamber_t
     private
-    real(rkind) M_, V_
+    real(rkind) M_, V_ ! chamber gas mass and volume (extensive properties)
+    type(grain_t) grain_
     type(gas_t) gas_
     type(combustion_t) combustion_
-    type(hole_t) hole_
+    type(nozzle_t) nozzle_
   contains
     procedure :: mass
     procedure :: energy
@@ -37,8 +43,8 @@ contains
     !! Set all chamber components
     character(len=*), intent(in) :: input_file
     type(chamber_t) new_chamber_t
-    real(rkind) :: volume, mass
-    namelist/chamber/ volume, mass
+    real(rkind) :: volume, id, od, length, rho_solid
+    namelist/chamber/ volume, id, od, length, rho_solid
 
     block
       integer, parameter :: success = 0
@@ -52,11 +58,10 @@ contains
     end block
 
     new_chamber_t%V_ = volume
-    new_chamber_t%M_ = mass
-
+    new_chamber_t%grain_ = grain_t(id_=id, od_=od, length_=length, rho_solid_=rho_solid)
     new_chamber_t%gas_ = gas_t(input_file)
     new_chamber_t%combustion_ = combustion_t(input_file)
-    new_chamber_t%hole_ = hole_t(input_file)
+    new_chamber_t%nozzle_ = nozzle_t(input_file)
   end function
 
   pure function mass(this) result(this_mass)
@@ -124,7 +129,7 @@ contains
   end function
 
   pure function efflux(this) result(rate)
-    !! Result contains the flow rates of mass and energy exiting the chamber through the hole
+    !! Result contains the flow rates of mass and energy exiting the chamber through the nozzle
     use universal_constants, only : atmospheric_pressure
     use flow_rate_module, only : flow_rate_t
     class(chamber_t), intent(in) :: this
@@ -136,7 +141,7 @@ contains
       px => this%gas_%p(rho = this%M_/this%V_), &
       tx => this%gas_%T(), &
       rx => this%gas_%R_gas(), &
-      ax => this%hole_%area() &
+      ax => this%nozzle_%area() &
     )
       associate( &
         p_ratio => px/atmospheric_pressure, &
