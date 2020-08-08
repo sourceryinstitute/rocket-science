@@ -40,8 +40,8 @@ contains
     character(len=max_errmsg_len) error_message
     integer :: io_status, file_unit
     integer, parameter :: success = 0
-    real(rkind) T_flame, m_pkg, gen_mass, gen_height, gen_dia, rho_solid, r_ref, n
-    namelist/combustion/ T_flame, m_pkg, gen_mass, gen_height, gen_dia, rho_solid, r_ref, n
+    real(rkind) T_flame, rho_solid, r_ref, n
+    namelist/combustion/ T_flame, rho_solid, r_ref, n
 
     open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
     call assert(io_status == success, "combustion%define: io_status == success ", diagnostic_data = error_message)
@@ -49,10 +49,6 @@ contains
     close(file_unit)
 
     new_combustion_t%T_flame_ = T_flame
-    new_combustion_t%m_pkg_ = m_pkg
-    new_combustion_t%gen_mass_ = gen_mass
-    new_combustion_t%gen_height_ = gen_height
-    new_combustion_t%gen_dia_ = gen_dia
     new_combustion_t%rho_solid_ = rho_solid
     new_combustion_t%r_ref_ = r_ref
     new_combustion_t%n_ = n
