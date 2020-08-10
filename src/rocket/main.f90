@@ -20,24 +20,21 @@ program main
   type(persistent_state_t) state
     !! state variables that need to be updated at each time step to allow for
     !! accumulation of values for mass, energy, time, and burn depth.
+  type(motor_t) motor
+  real(rkind), parameter :: zero=0._rkind
 
-  associate(motor => motor_t(input_file = "rocket.inp"))
+  call motor%define(input_file = "rocket.inp")
+  associate(chamber => motor%chamber())
+    call state%define(input_file="rocket.inp", gas=chamber%gas(), volume=chamber%initial_volume(), time=zero, burn_depth=zero)
+  end associate
 
-    associate( chamber_state => motor%chamber())
-      state = persistent_state_t(chamber_state%mass(), chamber_state%energy(), time = 0._rkind, burn_depth = 0._rkind)
-    end associate
+  associate(dt => motor%dt())
+    do while(state%time() < motor%t_max())
+      state = state + motor%d_dt(state)*dt
+    end do
+  end associate
 
-    associate(dt => motor%dt())
-      do while(state%time() < motor%t_max())
-        associate(dState_dt => motor%d_dt(state))
-          state = state + dt*dState_dt
-        end associate
-      end do
-    end associate
-
-    associate(reference_data => legacy_rocket())
-    end associate
-
+  associate(reference_data => legacy_rocket())
   end associate
 
   print *,"Test passed."

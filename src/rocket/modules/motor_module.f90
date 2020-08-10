@@ -4,6 +4,7 @@ module motor_module
   use assertions_interface, only : assert, max_errmsg_len
   use chamber_module, only : chamber_t
   use numerics_module, only : numerics_t
+  use persistent_state_module, only : persistent_state_t
   use kind_parameters, only : rkind
   implicit none
   private
@@ -15,35 +16,22 @@ module motor_module
     type(numerics_t) numerics_
     type(chamber_t) chamber_
   contains
-    procedure :: output
+    procedure :: define
     procedure :: t_max
     procedure :: chamber
     procedure :: dt
     procedure :: d_dt
   end type
 
-  interface motor_t
-    !! generic name for user-defined structure consructors
-    module procedure construct_motor_t
-  end interface
-
 contains
 
-  function construct_motor_t(input_file) result(new_motor_t)
-    !! result ia a newly constructed motor_t object
+  subroutine define(this, input_file)
+    !! define each motor_t component
+    class(motor_t), intent(out) :: this
     character(len=*), intent(in) :: input_file
-    type(motor_t) new_motor_t
 
-    new_motor_t%numerics_ = numerics_t(input_file)
-    new_motor_t%chamber_ = chamber_t(input_file)
-  end function
-
-  subroutine output(this, time, file_unit)
-    !! write all motor components to the specified file unit
-    class(motor_t), intent(in) :: this
-    real(rkind), intent(in) :: time
-    integer, intent(in) :: file_unit
-    write(file_unit,*) time, this%chamber_%p(), this%chamber_%T()
+    call this%numerics_%define(input_file)
+    call this%chamber_%define(input_file)
   end subroutine
 
   pure function t_max(this) result(this_t_max)
@@ -67,24 +55,24 @@ contains
     this_dt = this%numerics_%dt()
   end function
 
-  pure function d_dt(this, state) result(this_dState_dt)
+  pure function d_dt(this, state) result(state_rate)
     !! Result contains the numerically evaluated time derivative of each state variable
     use persistent_state_module, only : persistent_state_t
-    use flow_rate_module,        only : flow_rate_t
-    use generation_rate_module,  only : generation_rate_t
+    use state_rate_module, only : state_rate_t
     class(motor_t), intent(in) :: this
     type(persistent_state_t), intent(in) :: state
-    type(persistent_state_t) this_dState_dt
-
-    call this_dState_dt%set_time(1._rkind)
-    call this_dState_dt%set_burn_depth(this%chamber_%burn_rate())
+    type(state_rate_t) state_rate
 
     associate( &
-      generation_rate => this%chamber_%generate(state%burn_depth(), this%dt()), &
+      generation_rate => this%chamber_%generate(state%burn_depth()), &
       outflow => this%chamber_%efflux() &
     )
-       call this_dState_dt%set_mass(generation_rate%m_dot_gen() - outflow%m_dot_out())
-       call this_dState_dt%set_energy(generation_rate%e_dot_gen() - outflow%e_dot_out())
+      state_rate = state_rate_t( &
+        time_rate = 1._rkind, &
+        mass_rate = generation_rate%m_dot_gen() - outflow%m_dot_out(), &
+        energy_rate = generation_rate%e_dot_gen() - outflow%e_dot_out(), &
+        burn_depth_rate = this%chamber_%burn_rate() &
+      )
     end associate
   end function
 

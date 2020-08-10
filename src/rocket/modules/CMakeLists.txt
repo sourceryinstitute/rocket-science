@@ -9,6 +9,7 @@ add_library(modules
   persistent_state_module.f90
   flow_rate_module.f90
   generation_rate_module.f90
+  state_rate_module.f90
 )
 
 target_link_libraries(modules

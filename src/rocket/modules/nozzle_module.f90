@@ -13,33 +13,33 @@ module nozzle_module
     real(rkind) diameter_
     real(rkind) C_f_        !! thrust coefficient
   contains
+    procedure :: define
     procedure :: diameter
     procedure :: area
   end type
 
-  interface nozzle_t
-    module procedure construct_nozzle_t
-  end interface
-
 contains
 
-   function construct_nozzle_t(input_file) result(new_nozzle_t)
+   subroutine define(this, input_file)
+      class(nozzle_t), intent(out) :: this
       character(len=*), intent(in) :: input_file
-      type(nozzle_t) new_nozzle_t
-      character(len=max_errmsg_len) error_message
       real(rkind) :: diameter, C_f
-      integer :: io_status, file_unit
-      integer, parameter :: success = 0
       namelist/nozzle/ diameter, C_f
 
-      open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
-      call assert(io_status == success, "nozzle%define: io_status == success ", diagnostic_data = error_message)
-      read(file_unit, nml=nozzle)
-      close(file_unit)
+      block
+        character(len=max_errmsg_len) error_message
+        integer :: io_status, file_unit
+        integer, parameter :: success = 0
 
-      new_nozzle_t%diameter_ = diameter
-      new_nozzle_t%C_f_ = C_f
-   end function
+        open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
+        call assert(io_status == success, "nozzle_t%define: io_status == success ", diagnostic_data = error_message)
+        read(file_unit, nml=nozzle)
+        close(file_unit)
+      end block
+
+      this%diameter_ = diameter
+      this%C_f_ = C_f
+   end subroutine
 
    pure function diameter(this) result(this_diameter)
      class(nozzle_t), intent(in) :: this
