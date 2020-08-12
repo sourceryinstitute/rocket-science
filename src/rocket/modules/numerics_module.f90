@@ -10,34 +10,34 @@ module numerics_module
     private
     real(rkind) :: dt_, t_max_
   contains
+    procedure :: define
     procedure :: dt
     procedure :: t_max
   end type
 
-  interface numerics_t
-    module procedure construct_numerics_t
-  end interface
-
 contains
 
-  function construct_numerics_t(input_file) result(new_numerics_t)
+  subroutine define(this, input_file)
      use assertions_interface, only : assert, max_errmsg_len
-     type(numerics_t) new_numerics_t
+     class(numerics_t), intent(out) :: this
      character(len=*), intent(in) :: input_file
-     character(len=max_errmsg_len) error_message
-     integer io_status, file_unit
-     integer, parameter :: success =0
      real(rkind) dt, t_max
      namelist/numerics_list/ dt, t_max
 
-     open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
-     call assert(io_status == success, "define(numerics,...): io_status == success", error_message)
-     read(file_unit, nml=numerics_list)
-     close(file_unit)
+     block
+       character(len=max_errmsg_len) error_message
+       integer io_status, file_unit
+       integer, parameter :: success =0
 
-     new_numerics_t%dt_ = dt
-     new_numerics_t%t_max_ = t_max
-  end function
+       open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
+       call assert(io_status == success, "numerics_t%define: io_status == success", error_message)
+       read(file_unit, nml=numerics_list)
+       close(file_unit)
+     end block
+
+     this%dt_ = dt
+     this%t_max_ = t_max
+  end subroutine
 
    pure function dt(this) result(this_dt)
      class(numerics_t), intent(in) :: this

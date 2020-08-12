@@ -9,66 +9,49 @@ module gas_module
   public :: gas_t
 
   type gas_t
-    !! encapsulate gas thermodynamic state
+    !! encapsulate gas thermodynamic properties
     private
-    real(rkind) c_p_, MW_, T_
+    real(rkind) c_p_, MW_
   contains
-    procedure :: c_p    !! specific heat capacity at constant pressure
-    procedure :: MW     !! molecular weight
-    procedure :: T      !! temperature
-    procedure :: h      !! specific enthalpy
-    procedure :: e      !! specific internal energy
-    procedure :: R_gas  !! gas constant
-    procedure :: c_v    !! specific heart at constant volume
-    procedure :: g      !! ratio of specific heat capacities
-    procedure :: p      !! absolute pressure
+    procedure :: define       !! read all gas_t components from a file
+    procedure :: T            !! temperature
+    procedure :: c_p            !! specific enthalpy
+    procedure :: R_gas        !! gas constant
+    procedure :: g            !! ratio of specific heat capacities
+    procedure :: p            !! absolute pressure
+    procedure :: c_v !! specific heart at constant volume
   end type
-
-  interface gas_t
-    module procedure construct_gas_t
-  end interface
 
 contains
 
-  function construct_gas_t(input_file) result(new_gas_t)
+  subroutine define(this, input_file)
     !! Read gas components from input file
+    class(gas_t), intent(out) :: this
     character(len=*), intent(in) :: input_file
-    type(gas_t) new_gas_t
     character(len=max_errmsg_len) error_message
-    real(rkind) :: c_p, MW, temperature
-    integer :: io_status, file_unit
-    integer, parameter :: success = 0
-    namelist/gas/ c_p, MW, temperature
+    real(rkind) :: c_p, MW
+    namelist/gas/ c_p, MW
 
-    open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
-    call assert(io_status == success, "gas%construct_gas_t: io_status == success", diagnostic_data=error_message)
-    read(file_unit, nml=gas)
-    close(file_unit)
+    block
+      integer :: io_status, file_unit
+      integer, parameter :: success = 0
+      open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
+      call assert(io_status == success, "gas%define: io_status == success", diagnostic_data=error_message)
+      read(file_unit, nml=gas)
+      close(file_unit)
+    end block
 
-    new_gas_t%c_p_ = c_p
-    new_gas_t%MW_ = MW
-    new_gas_t%T_ = temperature
-  end function
+    this%c_p_ = c_p
+    this%MW_ = MW
+  end subroutine
 
-  pure function c_p(this) result(this_c_p)
-    !! Result is the specific heat capacity at constant pressure
-    class(gas_t), intent(in) :: this
-    real(rkind) :: this_c_p
-    this_c_p = this%c_p_
-  end function
-
-  pure function MW(this) result(this_MW)
-    !! Result is the gas molecular weight
-    class(gas_t), intent(in) :: this
-    real(rkind) :: this_MW
-    this_MW = this%MW_
-  end function
-
-  pure function T(this) result(this_temperature)
+  pure function T(this, energy) result(this_temperature)
     !! Result is the gas temperature
     class(gas_t), intent(in) :: this
+    real(rkind), intent(in) :: energy
     real(rkind) this_temperature
-    this_temperature = this%T_
+
+    this_temperature = energy/this%c_v()
   end function
 
   pure function R_gas(this) result(this_R_gas)
@@ -76,6 +59,7 @@ contains
     class(gas_t), intent(in) :: this
     real(rkind) this_R_gas
     real(rkind), parameter :: R_universal = 8314._rkind ! 8.31446261815324_rkind
+
     this_R_gas = R_universal/this%MW_
   end function
 
@@ -83,6 +67,7 @@ contains
     !! Result is the specific heat capacity at constant volume
     class(gas_t), intent(in) :: this
     real(rkind) this_c_v
+
     this_c_v = this%c_p_ - this%R_gas()
   end function
 
@@ -90,29 +75,31 @@ contains
     !! Result is the ratio of specific heat capacities
     class(gas_t), intent(in) :: this
     real(rkind) this_g
+
     this_g= this%c_p_/this%c_v()
   end function
 
-  pure function h(this) result(this_enthalpy)
+  pure function c_p(this) result(this_c_p)
     !! Result is the specific enthalpy
     class(gas_t), intent(in) :: this
-    real(rkind) this_enthalpy
-    this_enthalpy = this%c_p_*this%T_
+    real(rkind) this_c_p
+
+    this_c_p = this%c_p_
   end function
 
-  pure function e(this) result(this_internal_energy)
-    !! Result is the specific internal energy
+  pure function p(this, energy, mass, volume) result(pressure)
     class(gas_t), intent(in) :: this
-    real(rkind) this_internal_energy
-    real(rkind) internal_energy
-    this_internal_energy = this%c_v()*this%T_
-  end function
+    real(rkind), intent(in) :: energy, mass, volume
+    real(rkind) pressure
 
-  pure function p(this, rho) result(this_pressure)
-    class(gas_t), intent(in) :: this
-    real(rkind), intent(in) :: rho ! density
-    real(rkind) this_pressure
-    this_pressure = rho*this%R_gas()*this%T_
+    associate( &
+      M => (mass), &
+      R_gas => this%R_gas(), &
+      T => energy/this%c_v(), &
+      V => (volume) &
+    )
+      pressure = M*R_gas*T/V
+   end associate
   end function
 
 end module gas_module
