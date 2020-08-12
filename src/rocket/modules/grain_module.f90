@@ -61,9 +61,10 @@ contains
     associate( &
       lost_length => ends*burn_depth, &
       ir => this%id_/2 + burn_depth, &
-      or => this%od_/2 &
+      or => this%od_/2, &
+      plenum_volume => 1. - pi*(this%id_/2)**2 * this%length_ & ! set initial volume to 1.
     )
-      this_volume = pi*(ir**2 * (this%length_ - lost_length) + or**2 * lost_length)
+      this_volume = plenum_volume + pi*(ir**2 * (this%length_ - lost_length) + or**2 * lost_length)
     end associate
   end function
 
