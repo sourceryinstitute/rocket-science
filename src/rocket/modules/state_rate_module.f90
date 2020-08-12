@@ -1,5 +1,8 @@
 module state_rate_module
-  !! Encapsulate state variables that must persist throughught execution for purposes of accumulation
+  !! Encapsulate the time rate of change of the state variables that are defined as
+  !! persistent_state_t components.  These rate variables are used in the main program,
+  !! where a state_rate_t object gets multiplied by the time step:
+  !! motor%d_dt(state)*dt
   use assertions_interface, only : assert, max_errmsg_len
   use kind_parameters, only : rkind
   implicit none
@@ -9,10 +12,10 @@ module state_rate_module
 
   type state_rate_t
     private
-    real(rkind) time_rate_       !! time increase per unit time (always 1)
     real(rkind) mass_rate_       !! chamber mass increase per unit time
     real(rkind) energy_rate_     !! chamber internal energy increase per unit time
     real(rkind) burn_depth_rate_ !! surface-normal burn depth increase per unit time
+    real(rkind) time_rate_       !! time increase per unit time (always 1)
   contains
     procedure :: mass_rate
     procedure :: burn_depth_rate
