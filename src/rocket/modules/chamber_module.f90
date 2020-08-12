@@ -114,7 +114,7 @@ contains
     real(rkind), parameter :: p2 = p_ambient
 
     associate(e => state%energy(), m => state%mass(), V => this%grain_%volume(state%burn_depth()), c_p => this%gas_%c_p())
-      associate(T=>this%gas_%T(e), p =>this%gas_%p(e,m,V), ax=>this%nozzle_%area(), gx=>this%gas_%g(), rx=>this%gas_%R_gas())
+      associate(T=>this%gas_%T(e,m), p =>this%gas_%p(e,m,V), ax=>this%nozzle_%area(), gx=>this%gas_%g(), rx=>this%gas_%R_gas())
         associate(p1=>p, p_crit=>(2./(gx+1.))**(gx/(gx-1.)))
           associate( &
             px => max(p1,p2), &
