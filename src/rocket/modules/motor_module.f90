@@ -65,7 +65,7 @@ contains
 
     associate( &
       generation_rate => this%chamber_%generate(state%burn_depth()), &
-      outflow => this%chamber_%efflux() &
+      outflow => this%chamber_%efflux(state) &
     )
       state_rate = state_rate_t( &
         time_rate = 1._rkind, &

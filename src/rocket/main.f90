@@ -24,6 +24,7 @@ program main
   real(rkind), parameter :: zero=0._rkind
 
   call motor%define(input_file = "rocket.inp")
+
   associate(chamber => motor%chamber())
     call state%define(input_file="rocket.inp", gas=chamber%gas(), volume=chamber%initial_volume(), time=zero, burn_depth=zero)
   end associate

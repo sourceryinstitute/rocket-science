@@ -10,6 +10,7 @@ add_library(modules
   flow_rate_module.f90
   generation_rate_module.f90
   state_rate_module.f90
+  grain_module.f90
 )
 
 target_link_libraries(modules

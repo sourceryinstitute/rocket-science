@@ -15,7 +15,7 @@ module gas_module
   contains
     procedure :: define       !! read all gas_t components from a file
     procedure :: T            !! temperature
-    procedure :: h            !! specific enthalpy
+    procedure :: c_p            !! specific enthalpy
     procedure :: R_gas        !! gas constant
     procedure :: g            !! ratio of specific heat capacities
     procedure :: p            !! absolute pressure
@@ -79,15 +79,12 @@ contains
     this_g= this%c_p_/this%c_v()
   end function
 
-  pure function h(this, energy) result(enthalpy)
+  pure function c_p(this) result(this_c_p)
     !! Result is the specific enthalpy
     class(gas_t), intent(in) :: this
-    real(rkind), intent(in) :: energy
-    real(rkind) enthalpy
+    real(rkind) this_c_p
 
-    associate(T => energy/this%c_v())
-      enthalpy = this%c_p_*T
-    end associate
+    this_c_p = this%c_p_
   end function
 
   pure function p(this, energy, mass, volume) result(pressure)
