@@ -45,60 +45,55 @@ contains
     this%MW_ = MW
   end subroutine
 
-  pure function T(this, energy) result(this_temperature)
+  pure function T(this, energy, mass)
     !! Result is the gas temperature
     class(gas_t), intent(in) :: this
-    real(rkind), intent(in) :: energy
-    real(rkind) this_temperature
+    real(rkind), intent(in) :: energy, mass
+    real(rkind) T
 
-    this_temperature = energy/this%c_v()
+    T = energy/(this%c_v()*mass)
   end function
 
-  pure function R_gas(this) result(this_R_gas)
+  pure function R_gas(this)
     !! Result is the gas constant
     class(gas_t), intent(in) :: this
-    real(rkind) this_R_gas
+    real(rkind) R_gas
     real(rkind), parameter :: R_universal = 8314._rkind ! 8.31446261815324_rkind
 
-    this_R_gas = R_universal/this%MW_
+    R_gas = R_universal/this%MW_
   end function
 
-  pure function c_v(this) result(this_c_v)
+  pure function c_v(this)
     !! Result is the specific heat capacity at constant volume
     class(gas_t), intent(in) :: this
-    real(rkind) this_c_v
+    real(rkind) c_v
 
-    this_c_v = this%c_p_ - this%R_gas()
+    c_v = this%c_p_ - this%R_gas()
   end function
 
-  pure function g(this) result(this_g)
+  pure function g(this)
     !! Result is the ratio of specific heat capacities
     class(gas_t), intent(in) :: this
-    real(rkind) this_g
+    real(rkind) g
 
-    this_g= this%c_p_/this%c_v()
+    g = this%c_p_/this%c_v()
   end function
 
-  pure function c_p(this) result(this_c_p)
+  pure function c_p(this)
     !! Result is the specific enthalpy
     class(gas_t), intent(in) :: this
-    real(rkind) this_c_p
+    real(rkind) c_p
 
-    this_c_p = this%c_p_
+    c_p = this%c_p_
   end function
 
-  pure function p(this, energy, mass, volume) result(pressure)
+  pure function p(this, energy, mass, volume)
     class(gas_t), intent(in) :: this
     real(rkind), intent(in) :: energy, mass, volume
-    real(rkind) pressure
+    real(rkind) p !! pressure
 
-    associate( &
-      M => (mass), &
-      R_gas => this%R_gas(), &
-      T => energy/this%c_v(), &
-      V => (volume) &
-    )
-      pressure = M*R_gas*T/V
+    associate(M => (mass), R_gas => this%R_gas(), T => energy/this%c_v(), V => (volume))
+      p = M*R_gas*T/V
    end associate
   end function
 
