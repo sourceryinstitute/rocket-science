@@ -21,7 +21,7 @@ module chamber_module
     procedure :: define
     procedure :: gas
     procedure :: initial_volume
-    procedure :: efflux
+    procedure :: outflow
     procedure :: generate
     procedure :: burn_rate
   end type
@@ -99,7 +99,7 @@ contains
     end associate
   end function
 
-  pure function efflux(this, state) result(rate)
+  pure function outflow(this, state) result(rate)
     !! Result contains the flow rates of mass and energy exiting the chamber through the nozzle
     use universal_constants, only : atmospheric_pressure
     use flow_rate_module, only : flow_rate_t
@@ -140,6 +140,6 @@ contains
         end associate
       end associate
     end associate
-  end function efflux
+  end function outflow
 
 end module chamber_module
