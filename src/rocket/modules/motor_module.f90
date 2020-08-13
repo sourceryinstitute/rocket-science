@@ -64,14 +64,14 @@ contains
     type(state_rate_t) state_rate
 
     associate( &
-      generation_rate => this%chamber_%generate(state%burn_depth()), &
+      generation_rate => this%chamber_%generate(state), &
       flow_rate => this%chamber_%outflow(state) &
     )
       state_rate = state_rate_t( &
         time_rate = 1._rkind, &
         mass_rate = generation_rate%m_dot_gen() - flow_rate%m_dot_out(), &
         energy_rate = generation_rate%e_dot_gen() - flow_rate%e_dot_out(), &
-        burn_depth_rate = this%chamber_%burn_rate() &
+        burn_depth_rate = this%chamber_%burn_rate(state) &
       )
     end associate
   end function
