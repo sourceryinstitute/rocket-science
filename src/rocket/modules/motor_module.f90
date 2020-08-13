@@ -65,12 +65,12 @@ contains
 
     associate( &
       generation_rate => this%chamber_%generate(state%burn_depth()), &
-      outflow => this%chamber_%efflux(state) &
+      flow_rate => this%chamber_%outflow(state) &
     )
       state_rate = state_rate_t( &
         time_rate = 1._rkind, &
-        mass_rate = generation_rate%m_dot_gen() - outflow%m_dot_out(), &
-        energy_rate = generation_rate%e_dot_gen() - outflow%e_dot_out(), &
+        mass_rate = generation_rate%m_dot_gen() - flow_rate%m_dot_out(), &
+        energy_rate = generation_rate%e_dot_gen() - flow_rate%e_dot_out(), &
         burn_depth_rate = this%chamber_%burn_rate() &
       )
     end associate
