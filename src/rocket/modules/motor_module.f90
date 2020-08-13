@@ -34,40 +34,40 @@ contains
     call this%chamber_%define(input_file)
   end subroutine
 
-  pure function t_max(this) result(this_t_max)
+  pure function t_max(this)
     !! Result is the desired simulation end time
     class(motor_t), intent(in) :: this
-    real(rkind) this_t_max
-    this_t_max = this%numerics_%t_max()
+    real(rkind) t_max
+    t_max = this%numerics_%t_max()
   end function
 
-  pure function chamber(this) result(this_chamber)
+  pure function chamber(this)
     !! Result is the chamber_t component of this motor
     class(motor_t), intent(in) :: this
-    type(chamber_t) this_chamber
-    this_chamber = this%chamber_
+    type(chamber_t) chamber
+    chamber = this%chamber_
   end function
 
-  pure function dt(this) result(this_dt)
+  pure function dt(this)
     !! Result is the simulation time step
     class(motor_t), intent(in) :: this
-    real(rkind) this_dt
-    this_dt = this%numerics_%dt()
+    real(rkind) dt
+    dt = this%numerics_%dt()
   end function
 
-  pure function d_dt(this, state) result(state_rate)
+  pure function d_dt(this, state) result(dState_dt)
     !! Result contains the numerically evaluated time derivative of each state variable
     use persistent_state_module, only : persistent_state_t
     use state_rate_module, only : state_rate_t
     class(motor_t), intent(in) :: this
     type(persistent_state_t), intent(in) :: state
-    type(state_rate_t) state_rate
+    type(state_rate_t) dState_dt
 
     associate( &
       generation_rate => this%chamber_%generate(state), &
       flow_rate => this%chamber_%outflow(state) &
     )
-      state_rate = state_rate_t( &
+      dState_dt = state_rate_t( &
         time_rate = 1._rkind, &
         mass_rate = generation_rate%m_dot_gen() - flow_rate%m_dot_out(), &
         energy_rate = generation_rate%e_dot_gen() - flow_rate%e_dot_out(), &

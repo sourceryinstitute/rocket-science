@@ -24,12 +24,13 @@ module persistent_state_module
   end type
 
   interface persistent_state_t
-    module procedure construct_state
+    module procedure new_state
   end interface
 
 contains
 
-  pure function construct_state(mass, energy, burn_depth, time) result(new_state)
+  pure function new_state(mass, energy, burn_depth, time)
+    !! result is a new persistent_state_t object
     real(rkind), intent(in) ::  mass, energy, burn_depth, time
     type(persistent_state_t) new_state
 
@@ -41,7 +42,7 @@ contains
 
   subroutine define(this, input_file, gas, volume, time, burn_depth)
     use gas_module, only : gas_t
-    !! result is a newly constructured persistent_state_t object
+    !! set all components of this gas_t object
     class(persistent_state_t), intent(out) :: this
     character(len=*), intent(in) :: input_file
     type(gas_t), intent(in) :: gas
@@ -71,32 +72,32 @@ contains
     end associate
   end subroutine
 
-  pure function time(this) result(this_time)
+  pure function time(this)
     !! get the time state variable
     class(persistent_state_t), intent(in) :: this
-    real(rkind) this_time
-    this_time = this%time_
+    real(rkind) time
+    time = this%time_
   end function
 
-  pure function burn_depth(this) result(this_burn_depth)
+  pure function burn_depth(this)
     !! get the burn_depth state variable
     class(persistent_state_t), intent(in) :: this
-    real(rkind) this_burn_depth
-    this_burn_depth = this%burn_depth_
+    real(rkind) burn_depth
+    burn_depth = this%burn_depth_
   end function
 
-  pure function energy(this) result(this_energy)
+  pure function energy(this)
     !! get the energy state variable
     class(persistent_state_t), intent(in) :: this
-    real(rkind) this_energy
-    this_energy = this%energy_
+    real(rkind) energy
+    energy = this%energy_
   end function
 
-  pure function mass(this) result(this_mass)
+  pure function mass(this)
     !! get the mass state variable
     class(persistent_state_t), intent(in) :: this
-    real(rkind) this_mass
-    this_mass = this%mass_
+    real(rkind) mass
+    mass = this%mass_
   end function
 
   pure function add(lhs, rhs) result(total)
