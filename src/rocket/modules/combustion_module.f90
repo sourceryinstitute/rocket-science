@@ -45,25 +45,25 @@ contains
     this%n_ = n
   end subroutine
 
-  pure function burn_rate(this, p) result(rate)
+  pure function burn_rate(this, p)
     !! Result is the rate of surface-normal depth loss
     class(combustion_t), intent(in) :: this
     real(rkind), intent(in) :: p
-    real(rkind) rate
+    real(rkind) burn_rate
     real(rkind), parameter :: p_ref = 20.7E6_rkind  !! reference pressure
-    rate = this%r_ref_*(p/p_ref)**this%n_ ! (ref. rate) * (chamber pressure / ref. pressure)**(rate_exponent)
+    burn_rate = this%r_ref_*(p/p_ref)**this%n_ ! (ref. rate) * (chamber pressure / ref. pressure)**(rate_exponent)
   end function
 
-  pure function rho_solid(this) result(this_rho_solid)
+  pure function rho_solid(this)
     class(combustion_t), intent(in) :: this
-    real(rkind) this_rho_solid
-    this_rho_solid = this%rho_solid_
+    real(rkind) rho_solid
+    rho_solid = this%rho_solid_
   end function
 
-  pure function T_flame(this) result(this_T_flame)
+  pure function T_flame(this)
     class(combustion_t), intent(in) :: this
-    real(rkind) this_T_flame
-    this_T_flame = this%T_flame_
+    real(rkind) T_flame
+    T_flame = this%T_flame_
   end function
 
 end module combustion_module

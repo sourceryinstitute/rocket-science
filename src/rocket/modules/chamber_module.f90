@@ -53,27 +53,27 @@ contains
     call this%nozzle_%define(input_file)
   end subroutine
 
-  pure function gas(this) result(this_gas)
+  pure function gas(this)
     class(chamber_t), intent(in) :: this
-    type(gas_t) this_gas
-    this_gas = this%gas_
+    type(gas_t) gas
+    gas = this%gas_
   end function
 
-  pure function initial_volume(this) result(this_volume)
+  pure function initial_volume(this)
     class(chamber_t), intent(in) :: this
-    real(rkind) this_volume
-    this_volume = this%grain_%volume(burn_depth=0._rkind)
+    real(rkind) initial_volume
+    initial_volume = this%grain_%volume(burn_depth=0._rkind)
   end function
 
-  pure function burn_rate(this, state) result(this_burn_rate)
+  pure function burn_rate(this, state)
     !! Result is the rate of surface-normal depth loss for the burning tablets
     use persistent_state_module, only : persistent_state_t
     class(chamber_t), intent(in) :: this
     type(persistent_state_t), intent(in) :: state
-    real(rkind) this_burn_rate
+    real(rkind) burn_rate
 
     associate(e => state%energy(), m => state%mass(), V => this%grain_%volume(state%burn_depth()))
-      this_burn_rate = this%combustion_%burn_rate(this%gas_%p(energy=e, mass=m, volume=V))
+      burn_rate = this%combustion_%burn_rate(this%gas_%p(energy=e, mass=m, volume=V))
     end associate
   end function
 
