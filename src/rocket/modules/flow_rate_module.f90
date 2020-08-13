@@ -11,36 +11,36 @@ module flow_rate_module
 
   type flow_rate_t
     private
-    real(rkind) e_dot_o_
-    real(rkind) m_dot_o_
+    real(rkind) e_dot_out_
+    real(rkind) m_dot_out_
   contains
     procedure :: e_dot_out
     procedure :: m_dot_out
   end type
 
   interface flow_rate_t
-    module procedure construct_flow_rate_t
+    module procedure new_flow_rate
   end interface
 
 contains
 
-  pure function construct_flow_rate_t(mass_outflow_rate, energy_outflow_rate) result(new_flow_rate_t)
+  pure function new_flow_rate(mass_outflow_rate, energy_outflow_rate)
     real(rkind), intent(in) :: mass_outflow_rate, energy_outflow_rate
-    type(flow_rate_t) new_flow_rate_t
-    new_flow_rate_t%m_dot_o_ = mass_outflow_rate
-    new_flow_rate_t%e_dot_o_ = energy_outflow_rate
+    type(flow_rate_t) new_flow_rate
+    new_flow_rate%m_dot_out_ = mass_outflow_rate
+    new_flow_rate%e_dot_out_ = energy_outflow_rate
   end function
 
-  pure function m_dot_out(this) result(m_dot)
+  pure function m_dot_out(this)
     class(flow_rate_t), intent(in) :: this
-    real(rkind) m_dot
-    m_dot = this%m_dot_o_
+    real(rkind) m_dot_out
+    m_dot_out = this%m_dot_out_
   end function
 
-  pure function e_dot_out(this) result(e_dot)
+  pure function e_dot_out(this)
     class(flow_rate_t), intent(in) :: this
-    real(rkind) e_dot
-    e_dot = this%e_dot_o_
+    real(rkind) e_dot_out
+    e_dot_out = this%e_dot_out_
   end function
 
 end module flow_rate_module

@@ -39,16 +39,16 @@ contains
      this%t_max_ = t_max
   end subroutine
 
-   pure function dt(this) result(this_dt)
+   pure function dt(this)
      class(numerics_t), intent(in) :: this
-     real(rkind) this_dt
-     this_dt = this%dt_
+     real(rkind) dt
+     dt = this%dt_
    end function
 
-   pure function t_max(this) result(this_t_max)
+   pure function t_max(this)
      class(numerics_t), intent(in) :: this
-     real(rkind) this_t_max
-     this_t_max = this%t_max_
+     real(rkind) t_max
+     t_max = this%t_max_
    end function
 
 end module numerics_module

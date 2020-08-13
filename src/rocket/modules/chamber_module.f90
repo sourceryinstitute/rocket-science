@@ -53,35 +53,41 @@ contains
     call this%nozzle_%define(input_file)
   end subroutine
 
-  pure function gas(this) result(this_gas)
+  pure function gas(this)
     class(chamber_t), intent(in) :: this
-    type(gas_t) this_gas
-    this_gas = this%gas_
+    type(gas_t) gas
+    gas = this%gas_
   end function
 
-  pure function initial_volume(this) result(this_volume)
+  pure function initial_volume(this)
     class(chamber_t), intent(in) :: this
-    real(rkind) this_volume
-    this_volume = this%grain_%volume(burn_depth=0._rkind)
+    real(rkind) initial_volume
+    initial_volume = this%grain_%volume(burn_depth=0._rkind)
   end function
 
-  pure function burn_rate(this) result(this_burn_rate)
+  pure function burn_rate(this, state)
     !! Result is the rate of surface-normal depth loss for the burning tablets
+    use persistent_state_module, only : persistent_state_t
     class(chamber_t), intent(in) :: this
-    real(rkind) this_burn_rate
-    !this_burn_rate = this%combustion_%burn_rate(this%gas_%p())
+    type(persistent_state_t), intent(in) :: state
+    real(rkind) burn_rate
+
+    associate(e => state%energy(), m => state%mass(), V => this%grain_%volume(state%burn_depth()))
+      burn_rate = this%combustion_%burn_rate(this%gas_%p(energy=e, mass=m, volume=V))
+    end associate
   end function
 
-  pure function generate(this, depth) result(rate)
+  pure function generate(this, state) result(rate)
     !! Result contains the burn rate, mass generation rate, and energy generation rate
+    use persistent_state_module, only : persistent_state_t
     use generation_rate_module, only : generation_rate_t
     class(chamber_t), intent(in) :: this
+    type(persistent_state_t), intent(in) :: state
     type(generation_rate_t) rate
-    real(rkind), intent(in) :: depth
 
     associate( &
-      r => this%burn_rate(), &
-      A => this%grain_%surface_area(depth),  &
+      r => this%burn_rate(state), &
+      A => this%grain_%surface_area(state%burn_depth()),  &
       rho => this%combustion_%rho_solid() &
     )
       associate( &
@@ -114,7 +120,7 @@ contains
     real(rkind), parameter :: p2 = p_ambient
 
     associate(e => state%energy(), m => state%mass(), V => this%grain_%volume(state%burn_depth()), c_p => this%gas_%c_p())
-      associate(T=>this%gas_%T(e), p =>this%gas_%p(e,m,V), ax=>this%nozzle_%area(), gx=>this%gas_%g(), rx=>this%gas_%R_gas())
+      associate(T=>this%gas_%T(e,m), p =>this%gas_%p(e,m,V), ax=>this%nozzle_%area(), gx=>this%gas_%g(), rx=>this%gas_%R_gas())
         associate(p1=>p, p_crit=>(2./(gx+1.))**(gx/(gx-1.)))
           associate( &
             px => max(p1,p2), &

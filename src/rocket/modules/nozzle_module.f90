@@ -41,17 +41,17 @@ contains
       this%C_f_ = C_f
    end subroutine
 
-   pure function diameter(this) result(this_diameter)
+   pure function diameter(this)
      class(nozzle_t), intent(in) :: this
-     real(rkind) this_diameter
-     this_diameter = this%diameter_
+     real(rkind) diameter
+     diameter = this%diameter_
    end function
 
-   pure function area(this) result(nozzle_area)
+   pure function area(this)
      use universal_constants, only : pi
      class(nozzle_t), intent(in) :: this
-     real(rkind) nozzle_area
-     nozzle_area = pi*(this%diameter_**2)/4._rkind
+     real(rkind) area
+     area = pi*(this%diameter_**2)/4._rkind
    end function
 
 end module nozzle_module

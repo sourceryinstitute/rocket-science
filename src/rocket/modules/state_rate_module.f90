@@ -25,12 +25,12 @@ module state_rate_module
   end type
 
   interface state_rate_t
-    module procedure construct
+    module procedure new_rate
   end interface
 
 contains
 
-  pure function construct(time_rate, mass_rate, energy_rate, burn_depth_rate) result(new_rate)
+  pure function new_rate(time_rate, mass_rate, energy_rate, burn_depth_rate)
     !! result is a newly constructured state_rate_t object
     real(rkind), intent(in) :: time_rate, mass_rate, energy_rate, burn_depth_rate
     type(state_rate_t) new_rate
@@ -56,22 +56,22 @@ contains
     )
   end function
 
-  pure function burn_depth_rate(this) result(this_burn_depth_rate)
+  pure function burn_depth_rate(this)
     class(state_rate_t), intent(in) :: this
-    real(rkind) this_burn_depth_rate
-    this_burn_depth_rate = this%burn_depth_rate_
+    real(rkind) burn_depth_rate
+    burn_depth_rate = this%burn_depth_rate_
   end function
 
-  pure function energy_rate(this) result(this_energy)
+  pure function energy_rate(this)
     class(state_rate_t), intent(in) :: this
-    real(rkind) this_energy
-    this_energy = this%mass_rate_
+    real(rkind) energy_rate
+    energy_rate = this%energy_rate_
   end function
 
-  pure function mass_rate(this) result(this_mass_rate)
+  pure function mass_rate(this)
     class(state_rate_t), intent(in) :: this
-    real(rkind) this_mass_rate
-    this_mass_rate = this%mass_rate_
+    real(rkind) mass_rate
+    mass_rate = this%mass_rate_
   end function
 
 end module
