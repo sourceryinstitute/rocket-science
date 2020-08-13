@@ -65,23 +65,29 @@ contains
     this_volume = this%grain_%volume(burn_depth=0._rkind)
   end function
 
-  pure function burn_rate(this) result(this_burn_rate)
+  pure function burn_rate(this, state) result(this_burn_rate)
     !! Result is the rate of surface-normal depth loss for the burning tablets
+    use persistent_state_module, only : persistent_state_t
     class(chamber_t), intent(in) :: this
+    type(persistent_state_t), intent(in) :: state
     real(rkind) this_burn_rate
-    !this_burn_rate = this%combustion_%burn_rate(this%gas_%p())
+
+    associate(e => state%energy(), m => state%mass(), V => this%grain_%volume(state%burn_depth()))
+      this_burn_rate = this%combustion_%burn_rate(this%gas_%p(energy=e, mass=m, volume=V))
+    end associate
   end function
 
-  pure function generate(this, depth) result(rate)
+  pure function generate(this, state) result(rate)
     !! Result contains the burn rate, mass generation rate, and energy generation rate
+    use persistent_state_module, only : persistent_state_t
     use generation_rate_module, only : generation_rate_t
     class(chamber_t), intent(in) :: this
+    type(persistent_state_t), intent(in) :: state
     type(generation_rate_t) rate
-    real(rkind), intent(in) :: depth
 
     associate( &
-      r => this%burn_rate(), &
-      A => this%grain_%surface_area(depth),  &
+      r => this%burn_rate(state), &
+      A => this%grain_%surface_area(state%burn_depth()),  &
       rho => this%combustion_%rho_solid() &
     )
       associate( &
