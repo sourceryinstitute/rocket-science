@@ -1,5 +1,4 @@
 add_subdirectory(modules)
-add_subdirectory(original)
 add_subdirectory(reference)
 
 add_executable(rocket_science
