@@ -49,7 +49,7 @@ contains
     class(combustion_t), intent(in) :: this
     real(rkind), intent(in) :: p
     real(rkind) burn_rate
-    real(rkind), parameter :: p_ref = 20.7E6_rkind  !! reference pressure
+    real(rkind), parameter :: p_ref = 3000._rkind*6894.76  !! reference pressure 3000 psia converted to pascals
     burn_rate = this%r_ref_*(p/p_ref)**this%n_ ! (ref. rate) * (chamber pressure / ref. pressure)**(rate_exponent)
   end function
 
