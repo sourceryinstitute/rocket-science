@@ -22,5 +22,7 @@ program main
      end block
 
    end associate
+  
+   print *," Test passed."
 
 end program main
