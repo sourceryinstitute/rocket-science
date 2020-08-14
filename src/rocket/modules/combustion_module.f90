@@ -26,7 +26,7 @@ contains
     class(combustion_t), intent(out) ::  this
     character(len=*), intent(in) :: input_file
     real(rkind) T_flame, rho_solid, r_ref, n
-    namelist/combustion/ T_flame, rho_solid, r_ref, n
+    namelist/combustion/ T_flame, r_ref, n
 
     block
       integer :: io_status, file_unit
@@ -40,7 +40,6 @@ contains
     end block
 
     this%T_flame_ = T_flame
-    this%rho_solid_ = rho_solid
     this%r_ref_ = r_ref
     this%n_ = n
   end subroutine
