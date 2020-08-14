@@ -50,9 +50,7 @@ module assertions_interface
   !! longest Intel compiler error messagea (see https://intel.ly/35x84yr).
 
   interface
-#ifndef HAVE_ERROR_STOP_IN_PURE
-    impure &
-#endif
+
     elemental module subroutine assert(assertion,description,diagnostic_data,success)
       !! Report on the truth of an assertion or error-terminate on assertion failure
       implicit none
@@ -65,5 +63,35 @@ module assertions_interface
       logical, intent(out), optional :: success
         !! Optional assertion result
     end subroutine
+
   end interface
+
+contains
+
+  module procedure assert
+
+    character(len=:), allocatable :: message, preface
+    integer, parameter :: max_appended_characters=1024
+
+    if (assertions) then
+      if (.not. assertion) then
+        message = repeat(" ",ncopies=len(description)+max_appended_characters)
+        write(message,*) '(',description,')'
+        if (present(diagnostic_data)) then
+          select type(diagnostic_data)
+            type is(character(len=*))
+              message = trim(adjustl(message)) // 'with diagnostic data' // diagnostic_data
+            type is(integer)
+              preface = trim(adjustl(message)) // 'with diagnostic data'
+              write(message,*) preface, diagnostic_data
+            class default
+              message = trim(adjustl(message)) // 'with diagnostic data of unrecognized type'
+          end select
+        end if
+        if (.not. present(success)) error stop "Assertion failed '" // message // "' failed."
+      end if
+    end if
+
+  end procedure
+
 end module
