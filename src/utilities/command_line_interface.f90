@@ -3,9 +3,9 @@ module command_line_interface
   implicit none
 
   private
-  public :: command_line
+  public :: command_line_t
 
-  type command_line
+  type command_line_t
   contains
     procedure, nopass :: argument_present
   end type
