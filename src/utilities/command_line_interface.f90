@@ -14,8 +14,9 @@ module command_line_interface
     module function argument_present(acceptable_argument) result(found)
       !! result is .true. iff a command-line argument matches an element of this function's argument
       character(len=*), intent(in) :: acceptable_argument(:)
-        !! sample list: [character(len=len(longest_argument)):: "--benchmark", "-b", "/benchmark", "/b"]
-        !! where dashes support Linux/macOS and slashes support Windows
+        !! sample list: [character(len=len(<longest_argument>)):: "--benchmark", "-b", "/benchmark", "/b"]
+        !! where dashes support Linux/macOS, slashes support Windows, and <longest_argument> must be replaced
+        !! by the longest list element ("--benchmark" above)
       logical found
     end function
   end interface
