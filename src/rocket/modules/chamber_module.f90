@@ -88,7 +88,7 @@ contains
     associate( &
       r => this%burn_rate(state), &
       A => this%grain_%surface_area(state%burn_depth()),  &
-      rho => this%combustion_%rho_solid() &
+      rho => this%grain_%rho_solid() &
     )
       associate( &
         m_dot => rho*r*A, &

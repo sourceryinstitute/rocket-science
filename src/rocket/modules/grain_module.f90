@@ -14,6 +14,7 @@ module grain_module
   contains
     procedure :: surface_area
     procedure :: volume
+    procedure :: rho_solid
   end type
 
   interface grain_t
@@ -30,6 +31,12 @@ contains
     new_grain%od_ = od
     new_grain%length_ = length
     new_grain%rho_solid_ = rho_solid
+  end function
+
+  pure function rho_solid(this)
+    class(grain_t), INTENT(IN) :: this
+    real(rkind) rho_solid
+    rho_solid = this%rho_solid_
   end function
 
   pure function surface_area(this, burn_depth)

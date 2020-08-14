@@ -85,12 +85,12 @@ end function
   use mod1
   r=rref*(p/pref)**n ! calculate burn rate
 
-  surf=pi*(id+2d0*db)*length
-  if((id/2.0d0+db).gt.od/2.0d0) then
+  surf=pi*(id+2d0*db)*(length-2*db) + 2*pi*(od**2 - (id+2*db)**2)/4
+  if( (id/2.0d0+db .gt. od/2.0d0) .or. (length-2*db .le. 0) ) then
       surf=0.0d0 ! burned out to wall
       r=0.0d0 ! stop adding to burn distance because surface area becomes negative
   endif
-  if(i==1) surf=pi*id*length! no burn distance
+  if(i==1) surf=pi*id*length + 2*pi*(od**2 - id**2)/4 ! no burn distance
 
   mdotgen=rhos*r*surf
   edotgen=mdotgen*cp*tflame
