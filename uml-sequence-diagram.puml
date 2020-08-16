@@ -1,11 +1,13 @@
 @startuml
+Title UML Sequence Diagram for evaluating "state + motor%d_dt(state)*dt"
 Actor main
 activate motor
 activate chamber
 activate grain
-activate combustion
-activate state
 activate gas
+activate combustion
+activate nozzle
+activate state
 main -> motor: d_dt
 motor -> chamber: generate
 chamber -> chamber: burn_rate
@@ -19,6 +21,7 @@ chamber -> combustion: T_flame
 combustion --> chamber
 chamber -> gas: c_p
 gas --> chamber
+
 activate generation_rate
 chamber -> generation_rate: <<construct>>
 generation_rate --> chamber
@@ -44,6 +47,7 @@ chamber -> gas: g
 gas --> chamber
 chamber -> gas: R_gas
 gas --> chamber
+
 activate flow_rate
 chamber -> flow_rate: <<construct>>
 flow_rate --> chamber
@@ -57,7 +61,6 @@ generation_rate --> motor
 motor -> flow_rate: e_dot_out
 flow_rate --> motor
 motor -> chamber: burn_rate
-
 chamber -> state: energy
 state --> chamber
 chamber -> state: mass
@@ -71,17 +74,18 @@ gas --> chamber
 chamber -> combustion: burn_rate
 combustion --> chamber
 chamber --> motor
-motor --> main
 
 activate rate
-motor --> rate: <<construct>>
+motor -> rate: <<construct>>
 rate --> motor
+deactivate generation_rate
+deactivate flow_rate
 motor -> main
-main -> rate: operator(  *  )
+main -> rate: operator (  *  )
 rate --> main
-main -> state: operator(  +  )
-state --> main
-main -> state: <<result>>
+deactivate rate
+
+main -> state: operator (  +  )
 state --> main
 
 @enduml
