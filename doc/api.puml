@@ -1,0 +1,22 @@
+@startuml
+Title Rocket API: Classes Employed in the Main Program
+class motor_t {
+  define( input_file : character(len=*))
+  chamber() : chamber_t
+  dt() : real
+  t_max() : real
+  d_dt(persistent_state_t) : state_rate_t
+}
+
+motor_t -right- state_rate_t : produces >
+motor_t -down- persistent_state_t  : differentiates >
+
+class state_rate_t {
+  operator(*)(state_rate_t, real) : persistent_state_t
+}
+
+class persistent_state_t {
+  define(input_file : character(len=*))
+  operator(+)(persistent_state_t, persistent_state_t) : persistent_state_t
+}
+@enduml

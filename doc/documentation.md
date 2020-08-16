@@ -1,10 +1,10 @@
 project: Rocket
 summary: A mini-app demonstrating the emulation of a functional, object-oriented style for
          calculating aggregate tablet burn in inflator chambers using (mostly) Fortran 90.
-src_dir: src/rocket
-exclude_dir: src/utilities
-exclude_dir: src/original
-output_dir: doc
+src_dir: ../src/rocket
+exclude_dir: ../src/utilities
+exclude_dir: ../src/original
+output_dir: ford-docs
 display: public
          protected
          private
@@ -44,5 +44,3 @@ are pure functions.
 
 [This document is a FORD project file, formatted with Pythonic Markdown                                      ]:#
 [See https://github.com/Fortran-FOSS-programmers/ford/wiki/Project-File-Options for more info on writing FORD project files]:#
-
-

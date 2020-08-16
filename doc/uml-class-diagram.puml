@@ -1,0 +1,24 @@
+@startuml
+Title Objects Supporting the Rocket Main Program
+
+  object motor
+  object numerics
+  object chamber
+  object grain
+  object gas
+  object combustion
+  object nozzle
+  object state
+  object state_rate_t
+
+  motor -left- state : differentiates >
+  motor -right- state_rate_t : produces >
+  motor *-- numerics
+  motor *-- chamber
+
+  chamber *-- grain
+  chamber *-- gas
+  chamber *-- combustion
+  chamber *-- nozzle
+
+@enduml
