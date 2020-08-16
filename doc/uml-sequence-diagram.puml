@@ -1,0 +1,91 @@
+@startuml
+Title UML Sequence Diagram for evaluating "state + motor%d_dt(state)*dt"
+Actor main
+activate motor
+activate chamber
+activate grain
+activate gas
+activate combustion
+activate nozzle
+activate state
+main -> motor: d_dt
+motor -> chamber: generate
+chamber -> chamber: burn_rate
+chamber -> state: burn_depth
+state --> chamber
+chamber -> grain: surface_area
+grain --> chamber
+chamber -> combustion: rho_solid
+combustion --> chamber
+chamber -> combustion: T_flame
+combustion --> chamber
+chamber -> gas: c_p
+gas --> chamber
+
+activate generation_rate
+chamber -> generation_rate: <<construct>>
+generation_rate --> chamber
+chamber --> motor
+motor -> chamber: outflow
+chamber -> state: energy
+state --> chamber
+chamber -> state: mass
+state --> chamber
+chamber -> state: burn_depth
+state --> chamber
+chamber -> grain: volume
+gas --> chamber
+chamber -> gas: c_p
+gas --> chamber
+chamber -> gas: T
+gas --> chamber
+chamber -> gas: p
+gas --> chamber
+chamber -> nozzle: area
+nozzle --> chamber
+chamber -> gas: g
+gas --> chamber
+chamber -> gas: R_gas
+gas --> chamber
+
+activate flow_rate
+chamber -> flow_rate: <<construct>>
+flow_rate --> chamber
+chamber --> motor
+motor -> generation_rate: m_dot_gen
+generation_rate --> motor
+motor -> flow_rate: m_dot_out
+flow_rate --> motor
+motor -> generation_rate: e_dot_gen
+generation_rate --> motor
+motor -> flow_rate: e_dot_out
+flow_rate --> motor
+motor -> chamber: burn_rate
+chamber -> state: energy
+state --> chamber
+chamber -> state: mass
+state --> chamber
+chamber -> state: burn_depth
+state --> chamber
+chamber -> grain: volume
+grain --> chamber
+chamber -> gas: p
+gas --> chamber
+chamber -> combustion: burn_rate
+combustion --> chamber
+chamber --> motor
+
+activate rate
+motor -> rate: <<construct>>
+rate --> motor
+deactivate generation_rate
+deactivate flow_rate
+motor -> main
+main -> rate: operator (  *  )
+rate --> main
+deactivate rate
+
+main -> state: operator (  +  )
+state --> main
+
+@enduml
