@@ -3,10 +3,10 @@ configure_file(
   "${CMAKE_CURRENT_BINARY_DIR}/rocket.inp"
   COPYONLY
 )
-add_executable( test-reference-data-output
-  test-reference-data-output.f90
+add_executable( test-results-class
+  test-results-class.f90
 )
-target_link_libraries( test-reference-data-output
+target_link_libraries( test-results-class
   PRIVATE utilities
   PRIVATE reference
 )

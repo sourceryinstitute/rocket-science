@@ -7,12 +7,13 @@ program main
 
   real, parameter :: tolerance=1.E-6
 
-  interface  !interface block
+  interface
 
-    function legacy_rocket() result(output)
-      !! interface body for reference implementation
+    function legacy_rocket(input_file)
+      use results_interface, only : results_t
       implicit none
-      real, allocatable :: output(:,:)
+      character(len=*), intent(in) :: input_file
+      type(results_t) legacy_rocket
     end function
 
   end interface
@@ -22,20 +23,23 @@ program main
     !! accumulation of values for mass, energy, time, and burn depth.
   type(motor_t) motor
   real(rkind), parameter :: zero=0._rkind
+  character(len=*), parameter :: input_file="rocket.inp"
 
-  call motor%define(input_file = "rocket.inp")
+  call motor%define(input_file)
 
   associate(chamber => motor%chamber())
-    call state%define(input_file="rocket.inp", gas=chamber%gas(), volume=chamber%initial_volume(), time=zero, burn_depth=zero)
+    call state%define(input_file, gas=chamber%gas(), volume=chamber%initial_volume(), time=zero, burn_depth=zero)
   end associate
 
-  associate(dt => motor%dt())
-    do while(state%time() < motor%t_max())
+  associate(dt => motor%dt(), t_max => motor%t_max())
+
+    do while(state%time() < t_max)
       state = state + motor%d_dt(state)*dt
     end do
-  end associate
 
-  associate(reference_data => legacy_rocket())
+    associate(reference_results => legacy_rocket(input_file))
+    end associate
+
   end associate
 
   print *,"Test passed."

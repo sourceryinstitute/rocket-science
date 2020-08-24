@@ -1,5 +1,5 @@
 foreach( dir
-  reference-data-output
+  results-class
 )
   add_subdirectory(${dir})
 endforeach()

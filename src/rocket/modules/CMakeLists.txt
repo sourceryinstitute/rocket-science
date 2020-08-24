@@ -11,6 +11,8 @@ add_library(modules
   generation_rate_module.f90
   state_rate_module.f90
   grain_module.f90
+  results_interface.f90
+  results_implementation.f90
 )
 
 target_link_libraries(modules
