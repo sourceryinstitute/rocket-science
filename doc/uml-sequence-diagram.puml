@@ -15,8 +15,8 @@ chamber -> state: burn_depth
 state --> chamber
 chamber -> grain: surface_area
 grain --> chamber
-chamber -> combustion: rho_solid
-combustion --> chamber
+chamber -> grain: rho_solid
+grain --> chamber
 chamber -> combustion: T_flame
 combustion --> chamber
 chamber -> gas: c_p
@@ -75,15 +75,19 @@ chamber -> combustion: burn_rate
 combustion --> chamber
 chamber --> motor
 
-activate rate
-motor -> rate: <<construct>>
-rate --> motor
+activate state_rate_t
+motor -> state_rate_t: <<construct>>
+state_rate_t --> motor
 deactivate generation_rate
 deactivate flow_rate
-motor -> main
-main -> rate: operator (  *  )
-rate --> main
-deactivate rate
+motor --> main
+main -> state_rate_t: operator (  *  )
+state_rate_t -> persistent_state_t: <<construct>
+activate persistent_state_t
+persistent_state_t --> state_rate_t
+state_rate_t --> main
+deactivate persistent_state_t
+deactivate state_rate_t
 
 main -> state: operator (  +  )
 state --> main
