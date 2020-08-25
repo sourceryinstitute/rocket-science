@@ -25,8 +25,8 @@ contains
     !! Define this combustion object by reading values from an input file
     class(combustion_t), intent(out) ::  this
     character(len=*), intent(in) :: input_file
-    real(rkind) T_flame, rho_solid, r_ref, n
-    namelist/combustion/ T_flame, r_ref, n
+    real(rkind) T_flame_, r_ref_, n_
+    namelist/combustion_list/ T_flame_, r_ref_, n_
 
     block
       integer :: io_status, file_unit
@@ -35,13 +35,13 @@ contains
 
       open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
       call assert(io_status == success, "combustion%define: io_status == success ", diagnostic_data = error_message)
-      read(file_unit, nml=combustion)
+      read(file_unit, nml=combustion_list)
       close(file_unit)
     end block
 
-    this%T_flame_ = T_flame
-    this%r_ref_ = r_ref
-    this%n_ = n
+    this%T_flame_ = T_flame_
+    this%r_ref_ = r_ref_
+    this%n_ = n_
   end subroutine
 
   pure function burn_rate(this, p)

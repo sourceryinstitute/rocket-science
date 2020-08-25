@@ -29,20 +29,20 @@ contains
     class(gas_t), intent(out) :: this
     character(len=*), intent(in) :: input_file
     character(len=max_errmsg_len) error_message
-    real(rkind) :: c_p, MW
-    namelist/gas/ c_p, MW
+    real(rkind) :: c_p_, MW_
+    namelist/gas_list/ c_p_, MW_
 
     block
       integer :: io_status, file_unit
       integer, parameter :: success = 0
       open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
       call assert(io_status == success, "gas%define: io_status == success", diagnostic_data=error_message)
-      read(file_unit, nml=gas)
+      read(file_unit, nml=gas_list)
       close(file_unit)
     end block
 
-    this%c_p_ = c_p
-    this%MW_ = MW
+    this%c_p_ = c_p_
+    this%MW_ = MW_
   end subroutine
 
   pure function T(this, energy, mass)

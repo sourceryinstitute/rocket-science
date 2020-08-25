@@ -14,8 +14,8 @@ real(dp):: mdotos, edotos, texit, dsigng,pamb,p,t
 real(dp):: mcham,echam,time
 integer nsteps,i
 real(dp), allocatable :: output(:,:)
-end module
 
+end module
 
 subroutine burnrate
   use mod1
@@ -55,7 +55,7 @@ subroutine massflow
    implicit none
    REAL (8)::mdtx,engyx
    REAL (8)::tx,gx,rx,px,cpx,pcrit,facx,term1,term2,pratio,cstar,ax,hx
-   REAL (8):: p1,p2,mindt
+   REAL (8):: p1,p2
 
    mdotos=0.
    edotos=0.  ! initially set them to zero prior to running this loop
@@ -129,56 +129,82 @@ end subroutine
 !!  Main program
 
 
-function legacy_rocket() result(capture_output)
+function legacy_rocket(input_file)
+  !! this is a basic program of a single stage
+  !! rocket motor flowing out of a nozzle, assuming
+  !! a thrust coefficient and ignoring the complexities of
+  !! what happens to thrust at low pressures, i.e. shock in the nozzle
 
+use assertions_interface, only : assert, max_errmsg_len
+use results_interface, only : results_t
 use mod1
 implicit none
 
-real(dp), allocatable :: capture_output(:,:)
+character(len=*), intent(in) :: input_file
+type(results_t) legacy_rocket
 
-! this is a basic program of a single stage
-! rocket motor flowing out of a nozzle, assuming
-! a thrust coefficient and ignoring the complexities of
-! what happens to thrust at low pressures, i.e. shock in the nozzle
+character(len=max_errmsg_len) error_message
+integer io_status, file_unit
+integer, parameter :: success = 0
 
-!! modifications as of 8/6/20:
-!  going to make more/simpler subroutines to avoid confusion
-!  in an attempt to avoid confusion with variable names
+real(dp) dt_, t_max_
+real(dp) c_p_, MW_
+real(dp) temperature_, pressure_
+real(dp) T_flame_, r_ref_, n_
+real(dp) id_, od_, length_, rho_solid_
+real(dp) dia_, C_f_
 
+namelist/numerics_list/ dt_, t_max_
+namelist/gas_list/ c_p_, MW_
+namelist/state_list/  temperature_, pressure_
+namelist/combustion_list/ T_flame_, r_ref_, n_
+namelist/grain_list/ id_, od_, length_, rho_solid_
+namelist/nozzle_list/ dia_, C_f_
 
-! define initial variables and constants
-! gas variables
-  cp=1500d0 ! j/kg/K
-  mw=28d0   ! kg/mol
+open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
+call assert(io_status == success, "legcy_rocket: io_status == success", error_message)
+
+read(file_unit, nml=numerics_list)
+dt   = dt_
+tmax = t_max_
+
+read(file_unit, nml=gas_list)
+cp = c_p_
+mw = MW_
+
+read(file_unit, nml=state_list)
+t = temperature_
+p = pressure_
+
+read(file_unit, nml=combustion_list)
+Tflame = T_flame_
+rref   = r_ref_
+n      = n_
+
+read(file_unit, nml=grain_list)
+id     = id_
+od     = od_
+length = length_
+rhos   = rho_solid_
+
+read(file_unit, nml=nozzle_list)
+dia = dia_
+cf  = C_f_
+
+close(file_unit)
 
 ! define geometry
   vol= 1.0d0 ! cubic meters
-  dia=0.1d0 ! nozzle diameter (meters)
-  cf=1.7d0 ! nozzle thrust coefficient
 
-! define propellent grain geom; simple outward burning cylinder.
-! outer diameter is inhibited since this is a cast propellent meaning
-! it was poured into the tube/chamber and only the inner diameter
-! burns when ignited
-!! geometry of the propellant
-!! I am modifying the burn so that it not only burns radially, but also from the front
-!! and back ends.  e.g adding a few  hollow cylinders burning
-  id=.25d0  ! inner diameter of propellant
-  od=0.5d0  ! outder diameter
-  length=1.0d0 ! propellant grain length
+!  propellent grain is a cylinder burning radially outward and axially inward.
+! outer diameter is inhibited because this is a cast propellent: it was poured
+! into the tube/chamber and only the inner diameter burns when ignited.
 
-  !! propellant burn rate information
-  rref=.05d0  ! propellant burn rate at Pref  (m/s)
-  rhos=2000d0 ! kg/m3
+  ! propellant burn rate information
   psipa=6894.76d0 ! pascals per psi (constant)
   pref=3000d0*psipa ! reference pressure (constant)
-  n=0.4 ! burn rate exponent
   db=0d0 ! initial burn distance
-  Tflame=4000 ! temperature in Kelvin
 
-!! calculate time related values
-  dt=0.005d0
-  tmax=5.0d0 ! time to stop calculating performance
   nsteps=nint(tmax/dt) ! number of time steps
 
 ! preallocate an output file for simulation infomration
@@ -196,9 +222,7 @@ real(dp), allocatable :: capture_output(:,:)
 
   area=pi/4d0*dia**2.0d0 ! nozzle area
 
-  t=300d0 ! initial temp (Kelvin)
   pamb=101325d0 ! atmospheric pressure
-  p=pamb  ! initial chamber pressure
 
 !  calculate initial mass and energy in the chamber
   mcham=p*vol/rgas/t  ! use ideal gas law to determine mass in chamber
@@ -222,6 +246,6 @@ real(dp), allocatable :: capture_output(:,:)
 
   enddo
 
-  capture_output = output
+  legacy_rocket = results_t(header="time   pressure   temperature   mdotos  thrust", body=output)
 
 end function legacy_rocket

@@ -12,26 +12,37 @@ module grain_module
     private
     real(rkind) id_, od_, length_, rho_solid_
   contains
+    procedure :: define
     procedure :: surface_area
     procedure :: volume
     procedure :: rho_solid
   end type
 
-  interface grain_t
-    module procedure new_grain
-  end interface
-
 contains
 
-  pure function new_grain(id, od, length, rho_solid)
-    real(rkind), intent(in) :: id, od, length, rho_solid
-    type(grain_t) new_grain
+  subroutine define(this, input_file)
+    class(grain_t), intent(out) :: this
+    character(len=*), intent(in) :: input_file
 
-    new_grain%id_ = id
-    new_grain%od_ = od
-    new_grain%length_ = length
-    new_grain%rho_solid_ = rho_solid
-  end function
+    real(rkind) id_, od_, length_, rho_solid_
+    namelist/grain_list/ id_, od_, length_, rho_solid_
+
+    block
+      integer, parameter :: success = 0
+      character(len=max_errmsg_len) error_message
+      integer :: io_status, file_unit
+
+      open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
+      call assert(io_status == success, "grain_t%define: io_status == success", diagnostic_data = error_message)
+      read(file_unit, nml=grain_list)
+      close(file_unit)
+    end block
+
+    this%id_ = id_
+    this%od_ = od_
+    this%length_ = length_
+    this%rho_solid_ = rho_solid_
+  end subroutine
 
   pure function rho_solid(this)
     class(grain_t), INTENT(IN) :: this

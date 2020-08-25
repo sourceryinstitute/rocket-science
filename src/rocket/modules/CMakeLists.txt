@@ -6,11 +6,13 @@ add_library(modules
   motor_module.f90
   numerics_module.f90
   combustion_module.f90
-  persistent_state_module.f90
+  state_module.f90
   flow_rate_module.f90
   generation_rate_module.f90
   state_rate_module.f90
   grain_module.f90
+  results_interface.f90
+  results_implementation.f90
 )
 
 target_link_libraries(modules

@@ -1,6 +1,6 @@
 module state_rate_module
   !! Encapsulate the time rate of change of the state variables that are defined as
-  !! persistent_state_t components.  These rate variables are used in the main program,
+  !! state_t components.  These rate variables are used in the main program,
   !! where a state_rate_t object gets multiplied by the time step:
   !! motor%d_dt(state)*dt
   use assertions_interface, only : assert, max_errmsg_len
@@ -43,12 +43,12 @@ contains
 
   pure function multiply(this, rhs) result(this_x_rhs)
     !! result has components computed from multiply each rhs component by dt
-    use persistent_state_module, only : persistent_state_t
+    use state_module, only : state_t
     class(state_rate_t), intent(in) :: this
     real(rkind), intent(in) :: rhs
-    type(persistent_state_t) this_x_rhs
+    type(state_t) this_x_rhs
 
-    this_x_rhs = persistent_state_t( &
+    this_x_rhs = state_t( &
       mass       = this%mass_rate_*rhs, &
       energy     = this%energy_rate_*rhs, &
       burn_depth = this%burn_depth_rate_*rhs, &

@@ -23,8 +23,8 @@ contains
    subroutine define(this, input_file)
       class(nozzle_t), intent(out) :: this
       character(len=*), intent(in) :: input_file
-      real(rkind) :: diameter, C_f
-      namelist/nozzle/ diameter, C_f
+      real(rkind) :: dia_ , C_f_
+      namelist/nozzle_list/ dia_, C_f_
 
       block
         character(len=max_errmsg_len) error_message
@@ -33,12 +33,12 @@ contains
 
         open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
         call assert(io_status == success, "nozzle_t%define: io_status == success ", diagnostic_data = error_message)
-        read(file_unit, nml=nozzle)
+        read(file_unit, nml=nozzle_list)
         close(file_unit)
       end block
 
-      this%diameter_ = diameter
-      this%C_f_ = C_f
+      this%diameter_ = dia_
+      this%C_f_ = C_f_
    end subroutine
 
    pure function diameter(this)

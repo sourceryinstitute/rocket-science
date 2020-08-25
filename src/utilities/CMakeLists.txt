@@ -1,6 +1,8 @@
 add_library(utilities
-  command_line_module.f90
+  command_line_interface.f90
+  command_line_implementation.f90
   kind_parameters.f90
-  assertions_module.F90
+  assertions_interface.F90
+  assertions_implementation.F90
   universal_constants.f90
 )

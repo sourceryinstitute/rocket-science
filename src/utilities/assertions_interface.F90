@@ -17,15 +17,15 @@ module assertions_interface
   !!    Pass the optional success argument & check for false return value as an indication of assertion failure:
   !!
   !!    use assertions_interface, only : assert,assertions
-  !!    if (assertions) call assert( 2 > 1, "always true inequality", success)
+  !!    if (assertions) call assert( y>x, "y>x", success)
   !!    if (error_code/=0) call my_error_handler()
   !!
   !! Use case 2
   !! ----------
   !!    Error-terminate if the assertion fails:
   !!
-  !!    use assertions_interface, only : assert,assertions
-  !!    if (assertions) call assert( 2 > 1, "always true inequality")
+  !!    use assertions_interface, only : assert, assertions
+  !!    if (assertions) call assert( y>x, "y>x")
   !!
   implicit none
   private
@@ -66,32 +66,4 @@ module assertions_interface
 
   end interface
 
-contains
-
-  module procedure assert
-
-    character(len=:), allocatable :: message, preface
-    integer, parameter :: max_appended_characters=1024
-
-    if (assertions) then
-      if (.not. assertion) then
-        message = repeat(" ",ncopies=len(description)+max_appended_characters)
-        write(message,*) '(',description,')'
-        if (present(diagnostic_data)) then
-          select type(diagnostic_data)
-            type is(character(len=*))
-              message = trim(adjustl(message)) // 'with diagnostic data' // diagnostic_data
-            type is(integer)
-              preface = trim(adjustl(message)) // 'with diagnostic data'
-              write(message,*) preface, diagnostic_data
-            class default
-              message = trim(adjustl(message)) // 'with diagnostic data of unrecognized type'
-          end select
-        end if
-        if (.not. present(success)) error stop "Assertion failed '" // message // "' failed."
-      end if
-    end if
-
-  end procedure
-
-end module
+end module assertions_interface
