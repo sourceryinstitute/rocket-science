@@ -1,4 +1,5 @@
 module results_interface
+  use state_module, only : state_t
   use kind_parameters, only : rkind
   implicit none
 
@@ -20,6 +21,12 @@ module results_interface
       character(len=*), intent(in) :: header
       real(rkind), intent(in) :: body(:,:)
       type(results_t) new_results_t
+    end function
+
+    pure module function states_t_array(states)
+      implicit none
+      type(state_t), intent(in) :: states(:)
+      type(results_t) states_t_array
     end function
 
   end interface

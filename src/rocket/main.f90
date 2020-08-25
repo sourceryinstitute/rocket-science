@@ -19,11 +19,13 @@ program main
 
   end interface
 
-  type(motor_t) motor
-  type(state_t) state !! state variables updated at each time step: mass, energy, time, and burn depth
-
   real(rkind), parameter :: zero=0._rkind
   character(len=*), parameter :: input_file="rocket.inp"
+
+  type(motor_t) motor
+  type(state_t) state !! state variables updated at each time step: mass, energy, time, and burn depth
+  type(state_t), allocatable :: history(:)
+  allocate(history(0))
 
   call motor%define(input_file)
 
@@ -35,19 +37,27 @@ program main
 
     do while(state%time() < motor%t_max())
       state = state + motor%d_dt(state)*dt
+      history = [history, state]
     end do
 
     associate(reference_results => legacy_rocket(input_file))
       block
         use command_line_interface, only : command_line_t
+        use results_interface, only : results_t
         type(command_line_t) command
         character(len=max_errmsg_len) error_message
         integer io_status, file_unit
         integer, parameter :: success = 0
 
         if (command%argument_present([character(len=len("--graph")):: "--graph", "-g", "/graph", "/g"])) then
+
           open(newunit=file_unit, file="rocket.out", status="unknown", iostat=io_status, iomsg=error_message)
-          call assert(io_status == success, "main: io_status == success", diagnostic_data=error_message)
+          call assert(io_status == success, "main(open rocket.out): io_status == success", diagnostic_data=error_message)
+          write(unit=file_unit, fmt=*) results_t(history)
+          close(file_unit)
+
+          open(newunit=file_unit, file="legacy_rocket.out", status="unknown", iostat=io_status, iomsg=error_message)
+          call assert(io_status == success, "main (open legacy_rocket.out): io_status == success", diagnostic_data=error_message)
           write(unit=file_unit, fmt=*) reference_results
           close(file_unit)
           call execute_command_line('gnuplot gnuplot.inp')

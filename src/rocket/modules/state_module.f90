@@ -9,12 +9,13 @@ module state_module
 
   type state_t
     private
+    real(rkind) time_       !! simulated time
     real(rkind) mass_       !! mass contained in chamber
     real(rkind) energy_     !! internal energy contained in chamber
     real(rkind) burn_depth_ !! surface-normal burn distance
-    real(rkind) time_       !! simulated time
   contains
     procedure :: define
+    procedure :: row_vector
     procedure :: energy
     procedure :: mass
     procedure :: burn_depth
@@ -71,6 +72,12 @@ contains
       end associate
     end associate
   end subroutine
+
+  pure function row_vector(this)
+    class(state_t), intent(in) :: this
+    real(rkind), allocatable :: row_vector(:,:)
+    row_vector = reshape([this%time_, this%mass_, this%energy_, this%burn_depth_], [1,4])
+  end function
 
   pure function time(this)
     !! get the time state variable
