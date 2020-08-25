@@ -5,4 +5,6 @@ add_library(utilities
   assertions_interface.F90
   assertions_implementation.F90
   universal_constants.f90
+  array_functions_interface.f90
+  array_functions_implementation.f90
 )
