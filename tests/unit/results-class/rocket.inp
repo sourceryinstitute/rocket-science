@@ -4,7 +4,7 @@
 &gas_list
   c_p_=1500., MW_=28.
 /
-&persistent_state_list
+&state_list
   temperature_=300., pressure_=101325.
 /
 &combustion_list

@@ -156,7 +156,7 @@ real(dp) dia_, C_f_
 
 namelist/numerics_list/ dt_, t_max_
 namelist/gas_list/ c_p_, MW_
-namelist/persistent_state_list/  temperature_, pressure_
+namelist/state_list/  temperature_, pressure_
 namelist/combustion_list/ T_flame_, r_ref_, n_
 namelist/grain_list/ id_, od_, length_, rho_solid_
 namelist/nozzle_list/ dia_, C_f_
@@ -172,7 +172,7 @@ read(file_unit, nml=gas_list)
 cp = c_p_
 mw = MW_
 
-read(file_unit, nml=persistent_state_list)
+read(file_unit, nml=state_list)
 t = temperature_
 p = pressure_
 

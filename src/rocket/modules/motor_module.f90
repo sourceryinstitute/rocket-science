@@ -4,7 +4,7 @@ module motor_module
   use assertions_interface, only : assert, max_errmsg_len
   use chamber_module, only : chamber_t
   use numerics_module, only : numerics_t
-  use persistent_state_module, only : persistent_state_t
+  use state_module, only : state_t
   use kind_parameters, only : rkind
   implicit none
   private
@@ -57,10 +57,10 @@ contains
 
   pure function d_dt(this, state) result(dState_dt)
     !! Result contains the numerically evaluated time derivative of each state variable
-    use persistent_state_module, only : persistent_state_t
+    use state_module, only : state_t
     use state_rate_module, only : state_rate_t
     class(motor_t), intent(in) :: this
-    type(persistent_state_t), intent(in) :: state
+    type(state_t), intent(in) :: state
     type(state_rate_t) dState_dt
 
     associate( &
