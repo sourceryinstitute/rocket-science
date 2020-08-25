@@ -3,7 +3,6 @@ program main
   use motor_module, only : motor_t
   use state_module, only : state_t
   use kind_parameters, only : rkind
-  use results_interface, only : results_t
   implicit none
 
   real, parameter :: tolerance=1.E-6
@@ -38,7 +37,14 @@ program main
     end do
 
     associate(reference_results => legacy_rocket(input_file))
+      block
+        use command_line_interface, only : command_line_t
+        type(command_line_t) command
+
+        if (command%argument_present([character(len=len("--graph")):: "--graph", "-g", "/graph", "/g"])) print *,reference_results
+      end block
     end associate
+
   end associate
 
   print *,"Test passed."
