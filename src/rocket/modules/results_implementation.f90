@@ -7,10 +7,11 @@ contains
   module procedure write_formatted
     integer i
 
-    call assert(iotype=='LISTDIRECTED', "results%write_formtted: iotype='LISTDIRECTED'")
-    if (allocated(this%header)) print *, this%header
+    call assert(iotype=='LISTDIRECTED', "results_t%write_formtted: iotype='LISTDIRECTED'")
+
+    if (allocated(this%header)) write(unit,*) this%header, new_line('a')
     do i=1,size(this%body,1)
-      print *,this%body(i,:), new_line('a')
+      write(unit,*) this%body(i,:), new_line('a')
     end do
   end procedure
 

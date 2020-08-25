@@ -246,6 +246,6 @@ close(file_unit)
 
   enddo
 
-  legacy_rocket = results_t(header="[time,p,t,mdotos,thrust]", body=output)
+  legacy_rocket = results_t(header="time   pressure   temperature   mdotos  thrust", body=output)
 
 end function legacy_rocket
