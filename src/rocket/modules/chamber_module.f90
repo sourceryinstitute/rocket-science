@@ -32,22 +32,8 @@ contains
     !! Set all chamber components
     class(chamber_t), intent(out) ::  this
     character(len=*), intent(in) :: input_file
-    real(rkind) :: id, od, length, rho_solid
-    namelist/chamber/ id, od, length, rho_solid
 
-    block
-      integer, parameter :: success = 0
-      character(len=max_errmsg_len) error_message
-      integer :: io_status, file_unit
-
-      open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
-      call assert(io_status == success, "chamber_t%define: io_status == success", diagnostic_data = error_message)
-      read(file_unit, nml=chamber)
-      close(file_unit)
-    end block
-
-    this%grain_ = grain_t(od=od, id=id, length=length, rho_solid=rho_solid)
-
+    call this%grain_%define(input_file)
     call this%gas_%define(input_file)
     call this%combustion_%define(input_file)
     call this%nozzle_%define(input_file)

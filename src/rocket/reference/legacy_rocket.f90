@@ -15,17 +15,7 @@ real(dp):: mcham,echam,time
 integer nsteps,i
 real(dp), allocatable :: output(:,:)
 
-real(dp) :: t_max, c_p, rho_solid, diameter, C_f, T_flame, r_ref, temperature, pressure
-
-namelist/numerics_list/ dt, t_max
-namelist/gas/ c_p, MW
-namelist/persistent_state/  temperature, pressure
-namelist/combustion/ T_flame, r_ref, n
-namelist/nozzle/ diameter, C_f
-namelist/chamber/ id, od, length, rho_solid
-
 end module
-
 
 subroutine burnrate
   use mod1
@@ -65,7 +55,7 @@ subroutine massflow
    implicit none
    REAL (8)::mdtx,engyx
    REAL (8)::tx,gx,rx,px,cpx,pcrit,facx,term1,term2,pratio,cstar,ax,hx
-   REAL (8):: p1,p2,mindt
+   REAL (8):: p1,p2
 
    mdotos=0.
    edotos=0.  ! initially set them to zero prior to running this loop
@@ -155,25 +145,53 @@ type(results_t) legacy_rocket
 
 character(len=max_errmsg_len) error_message
 integer io_status, file_unit
-integer, parameter :: success =0
+integer, parameter :: success = 0
+
+real(dp) dt_, t_max_
+real(dp) c_p_, MW_
+real(dp) temperature_, pressure_
+real(dp) T_flame_, r_ref_, n_
+real(dp) id_, od_, length_, rho_solid_
+real(dp) dia_, C_f_
+
+namelist/numerics_list/ dt_, t_max_
+namelist/gas_list/ c_p_, MW_
+namelist/persistent_state_list/  temperature_, pressure_
+namelist/combustion_list/ T_flame_, r_ref_, n_
+namelist/grain_list/ id_, od_, length_, rho_solid_
+namelist/nozzle_list/ dia_, C_f_
 
 open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
 call assert(io_status == success, "legcy_rocket: io_status == success", error_message)
 
-read(file_unit, nml=numerics_list)    ! dt (sec), tmax (sec)
-read(file_unit, nml=gas)              ! cp (J/kg/K), MW (kg/mol)
-read(file_unit, nml=persistent_state) ! temperature (K), pressure (Pa)
-read(file_unit, nml=chamber)          ! grain id (m), od (m), length (m), rho_solid (m/kg**3)
-!read(file_unit, nml=nozzle)           ! diameter (m), C_f (thrust coeff.)
-!read(file_unit, nml=combustion)       ! T_flame (K), r_ref, n
+read(file_unit, nml=numerics_list)
+dt   = dt_
+tmax = t_max_
+
+read(file_unit, nml=gas_list)
+cp = c_p_
+mw = MW_
+
+read(file_unit, nml=persistent_state_list)
+t = temperature_
+p = pressure_
+
+read(file_unit, nml=combustion_list)
+Tflame = T_flame_
+rref   = r_ref_
+n      = n_
+
+read(file_unit, nml=grain_list)
+id     = id_
+od     = od_
+length = length_
+rhos   = rho_solid_
+
+read(file_unit, nml=nozzle_list)
+dia = dia_
+cf  = C_f_
+
 close(file_unit)
-
-T_flame=4000.; r_ref=0.05; n =0.4
-diameter=0.05; C_f=1.7
-
-tmax=t_max; cp=c_p; t=temperature; p=pressure
-rhos=rho_solid; dia=diameter; cf=C_f; Tflame=T_flame; rref=r_ref;
-
 
 ! define geometry
   vol= 1.0d0 ! cubic meters

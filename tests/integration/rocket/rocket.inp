@@ -1,6 +1,18 @@
-&numerics_list     dt=0.001, t_max=15. /
-&gas               c_p=1500., MW=28./
-&persistent_state  temperature=300., pressure=101325. /
-&combustion        T_flame=4000., r_ref=0.05, n =0.4 /
-&nozzle            diameter=0.05, C_f=1.7 /
-&chamber           id=.25, od=0.5, length=1., rho_solid=2000. /
+&numerics_list
+  dt_=0.001, t_max_=15.
+/
+&gas_list
+  c_p_=1500., MW_=28.
+/
+&persistent_state_list
+  temperature_=300., pressure_=101325.
+/
+&combustion_list
+  T_flame_=4000., r_ref_=0.05, n_ =0.4
+/
+&grain_list
+  id_=.25, od_=0.5, length_=1., rho_solid_=2000.
+/
+&nozzle_list
+  dia_=0.05, C_f_=1.7
+/

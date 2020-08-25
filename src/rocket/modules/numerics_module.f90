@@ -21,8 +21,9 @@ contains
      use assertions_interface, only : assert, max_errmsg_len
      class(numerics_t), intent(out) :: this
      character(len=*), intent(in) :: input_file
-     real(rkind) dt, t_max
-     namelist/numerics_list/ dt, t_max
+     real(rkind) dt_, t_max_
+
+     namelist/numerics_list/ dt_, t_max_
 
      block
        character(len=max_errmsg_len) error_message
@@ -35,8 +36,8 @@ contains
        close(file_unit)
      end block
 
-     this%dt_ = dt
-     this%t_max_ = t_max
+     this%dt_ = dt_
+     this%t_max_ = t_max_
   end subroutine
 
    pure function dt(this)

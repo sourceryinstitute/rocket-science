@@ -1,12 +1,12 @@
 program main
-  !! Reference, procedural rocket motor simulation
+  !! Test results abstraction
+  use results_interface, only : results_t
   implicit none
 
   interface
 
     function legacy_rocket(input_file)
       use results_interface, only : results_t
-      use mod1, only : dp
       implicit none
       character(len=*), intent(in) :: input_file
       type(results_t) legacy_rocket
@@ -14,15 +14,10 @@ program main
 
   end interface
 
-  character(len=*), parameter :: input_file="rocket.inp"
+  type(results_t) reference_results
 
-  block
-    use results_interface, only : results_t
-    type(results_t) reference_results
-
-    reference_results = legacy_rocket(input_file)
-    print *, reference_results
-  end block
+  reference_results = legacy_rocket(input_file="rocket.inp")
+  print *, reference_results
 
   print *," Test passed."
 

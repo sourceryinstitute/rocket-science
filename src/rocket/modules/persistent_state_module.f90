@@ -47,8 +47,8 @@ contains
     character(len=*), intent(in) :: input_file
     type(gas_t), intent(in) :: gas
     real(rkind), intent(in) :: volume, time, burn_depth
-    real(rkind) :: temperature, pressure
-    namelist/persistent_state/ temperature, pressure
+    real(rkind) :: temperature_, pressure_
+    namelist/persistent_state_list/ temperature_, pressure_
 
     this%time_ = time
     this%burn_depth_ = burn_depth
@@ -60,11 +60,11 @@ contains
 
       open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
       call assert(io_status == success, "persistent_state_t%define: io_status == success", diagnostic_data = error_message)
-      read(file_unit, nml=persistent_state)
+      read(file_unit, nml=persistent_state_list)
       close(file_unit)
     end block
 
-    associate(V => (volume), T => (temperature), p => (pressure))
+    associate(V => (volume), T => (temperature_), p => (pressure_))
       associate(R_gas => gas%R_gas(), c_v => gas%c_v())
         this%mass_ = p*V/(R_gas*T)
         this%energy_ = c_v*T

@@ -3,6 +3,7 @@ program main
   use motor_module, only : motor_t
   use persistent_state_module, only : persistent_state_t
   use kind_parameters, only : rkind
+  use results_interface, only : results_t
   implicit none
 
   real, parameter :: tolerance=1.E-6
@@ -25,20 +26,21 @@ program main
   real(rkind), parameter :: zero=0._rkind
   character(len=*), parameter :: input_file="rocket.inp"
 
+  type(results_t) reference_results
+  reference_results = legacy_rocket(input_file)
+
   call motor%define(input_file)
 
   associate(chamber => motor%chamber())
     call state%define(input_file, gas=chamber%gas(), volume=chamber%initial_volume(), time=zero, burn_depth=zero)
   end associate
 
+
   associate(dt => motor%dt(), t_max => motor%t_max())
 
     do while(state%time() < t_max)
       state = state + motor%d_dt(state)*dt
     end do
-
-    associate(reference_results => legacy_rocket(input_file))
-    end associate
 
   end associate
 
