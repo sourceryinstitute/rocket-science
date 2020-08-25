@@ -10,7 +10,7 @@ contains
     call assert(iotype=='LISTDIRECTED', "results%write_formtted: iotype='LISTDIRECTED'")
     if (allocated(this%header)) print *, this%header
     do i=1,size(this%body,1)
-      print *,this%body(i,:)
+      print *,this%body(i,:), new_line('a')
     end do
   end procedure
 
