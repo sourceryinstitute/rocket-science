@@ -20,4 +20,19 @@ contains
     new_results_t%body = body
   end procedure
 
+  module procedure states_t_array
+    use array_functions_interface, only : operator(.catRows.)
+
+    states_t_array%header = "time mass energy burn_depth"
+    allocate(states_t_array%body(0,0))
+
+    block
+      integer i
+
+      do i=1,size(states)
+        states_t_array%body = states_t_array%body .catRows. states(i)%row_vector()
+      end do
+    end block
+  end procedure
+
 end submodule results_implementation

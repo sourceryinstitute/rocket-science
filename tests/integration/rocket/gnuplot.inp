@@ -1,8 +1,8 @@
-plot 'rocket.out' using 0:2 with lines title columnheader
+plot 'legacy_rocket.out' using 0:2 with lines title columnheader
 pause mouse any "Plot 1 of 4. Press any key to continue.\n"
-plot 'rocket.out' using 0:2 with lines title columnheader
+plot 'legacy_rocket.out' using 0:2 with lines title columnheader
 pause mouse any "Plot 2 of 4. Press any key to continue.\n"
-plot 'rocket.out' using 0:3 with lines title columnheader
+plot 'legacy_rocket.out' using 0:3 with lines title columnheader
 pause mouse any "Plot 3 of 4. Press any key to continue.\n"
-plot 'rocket.out' using 0:4with lines title columnheader
+plot 'legacy_rocket.out' using 0:4with lines title columnheader
 pause mouse any "Plot 4 of 4. Press any key to exit.\n"
