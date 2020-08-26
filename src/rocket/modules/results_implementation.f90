@@ -9,7 +9,7 @@ contains
 
     call assert(iotype=='LISTDIRECTED', "results_t%write_formtted: iotype='LISTDIRECTED'")
 
-    if (allocated(this%header)) write(unit,*) this%header, new_line('a')
+    if (allocated(this%header)) write(unit,'(5x,4(a,10x))') this%header, new_line('a')
     do i=1,size(this%body,1)
       write(unit,*) this%body(i,:), new_line('a')
     end do
@@ -23,8 +23,8 @@ contains
   module procedure states_t_array
     use array_functions_interface, only : operator(.catRows.)
 
-    states_t_array%header = "time mass energy burn_depth"
-    allocate(states_t_array%body(0,0))
+    states_t_array%header = header
+    allocate(states_t_array%body(0,size(header)))
 
     block
       integer i
@@ -33,6 +33,7 @@ contains
         states_t_array%body = states_t_array%body .catRows. states(i)%row_vector()
       end do
     end block
+
   end procedure
 
 end submodule results_implementation

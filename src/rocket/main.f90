@@ -25,7 +25,7 @@ program main
   type(motor_t) motor
   type(state_t) state !! state variables updated at each time step: mass, energy, time, and burn depth
   type(state_t), allocatable :: history(:)
-  allocate(history(0))
+  character(len=*), parameter :: header(*) = [ character(len=len("burn_depth")) :: "time", "mass", "energy", "burn_depth"]
 
   call motor%define(input_file)
 
@@ -35,12 +35,14 @@ program main
 
   associate(dt => motor%dt() )
 
+    history = [state]
+
     do while(state%time() < motor%t_max())
       state = state + motor%d_dt(state)*dt
       history = [history, state]
     end do
 
-    associate(reference_results => legacy_rocket(input_file))
+    !associate(reference_results => legacy_rocket(input_file))
       block
         use command_line_interface, only : command_line_t
         use results_interface, only : results_t
@@ -52,18 +54,19 @@ program main
         if (command%argument_present([character(len=len("--graph")):: "--graph", "-g", "/graph", "/g"])) then
 
           open(newunit=file_unit, file="rocket.out", status="unknown", iostat=io_status, iomsg=error_message)
-          call assert(io_status == success, "main(open rocket.out): io_status == success", diagnostic_data=error_message)
-          write(unit=file_unit, fmt=*) results_t(history)
+          call assert(io_status == success, "main (opening rocket.out): io_status == success", diagnostic_data=error_message)
+          write(unit=file_unit, fmt=*) results_t(header, history)
           close(file_unit)
 
           open(newunit=file_unit, file="legacy_rocket.out", status="unknown", iostat=io_status, iomsg=error_message)
-          call assert(io_status == success, "main (open legacy_rocket.out): io_status == success", diagnostic_data=error_message)
-          write(unit=file_unit, fmt=*) reference_results
+          call assert(io_status == success, "main (opening legacy_rocket.out): io_status == success", diagnostic_data=error_message)
+          write(unit=file_unit, fmt=*) legacy_rocket(input_file)
           close(file_unit)
+
           call execute_command_line('gnuplot gnuplot.inp')
         end if
       end block
-    end associate
+    !end associate
   end associate
 
   print *,"Test passed."
