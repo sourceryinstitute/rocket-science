@@ -92,7 +92,7 @@ contains
     real(rkind), intent(in) :: energy, mass, volume
     real(rkind) p !! pressure
 
-    associate(M => (mass), R_gas => this%R_gas(), T => energy/this%c_v(), V => (volume))
+    associate(M => (mass), R_gas => this%R_gas(), T => energy/(mass*this%c_v()), V => (volume))
       p = M*R_gas*T/V
    end associate
   end function

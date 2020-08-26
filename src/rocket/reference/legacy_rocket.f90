@@ -246,6 +246,11 @@ close(file_unit)
 
   enddo
 
-  legacy_rocket = results_t(header="time   pressure   temperature   mdotos  thrust", body=output)
+  block
+    character(len=*), parameter :: header(*) = &
+      [ character(len=len("pressure")) :: "time", "pressure", "mdotos", "thrust"]
+
+    legacy_rocket = results_t(header, output)
+  end block
 
 end function legacy_rocket
