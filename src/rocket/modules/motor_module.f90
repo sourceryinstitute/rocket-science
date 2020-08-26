@@ -70,7 +70,7 @@ contains
       dState_dt = state_rate_t( &
         time_rate = 1._rkind, &
         mass_rate = generation_rate%m_dot_gen() - flow_rate%m_dot_out(), &
-        energy_rate = generation_rate%e_dot_gen() - flow_rate%e_dot_out(), &
+        energy_rate = generation_rate%E_dot_gen() - flow_rate%E_dot_out(), &
         burn_depth_rate = this%chamber_%burn_rate(state) &
       )
     end associate

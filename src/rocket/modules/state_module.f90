@@ -68,7 +68,7 @@ contains
     associate(V => (volume), T => (temperature_), p => (pressure_))
       associate(R_gas => gas%R_gas(), c_v => gas%c_v())
         this%mass_ = p*V/(R_gas*T)
-        this%energy_ = c_v*T
+        this%energy_ = this%mass_*c_v*T
       end associate
     end associate
   end subroutine
