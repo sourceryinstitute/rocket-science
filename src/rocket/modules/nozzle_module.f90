@@ -16,6 +16,7 @@ module nozzle_module
     procedure :: define
     procedure :: diameter
     procedure :: area
+    procedure :: thrust
   end type
 
 contains
@@ -47,11 +48,18 @@ contains
      diameter = this%diameter_
    end function
 
-   pure function area(this)
+   elemental function area(this)
      use universal_constants, only : pi
      class(nozzle_t), intent(in) :: this
      real(rkind) area
      area = pi*(this%diameter_**2)/4._rkind
+   end function
+
+   elemental function thrust(this, gage_pressure)
+     class(nozzle_t), intent(in) :: this
+     real(rkind), intent(in) :: gage_pressure
+     real(rkind) thrust
+     thrust = gage_pressure*this%area()*this%C_f_ ! correction to thrust (actual vs vacuum thrust)
    end function
 
 end module nozzle_module

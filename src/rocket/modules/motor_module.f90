@@ -21,6 +21,7 @@ module motor_module
     procedure :: chamber
     procedure :: dt
     procedure :: d_dt
+    procedure :: derived_variables
   end type
 
 contains
@@ -33,6 +34,24 @@ contains
     call this%numerics_%define(input_file)
     call this%chamber_%define(input_file)
   end subroutine
+
+  pure function derived_variables(this, states)
+    !! result contains tabulated pressure, mass flux, and thrust versus time
+    class(motor_t), intent(in) :: this
+    type(state_t), intent(in) :: states(:)
+    real(rkind), allocatable :: derived_variables(:,:)
+
+    associate(t=>states%time(), m=>states%mass(), E=>states%energy(), dn=>states%burn_depth())
+      associate(V => this%chamber_%volume(dn))
+        associate(p => this%chamber_%pressure(energy=E, mass=m, volume=V))
+          associate(thrust => this%chamber_%thrust(p))
+            derived_variables = reshape([t,p,thrust], [size(t),3])
+          end associate
+        end associate
+      end associate
+    end associate
+
+  end function
 
   pure function t_max(this)
     !! Result is the desired simulation end time

@@ -79,28 +79,28 @@ contains
     row_vector = reshape([this%time_, this%mass_, this%energy_, this%burn_depth_], [1,4])
   end function
 
-  pure function time(this)
+  elemental function time(this)
     !! get the time state variable
     class(state_t), intent(in) :: this
     real(rkind) time
     time = this%time_
   end function
 
-  pure function burn_depth(this)
+  elemental function burn_depth(this)
     !! get the burn_depth state variable
     class(state_t), intent(in) :: this
     real(rkind) burn_depth
     burn_depth = this%burn_depth_
   end function
 
-  pure function energy(this)
+  elemental function energy(this)
     !! get the energy state variable
     class(state_t), intent(in) :: this
     real(rkind) energy
     energy = this%energy_
   end function
 
-  pure function mass(this)
+  elemental function mass(this)
     !! get the mass state variable
     class(state_t), intent(in) :: this
     real(rkind) mass

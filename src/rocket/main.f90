@@ -60,7 +60,7 @@ contains
 
     open(newunit=file_unit, file="rocket.out", status="unknown", iostat=io_status, iomsg=error_message)
     call assert(io_status == success, "main (opening rocket.out): io_status == success", diagnostic_data=error_message)
-    write(unit=file_unit, fmt=*) results_t(header, history)
+    write(unit=file_unit, fmt=*) results_t(header, motor%derived_variables(history))
     close(file_unit)
 
     open(newunit=file_unit, file="legacy_rocket.out", status="unknown", iostat=io_status, iomsg=error_message)

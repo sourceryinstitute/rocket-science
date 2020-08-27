@@ -87,7 +87,7 @@ contains
     c_p = this%c_p_
   end function
 
-  pure function p(this, energy, mass, volume)
+  elemental function p(this, energy, mass, volume)
     class(gas_t), intent(in) :: this
     real(rkind), intent(in) :: energy, mass, volume
     real(rkind) p !! pressure
