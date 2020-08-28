@@ -20,11 +20,18 @@ module chamber_module
   contains
     procedure :: define
     procedure :: gas
+    procedure :: thrust
+    procedure :: mdotos
+    procedure :: pressure
+    procedure :: volume
+    procedure :: temperature
     procedure :: initial_volume
     procedure :: outflow
     procedure :: generate
     procedure :: burn_rate
   end type
+
+  real(rkind), parameter :: T_ambient=300._rkind, p_ambient=101325._rkind
 
 contains
 
@@ -43,6 +50,27 @@ contains
     class(chamber_t), intent(in) :: this
     type(gas_t) gas
     gas = this%gas_
+  end function
+
+  elemental function volume(this, burn_depth)
+    class(chamber_t), intent(in) :: this
+    real(rkind), intent(in) :: burn_depth
+    real(rkind) volume
+    volume = this%grain_%volume(burn_depth)
+  end function
+
+  elemental function temperature(this, energy, mass)
+    class(chamber_t), intent(in) :: this
+    real(rkind), intent(in) :: energy, mass
+    real(rkind) temperature
+    temperature = this%gas_%T(energy, mass)
+  end function
+
+  elemental function thrust(this, pressure)
+    class(chamber_t), intent(in) :: this
+    real(rkind), intent(in) :: pressure
+    real(rkind) thrust
+    thrust = this%nozzle_%thrust(gage_pressure=pressure-p_ambient)
   end function
 
   pure function initial_volume(this)
@@ -92,18 +120,29 @@ contains
   end function
 
   pure function outflow(this, state) result(rate)
-    !! Result contains the flow rates of mass and energy exiting the chamber through the nozzle
-    use universal_constants, only : atmospheric_pressure
     use flow_rate_module, only : flow_rate_t
     use state_module, only : state_t
 
     class(chamber_t), intent(in) :: this
     type(state_t), intent(in) :: state
-
     type(flow_rate_t) rate
-    real(rkind) mdtx
-    real(rkind), parameter :: T_ambient=300._rkind, p_ambient=101325._rkind, sqrt_2=sqrt(2._rkind)
-    real(rkind), parameter :: p2 = p_ambient
+
+    associate(e => state%energy(), m => state%mass())
+      associate(c_p => this%gas_%c_p(), T=>this%gas_%T(e,m), m_dot => this%mdotos(state))
+        rate = flow_rate_t(mass_outflow_rate = m_dot, energy_outflow_rate = m_dot*c_p*T)
+      end associate
+    end associate
+
+  end function
+
+  elemental function mdotos(this, state)
+    use state_module, only : state_t
+
+    class(chamber_t), intent(in) :: this
+    type(state_t), intent(in) :: state
+
+    real(rkind) mdotos
+    real(rkind), parameter :: p2 = p_ambient, sqrt_2 = sqrt(2._rkind)
 
     associate(e => state%energy(), m => state%mass(), V => this%grain_%volume(state%burn_depth()), c_p => this%gas_%c_p())
       associate(T=>this%gas_%T(e,m), p =>this%gas_%p(e,m,V), ax=>this%nozzle_%area(), gx=>this%gas_%g(), rx=>this%gas_%R_gas())
@@ -117,21 +156,27 @@ contains
             associate(hx=>c_p*tx, choked_flow => (1./p_ratio) < p_crit)
               if (choked_flow) then
                 associate(c_star => sqrt((1./gx)*((gx+1.)/2.)**((gx+1.)/(gx-1.))*rx*tx))
-                  mdtx = px*ax/c_star
+                  mdotos = px*ax/c_star
                 end associate
               else
                 associate(facx =>p_ratio**((gx-1.)/gx))
                   associate(term1 => sqrt(gx*rx*tx/facx), term2 => sqrt((facx-1.)/(gx-1.)))
-                    mdtx = d_sign_g*sqrt_2*px/p_ratio/rx/tx*facx*term1*term2*ax
+                    mdotos = d_sign_g*sqrt_2*px/p_ratio/rx/tx*facx*term1*term2*ax
                   end associate
                 end associate
               end if
-              rate = flow_rate_t(mass_outflow_rate = mdtx, energy_outflow_rate = mdtx*c_p*T)
             end associate
           end associate
         end associate
       end associate
     end associate
-  end function outflow
+  end function
+
+  elemental function pressure(this, energy, mass, volume)
+    class(chamber_t), intent(in) :: this
+    real(rkind), intent(in) :: energy, mass, volume
+    real(rkind) pressure
+    pressure = this%gas_%p(energy, mass, volume)
+  end function
 
 end module chamber_module

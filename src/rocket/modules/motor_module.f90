@@ -21,6 +21,7 @@ module motor_module
     procedure :: chamber
     procedure :: dt
     procedure :: d_dt
+    procedure :: derived_variables
   end type
 
 contains
@@ -33,6 +34,28 @@ contains
     call this%numerics_%define(input_file)
     call this%chamber_%define(input_file)
   end subroutine
+
+  pure function derived_variables(this, states)
+    !! result contains tabulated pressure, mass flux, and thrust versus time
+    class(motor_t), intent(in) :: this
+    type(state_t), intent(in) :: states(:)
+    real(rkind), allocatable :: derived_variables(:,:)
+
+    associate(t=>states%time(), m=>states%mass(), E=>states%energy(), dn=>states%burn_depth())
+      associate(V => this%chamber_%volume(dn))
+        associate( &
+          p => this%chamber_%pressure(energy=E, mass=m, volume=V), &
+          temperature => this%chamber_%temperature(energy=E, mass=m), &
+          mdotos => this%chamber_%mdotos(states) &
+          )
+          associate(thrust => this%chamber_%thrust(p))
+            derived_variables = reshape([t,p,temperature,mdotos,thrust], [size(t),5])
+          end associate
+        end associate
+      end associate
+    end associate
+
+  end function
 
   pure function t_max(this)
     !! Result is the desired simulation end time
@@ -65,12 +88,12 @@ contains
 
     associate( &
       generation_rate => this%chamber_%generate(state), &
-      flow_rate => this%chamber_%outflow(state) &
+      outflow_rate => this%chamber_%outflow(state) &
     )
       dState_dt = state_rate_t( &
         time_rate = 1._rkind, &
-        mass_rate = generation_rate%m_dot_gen() - flow_rate%m_dot_out(), &
-        energy_rate = generation_rate%E_dot_gen() - flow_rate%E_dot_out(), &
+        mass_rate = generation_rate%m_dot_gen() - outflow_rate%m_dot_out(), &
+        energy_rate = generation_rate%E_dot_gen() - outflow_rate%E_dot_out(), &
         burn_depth_rate = this%chamber_%burn_rate(state) &
       )
     end associate

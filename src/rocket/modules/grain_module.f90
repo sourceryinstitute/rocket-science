@@ -69,7 +69,7 @@ contains
     end associate
   end function
 
-  pure function volume(this, burn_depth)
+  elemental function volume(this, burn_depth)
     use universal_constants, only : pi
     class(grain_t), intent(in) :: this
     real(rkind), intent(in) :: burn_depth
