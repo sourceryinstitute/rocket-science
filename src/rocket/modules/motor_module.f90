@@ -43,9 +43,13 @@ contains
 
     associate(t=>states%time(), m=>states%mass(), E=>states%energy(), dn=>states%burn_depth())
       associate(V => this%chamber_%volume(dn))
-        associate(p => this%chamber_%pressure(energy=E, mass=m, volume=V))
+        associate( &
+          p => this%chamber_%pressure(energy=E, mass=m, volume=V), &
+          temperature => this%chamber_%temperature(energy=E, mass=m), &
+          mdotos => this%chamber_%mdotos(states) &
+          )
           associate(thrust => this%chamber_%thrust(p))
-            derived_variables = reshape([t,p,thrust], [size(t),3])
+            derived_variables = reshape([t,p,temperature,mdotos,thrust], [size(t),5])
           end associate
         end associate
       end associate

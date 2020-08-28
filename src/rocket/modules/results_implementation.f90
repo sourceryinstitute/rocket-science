@@ -9,7 +9,7 @@ contains
 
     call assert(iotype=='LISTDIRECTED', "results_t%write_formtted: iotype='LISTDIRECTED'")
 
-    if (allocated(this%header)) write(unit,'(5x,4(a,10x))') this%header, new_line('a')
+    if (allocated(this%header)) write(unit,'(5x,5(a,10x))') this%header, new_line('a')
     do i=1,size(this%body,1)
       write(unit,*) this%body(i,:), new_line('a')
     end do

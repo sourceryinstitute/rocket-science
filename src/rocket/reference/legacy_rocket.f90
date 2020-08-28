@@ -248,7 +248,7 @@ close(file_unit)
 
   block
     character(len=*), parameter :: header(*) = &
-      [ character(len=len("pressure")) :: "time", "pressure", "mdotos", "thrust"]
+      [ character(len=len("temperature")) :: "time", "pressure", "temperature", "mdotos", "thrust"]
 
     legacy_rocket = results_t(header, output)
   end block

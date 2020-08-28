@@ -44,7 +44,8 @@ contains
   subroutine write_histories
     use assertions_interface, only : assert, max_errmsg_len
     use results_interface, only : results_t
-    character(len=*), parameter :: header(*) = [ character(len=len("burn_depth")) :: "time", "mass", "energy", "burn_depth"]
+    character(len=*), parameter :: header(*) = &
+       [ character(len=len("temperature")) :: "time", "pressure", "temperature", "mdotos", "thrust"]
     character(len=max_errmsg_len) error_message
     integer io_status, file_unit
     integer, parameter :: success = 0
