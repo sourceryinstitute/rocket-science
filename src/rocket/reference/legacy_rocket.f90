@@ -31,7 +31,7 @@ subroutine calcsurf
   implicit none
 
   if(i==1) db=0d0 ! at first time step, don't regress the grain
-  surf=pi*(id+2.0d0*db)*(length-2.0d0*db)+0.5d0*pi*(od**2.0d0-(id+2.0*db)**2.0d0)
+  surf=pi*(id+2.0d0*db)*(length-2.0d0*db)+0.25d0*pi*(od**2.0d0-(id+2.0*db)**2.0d0)
 
   if(id+2d0*db.gt.od.or.db.gt.length/2d0) THEN
      surf=0d0  ! we hit the wall and burned out
