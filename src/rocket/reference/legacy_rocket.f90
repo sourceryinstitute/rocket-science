@@ -208,7 +208,7 @@ close(file_unit)
   nsteps=nint(tmax/dt) ! number of time steps
 
 ! preallocate an output file for simulation infomration
-  allocate(output(nsteps,5))
+  allocate(output(nsteps,6))
   output=0d0 ! initialize to zero
 
   thrust=0d0
@@ -241,14 +241,14 @@ close(file_unit)
    call calct
    call calcp
    call calcthrust
-   output(i,:)=[time,p,t,mdotos,thrust]
+   output(i,:)=[time,p,t,mdotos,thrust,vol]
    time=time+dt
 
   enddo
 
   block
     character(len=*), parameter :: header(*) = &
-      [ character(len=len("temperature")) :: "time", "pressure", "temperature", "mdotos", "thrust"]
+      [ character(len=len("temperature")) :: "time", "pressure", "temperature", "mdotos", "thrust", "volume"]
 
     legacy_rocket = results_t(header, output)
   end block
