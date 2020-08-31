@@ -30,7 +30,6 @@ subroutine calcsurf
   use mod1
   implicit none
 
-  if(i==1) db=0d0 ! at first time step, don't regress the grain
   surf=pi*(id+2.0d0*db)*(length-2.0d0*db)+0.5d0*pi*(od**2.0d0-(id+2.0*db)**2.0d0)
 
   if(id+2d0*db.gt.od.or.db.gt.length/2d0) THEN
@@ -38,8 +37,7 @@ subroutine calcsurf
      r=0  ! turn off burn rate so burn distance stops increasing
    endif
 
-   if (i>1) vol=vol+r*surf*dt ! increment the interior volume of the chamber a little
-  ! print *,'surf',surf
+vol=vol+r*surf*dt ! increment the interior volume of the chamber a little
 end subroutine
 
 subroutine calmdotgen
@@ -243,8 +241,8 @@ close(file_unit)
    call calct
    call calcp
    call calcthrust
-   output(i,:)=[time,p,t,mdotos,thrust,vol]
    time=time+dt
+   output(i,:)=[time,p,t,mdotos,thrust,vol]
 
   enddo
 
