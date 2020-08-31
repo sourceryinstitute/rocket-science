@@ -17,10 +17,7 @@ module state_rate_module
     real(rkind) burn_depth_rate_ !! surface-normal burn depth increase per unit time
     real(rkind) time_rate_       !! time increase per unit time (always 1)
   contains
-    procedure :: mass_rate
-    procedure :: burn_depth_rate
-    procedure :: energy_rate
-    procedure :: multiply
+    procedure, private :: multiply
     generic :: operator(*) => multiply
   end type
 
@@ -54,24 +51,6 @@ contains
       burn_depth = this%burn_depth_rate_*rhs, &
       time       = this%time_rate_*rhs &
     )
-  end function
-
-  pure function burn_depth_rate(this)
-    class(state_rate_t), intent(in) :: this
-    real(rkind) burn_depth_rate
-    burn_depth_rate = this%burn_depth_rate_
-  end function
-
-  pure function energy_rate(this)
-    class(state_rate_t), intent(in) :: this
-    real(rkind) energy_rate
-    energy_rate = this%energy_rate_
-  end function
-
-  pure function mass_rate(this)
-    class(state_rate_t), intent(in) :: this
-    real(rkind) mass_rate
-    mass_rate = this%mass_rate_
   end function
 
 end module

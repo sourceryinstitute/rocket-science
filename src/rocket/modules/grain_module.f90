@@ -64,7 +64,7 @@ contains
         id => this%id_+ lost_length, &
         od => (this%od_) &
       )
-        surface_area = merge(0._rkind, pi*(id*grain_length + (od**2-(id+2*burn_depth)**2)/four), id>od .or. grain_length<0._rkind)
+        surface_area = merge(0._rkind, pi*(id*grain_length + ends*(od**2-id**2)/four), id>od .or. grain_length<0._rkind)
       end associate
     end associate
   end function
@@ -77,12 +77,12 @@ contains
     integer, parameter :: ends = 2
 
     associate( &
-      lost_length => ends*burn_depth, &
-      ir => this%id_/2 + burn_depth, &
-      or => this%od_/2, &
-      plenum_volume => 1. - pi*(this%id_/2)**2 * this%length_ & ! set initial volume to 1.
-    )
-      volume = plenum_volume + pi*(ir**2 * (this%length_ - lost_length) + or**2 * lost_length)
+      length_new => this%length_ - ends*burn_depth, &
+      ir_new => this%id_/2 + burn_depth, &
+      ir_original => this%id_/2, &
+      or_original => this%od_/2 &
+      )
+        volume = 1. + length_new*pi*(ir_new**2  - ir_original**2) + ends*burn_depth*pi*(or_original**2 - ir_original**2)
     end associate
   end function
 

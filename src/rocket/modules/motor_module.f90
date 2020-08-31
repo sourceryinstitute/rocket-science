@@ -49,7 +49,7 @@ contains
           mdotos => this%chamber_%mdotos(states) &
           )
           associate(thrust => this%chamber_%thrust(p))
-            derived_variables = reshape([t,p,temperature,mdotos,thrust], [size(t),5])
+            derived_variables = reshape([t,p,temperature,mdotos,thrust,V], [size(t),6])
           end associate
         end associate
       end associate
