@@ -17,7 +17,7 @@ module state_rate_module
     real(rkind) burn_depth_rate_ !! surface-normal burn depth increase per unit time
     real(rkind) time_rate_       !! time increase per unit time (always 1)
   contains
-    procedure :: multiply
+    procedure, private :: multiply
     generic :: operator(*) => multiply
   end type
 
