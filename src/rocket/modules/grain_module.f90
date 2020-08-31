@@ -16,6 +16,7 @@ module grain_module
     procedure :: surface_area
     procedure :: volume
     procedure :: rho_solid
+    procedure :: burned_out
   end type
 
 contains
@@ -44,6 +45,23 @@ contains
     this%rho_solid_ = rho_solid_
   end subroutine
 
+  pure function burned_out(this, burn_depth)
+    class(grain_t), intent(in) :: this
+    real(rkind), intent(in) :: burn_depth
+    logical burned_out
+    integer, parameter :: ends = 2
+
+    associate(lost_length => ends*burn_depth)
+      associate( &
+        grain_length => this%length_ - lost_length, &
+        id => this%id_+ lost_length, &
+        od => (this%od_) &
+      )
+        burned_out = id>od .or. grain_length<0
+      end associate
+    end associate
+  end function
+
   pure function rho_solid(this)
     class(grain_t), INTENT(IN) :: this
     real(rkind) rho_solid
@@ -56,7 +74,7 @@ contains
     real(rkind), intent(in) :: burn_depth
     real(rkind) surface_area
     integer, parameter :: ends = 2
-    real(rkind), parameter :: four=4._rkind
+    real(rkind), parameter :: four=4, zero=0
 
     associate(lost_length => ends*burn_depth)
       associate( &
@@ -64,7 +82,7 @@ contains
         id => this%id_+ lost_length, &
         od => (this%od_) &
       )
-        surface_area = merge(0._rkind, pi*(id*grain_length + ends*(od**2-id**2)/four), id>od .or. grain_length<0._rkind)
+        surface_area = merge(zero, pi*(id*grain_length + ends*(od**2-id**2)/four), this%burned_out(burn_depth))
       end associate
     end associate
   end function
