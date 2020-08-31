@@ -208,7 +208,7 @@ close(file_unit)
   nsteps=nint(tmax/dt) ! number of time steps
 
 ! preallocate an output file for simulation infomration
-  allocate(output(nsteps,6))
+  allocate(output(0:nsteps,6))
   output=0d0 ! initialize to zero
 
   thrust=0d0
@@ -229,6 +229,8 @@ close(file_unit)
   echam=mcham*cv*t ! initial internal energy in chamber
 
   time=0d0
+
+  output(0,:)=[time,p,t,mdotos,thrust,vol]
 
   do i=1,nsteps
    call burnrate
