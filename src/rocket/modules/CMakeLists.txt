@@ -13,7 +13,8 @@ add_library(modules
   state_implementation.f90
   flow_rate_interface.f90
   flow_rate_implementation.f90
-  generation_rate_module.f90
+  generation_rate_interface.f90
+  generation_rate_implementation.f90
   state_rate_interface.f90
   state_rate_implementation.f90
   grain_interface.f90
