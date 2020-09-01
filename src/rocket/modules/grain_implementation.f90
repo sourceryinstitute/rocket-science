@@ -1,29 +1,11 @@
-module grain_module
+submodule(grain_interface) grain_implementation
   !! Encapsulate the grain geometry
   use assertions_interface, only : assert, max_errmsg_len
-  use kind_parameters, only : rkind
   implicit none
-
-  private
-  public :: grain_t
-
-  type grain_t
-    !! Encapsulate propellent abstraction as a friend of grain_t
-    private
-    real(rkind) id_, od_, length_, rho_solid_
-  contains
-    procedure :: define
-    procedure :: surface_area
-    procedure :: volume
-    procedure :: rho_solid
-    procedure :: burned_out
-  end type
 
 contains
 
-  subroutine define(this, input_file)
-    class(grain_t), intent(out) :: this
-    character(len=*), intent(in) :: input_file
+  module procedure define
 
     real(rkind) id_, od_, length_, rho_solid_
     namelist/grain_list/ id_, od_, length_, rho_solid_
@@ -43,12 +25,9 @@ contains
     this%od_ = od_
     this%length_ = length_
     this%rho_solid_ = rho_solid_
-  end subroutine
+  end procedure
 
-  pure function burned_out(this, burn_depth)
-    class(grain_t), intent(in) :: this
-    real(rkind), intent(in) :: burn_depth
-    logical burned_out
+  module procedure burned_out
     integer, parameter :: ends = 2
 
     associate(lost_length => ends*burn_depth)
@@ -60,19 +39,14 @@ contains
         burned_out = id>od .or. grain_length<0
       end associate
     end associate
-  end function
+  end procedure
 
-  pure function rho_solid(this)
-    class(grain_t), INTENT(IN) :: this
-    real(rkind) rho_solid
+  module procedure rho_solid
     rho_solid = this%rho_solid_
-  end function
+  end procedure
 
-  pure function surface_area(this, burn_depth)
+  module procedure surface_area
     use universal_constants, only : pi
-    class(grain_t), intent(in) :: this
-    real(rkind), intent(in) :: burn_depth
-    real(rkind) surface_area
     integer, parameter :: ends = 2
     real(rkind), parameter :: four=4, zero=0
 
@@ -85,13 +59,10 @@ contains
         surface_area = merge(zero, pi*(id*grain_length + ends*(od**2-id**2)/four), this%burned_out(burn_depth))
       end associate
     end associate
-  end function
+  end procedure
 
-  elemental function volume(this, burn_depth)
+  module procedure volume
     use universal_constants, only : pi
-    class(grain_t), intent(in) :: this
-    real(rkind), intent(in) :: burn_depth
-    real(rkind) volume
     integer, parameter :: ends = 2
 
     associate( &
@@ -102,6 +73,6 @@ contains
       )
         volume = 1. + length_new*pi*(ir_new**2  - ir_original**2) + ends*burn_depth*pi*(or_original**2 - ir_original**2)
     end associate
-  end function
+  end procedure
 
-end module grain_module
+end submodule grain_implementation

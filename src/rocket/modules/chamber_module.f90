@@ -4,7 +4,7 @@ module chamber_module
   use gas_module, only : gas_t
   use combustion_module, only : combustion_t
   use nozzle_module, only : nozzle_t
-  use grain_module, only : grain_t
+  use grain_interface, only : grain_t
   use kind_parameters, only : rkind
   implicit none
 

@@ -11,7 +11,8 @@ add_library(modules
   flow_rate_module.f90
   generation_rate_module.f90
   state_rate_module.f90
-  grain_module.f90
+  grain_interface.f90
+  grain_implementation.f90
   results_interface.f90
   results_implementation.f90
 )
