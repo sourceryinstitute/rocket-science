@@ -1,11 +1,11 @@
 add_library(modules
-  numerics_module.f90
+  numerics_interface.f90
+  numerics_implementation.f90
   chamber_module.f90
   gas_module.f90
   nozzle_module.f90
   motor_interface.f90
   motor_implementation.f90
-  numerics_module.f90
   combustion_module.f90
   state_module.f90
   flow_rate_module.f90
