@@ -233,13 +233,11 @@ close(file_unit)
   do i=1,nsteps
    call burnrate
    call calcsurf
-
-   call calmdotgen
-   call massflow
-  ! [mdot,engy,dsign]= massflow(p1,pamb,t1,tamb,cp,cp,rgas,rgas,g,g,area)
+   call calmdotgen  ! [mdot,engy,dsign]= massflow(p1,pamb,t1,tamb,cp,cp,rgas,rgas,g,g,area)
    call addmass
    call calct
    call calcp
+   call massflow
    call calcthrust
    time=time+dt
    output(i,:)=[time,p,t,mdotos,thrust,vol]

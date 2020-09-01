@@ -86,8 +86,11 @@ contains
     type(state_t), intent(in) :: state
     real(rkind) burn_rate
 
-    associate(e => state%energy(), m => state%mass(), V => this%grain_%volume(state%burn_depth()))
-      burn_rate = this%combustion_%burn_rate(this%gas_%p(energy=e, mass=m, volume=V))
+    associate(burn_depth=>state%burn_depth())
+      associate(e => state%energy(), m => state%mass(), V => this%grain_%volume(burn_depth))
+        burn_rate = &
+          merge(0._rkind, this%combustion_%burn_rate(this%gas_%p(energy=e, mass=m, volume=V)), this%grain_%burned_out(burn_depth))
+      end associate
     end associate
   end function
 
