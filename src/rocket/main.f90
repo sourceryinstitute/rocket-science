@@ -1,6 +1,6 @@
 program main
   !! Test the new rocket motor simulator against the legacy simulator
-  use motor_module, only : motor_t
+  use motor_interface, only : motor_t
   use state_module, only : state_t
   use kind_parameters, only : rkind
   implicit none
