@@ -2,9 +2,9 @@ module chamber_module
   !! Encapsulate the chamber components: propellant grain, combustion model, gas, & nozzle geometry
   use assertions_interface, only : assert, max_errmsg_len
   use gas_module, only : gas_t
-  use combustion_module, only : combustion_t
+  use combustion_interface, only : combustion_t
   use nozzle_module, only : nozzle_t
-  use grain_module, only : grain_t
+  use grain_interface, only : grain_t
   use kind_parameters, only : rkind
   implicit none
 
@@ -81,7 +81,7 @@ contains
 
   pure function burn_rate(this, state)
     !! Result is the rate of surface-normal depth loss for the burning tablets
-    use state_module, only : state_t
+    use state_interface, only : state_t
     class(chamber_t), intent(in) :: this
     type(state_t), intent(in) :: state
     real(rkind) burn_rate
@@ -96,8 +96,8 @@ contains
 
   pure function generate(this, state) result(rate)
     !! Result contains the burn rate, mass generation rate, and energy generation rate
-    use state_module, only : state_t
-    use generation_rate_module, only : generation_rate_t
+    use state_interface, only : state_t
+    use generation_rate_interface, only : generation_rate_t
     class(chamber_t), intent(in) :: this
     type(state_t), intent(in) :: state
     type(generation_rate_t) rate
@@ -123,8 +123,8 @@ contains
   end function
 
   pure function outflow(this, state) result(rate)
-    use flow_rate_module, only : flow_rate_t
-    use state_module, only : state_t
+    use flow_rate_interface, only : flow_rate_t
+    use state_interface, only : state_t
 
     class(chamber_t), intent(in) :: this
     type(state_t), intent(in) :: state
@@ -139,7 +139,7 @@ contains
   end function
 
   elemental function mdotos(this, state)
-    use state_module, only : state_t
+    use state_interface, only : state_t
 
     class(chamber_t), intent(in) :: this
     type(state_t), intent(in) :: state
