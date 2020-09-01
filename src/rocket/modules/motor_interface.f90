@@ -58,7 +58,7 @@ module motor_interface
     pure module function d_dt(this, state) result(dState_dt)
       !! result contains the numerically evaluated time derivative of each state component
       use state_interface, only : state_t
-      use state_rate_module, only : state_rate_t
+      use state_rate_interface, only : state_rate_t
       implicit none
       class(motor_t), intent(in) :: this
       type(state_t), intent(in) :: state

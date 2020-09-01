@@ -43,7 +43,7 @@ contains
 
   module procedure d_dt
     use kind_parameters, only : rkind
-    use state_rate_module, only : state_rate_t
+    use state_rate_interface, only : state_rate_t
 
     associate( &
       generation_rate => this%chamber_%generate(state), &
