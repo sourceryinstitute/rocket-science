@@ -40,7 +40,7 @@ contains
 
   pure function multiply(this, rhs) result(this_x_rhs)
     !! result has components computed from multiply each rhs component by dt
-    use state_module, only : state_t
+    use state_interface, only : state_t
     class(state_rate_t), intent(in) :: this
     real(rkind), intent(in) :: rhs
     type(state_t) this_x_rhs

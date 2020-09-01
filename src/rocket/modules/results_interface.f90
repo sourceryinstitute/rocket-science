@@ -1,5 +1,5 @@
 module results_interface
-  use state_module, only : state_t
+  use state_interface, only : state_t
   use kind_parameters, only : rkind
   implicit none
 

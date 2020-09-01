@@ -7,7 +7,8 @@ add_library(modules
   motor_interface.f90
   motor_implementation.f90
   combustion_module.f90
-  state_module.f90
+  state_interface.f90
+  state_implementation.f90
   flow_rate_module.f90
   generation_rate_module.f90
   state_rate_module.f90
