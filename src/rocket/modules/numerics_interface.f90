@@ -15,16 +15,19 @@ module numerics_interface
   interface
 
     module subroutine define(this, input_file)
+     implicit none
      class(numerics_t), intent(out) :: this
      character(len=*), intent(in) :: input_file
     end subroutine
 
     pure module function dt(this)
+      implicit none
       class(numerics_t), intent(in) :: this
       real(rkind) dt
     end function
 
     pure module function t_max(this)
+      implicit none
       class(numerics_t), intent(in) :: this
       real(rkind) t_max
     end function

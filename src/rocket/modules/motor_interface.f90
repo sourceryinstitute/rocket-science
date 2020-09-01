@@ -17,6 +17,7 @@ module motor_interface
 
     module subroutine define(this, input_file)
       !! define each motor_t component
+      implicit none
       class(motor_t), intent(out) :: this
       character(len=*), intent(in) :: input_file
     end subroutine
@@ -25,6 +26,7 @@ module motor_interface
       !! result contains tabulated pressure, mass flux, and thrust versus time
       use kind_parameters, only : rkind
       use state_module, only : state_t
+      implicit none
       class(motor_t), intent(in) :: this
       type(state_t), intent(in) :: states(:)
       real(rkind), allocatable :: derived_variables(:,:)
@@ -33,12 +35,14 @@ module motor_interface
     pure module function t_max(this)
       !! result is the desired simulation end time
       use kind_parameters, only : rkind
+      implicit none
       class(motor_t), intent(in) :: this
       real(rkind) t_max
     end function
 
     pure module function chamber(this)
       !! result is the chamber_t component of this motor
+      implicit none
       class(motor_t), intent(in) :: this
       type(chamber_t) chamber
     end function
@@ -46,6 +50,7 @@ module motor_interface
     pure module function dt(this)
       !! result is the simulation time step
       use kind_parameters, only : rkind
+      implicit none
       class(motor_t), intent(in) :: this
       real(rkind) dt
     end function
@@ -54,6 +59,7 @@ module motor_interface
       !! result contains the numerically evaluated time derivative of each state component
       use state_module, only : state_t
       use state_rate_module, only : state_rate_t
+      implicit none
       class(motor_t), intent(in) :: this
       type(state_t), intent(in) :: state
       type(state_rate_t) dState_dt
