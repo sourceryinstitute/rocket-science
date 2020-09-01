@@ -1,6 +1,6 @@
 module motor_interface
   !! Composite physics abstraction encapsulating a chamber and numerical algorithm parameters
-  use chamber_module, only : chamber_t
+  use chamber_interface, only : chamber_t
   use numerics_interface, only : numerics_t
   implicit none
   private

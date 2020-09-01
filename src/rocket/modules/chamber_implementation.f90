@@ -1,4 +1,4 @@
-module chamber_module
+submodule(chamber_interface) chamber_implementation
   !! Encapsulate the chamber components: propellant grain, combustion model, gas, & nozzle geometry
   use assertions_interface, only : assert, max_errmsg_len
   use gas_module, only : gas_t
@@ -8,83 +8,41 @@ module chamber_module
   use kind_parameters, only : rkind
   implicit none
 
-  private
-  public :: chamber_t
-
-  type chamber_t
-    private
-    type(grain_t) grain_
-    type(gas_t) gas_
-    type(combustion_t) combustion_
-    type(nozzle_t) nozzle_
-  contains
-    procedure :: define
-    procedure :: gas
-    procedure :: thrust
-    procedure :: mdotos
-    procedure :: pressure
-    procedure :: volume
-    procedure :: temperature
-    procedure :: initial_volume
-    procedure :: outflow
-    procedure :: generate
-    procedure :: burn_rate
-  end type
-
   real(rkind), parameter :: T_ambient=300._rkind, p_ambient=101325._rkind
 
 contains
 
-  subroutine define(this, input_file)
-    !! Set all chamber components
-    class(chamber_t), intent(out) ::  this
-    character(len=*), intent(in) :: input_file
-
+  module procedure define
     call this%grain_%define(input_file)
     call this%gas_%define(input_file)
     call this%combustion_%define(input_file)
     call this%nozzle_%define(input_file)
-  end subroutine
+  end procedure
 
-  pure function gas(this)
-    class(chamber_t), intent(in) :: this
-    type(gas_t) gas
+  module procedure gas
     gas = this%gas_
-  end function
+  end procedure
 
-  elemental function volume(this, burn_depth)
-    class(chamber_t), intent(in) :: this
-    real(rkind), intent(in) :: burn_depth
-    real(rkind) volume
+  module procedure volume
     volume = this%grain_%volume(burn_depth)
-  end function
+  end procedure
 
-  elemental function temperature(this, energy, mass)
-    class(chamber_t), intent(in) :: this
-    real(rkind), intent(in) :: energy, mass
-    real(rkind) temperature
+  module procedure temperature
     temperature = this%gas_%T(energy, mass)
-  end function
+  end procedure
 
-  elemental function thrust(this, pressure)
-    class(chamber_t), intent(in) :: this
-    real(rkind), intent(in) :: pressure
-    real(rkind) thrust
+  module procedure thrust
     thrust = this%nozzle_%thrust(gage_pressure=pressure-p_ambient)
-  end function
+  end procedure
 
-  pure function initial_volume(this)
-    class(chamber_t), intent(in) :: this
+  module procedure initial_volume
     real(rkind) initial_volume
     initial_volume = this%grain_%volume(burn_depth=0._rkind)
-  end function
+  end procedure
 
-  pure function burn_rate(this, state)
+  module procedure burn_rate
     !! Result is the rate of surface-normal depth loss for the burning tablets
     use state_interface, only : state_t
-    class(chamber_t), intent(in) :: this
-    type(state_t), intent(in) :: state
-    real(rkind) burn_rate
 
     associate(burn_depth=>state%burn_depth())
       associate(e => state%energy(), m => state%mass(), V => this%grain_%volume(burn_depth))
@@ -92,15 +50,12 @@ contains
           merge(0._rkind, this%combustion_%burn_rate(this%gas_%p(energy=e, mass=m, volume=V)), this%grain_%burned_out(burn_depth))
       end associate
     end associate
-  end function
+  end procedure
 
-  pure function generate(this, state) result(rate)
+  module procedure generate
     !! Result contains the burn rate, mass generation rate, and energy generation rate
     use state_interface, only : state_t
     use generation_rate_interface, only : generation_rate_t
-    class(chamber_t), intent(in) :: this
-    type(state_t), intent(in) :: state
-    type(generation_rate_t) rate
 
     associate( &
       r => this%burn_rate(state), &
@@ -120,15 +75,11 @@ contains
         end associate
       end associate
     end associate
-  end function
+  end procedure
 
-  pure function outflow(this, state) result(rate)
+  module procedure outflow
     use flow_rate_interface, only : flow_rate_t
     use state_interface, only : state_t
-
-    class(chamber_t), intent(in) :: this
-    type(state_t), intent(in) :: state
-    type(flow_rate_t) rate
 
     associate(e => state%energy(), m => state%mass())
       associate(c_p => this%gas_%c_p(), T=>this%gas_%T(e,m), m_dot => this%mdotos(state))
@@ -136,15 +87,10 @@ contains
       end associate
     end associate
 
-  end function
+  end procedure
 
-  elemental function mdotos(this, state)
+  module procedure mdotos
     use state_interface, only : state_t
-
-    class(chamber_t), intent(in) :: this
-    type(state_t), intent(in) :: state
-
-    real(rkind) mdotos
     real(rkind), parameter :: p2 = p_ambient, sqrt_2 = sqrt(2._rkind)
 
     associate(e => state%energy(), m => state%mass(), V => this%grain_%volume(state%burn_depth()), c_p => this%gas_%c_p())
@@ -173,13 +119,10 @@ contains
         end associate
       end associate
     end associate
-  end function
+  end procedure
 
-  elemental function pressure(this, energy, mass, volume)
-    class(chamber_t), intent(in) :: this
-    real(rkind), intent(in) :: energy, mass, volume
-    real(rkind) pressure
+  module procedure pressure
     pressure = this%gas_%p(energy, mass, volume)
-  end function
+  end procedure
 
-end module chamber_module
+end submodule chamber_implementation
