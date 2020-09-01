@@ -123,7 +123,7 @@ contains
   end function
 
   pure function outflow(this, state) result(rate)
-    use flow_rate_module, only : flow_rate_t
+    use flow_rate_interface, only : flow_rate_t
     use state_interface, only : state_t
 
     class(chamber_t), intent(in) :: this

@@ -11,7 +11,8 @@ add_library(modules
   combustion_implementation.f90
   state_interface.f90
   state_implementation.f90
-  flow_rate_module.f90
+  flow_rate_interface.f90
+  flow_rate_implementation.f90
   generation_rate_module.f90
   state_rate_interface.f90
   state_rate_implementation.f90
