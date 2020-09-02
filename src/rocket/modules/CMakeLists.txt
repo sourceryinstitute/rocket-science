@@ -3,7 +3,8 @@ add_library(modules
   numerics_implementation.f90
   chamber_interface.f90
   chamber_implementation.f90
-  gas_module.f90
+  gas_interface.f90
+  gas_implementation.f90
   nozzle_interface.f90
   nozzle_implementation.f90
   motor_interface.f90
