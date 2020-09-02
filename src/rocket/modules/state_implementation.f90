@@ -5,7 +5,7 @@ submodule(state_interface) state_implementation
 contains
 
   module procedure define
-    use gas_module, only : gas_t
+    use gas_interface, only : gas_t
     use assertions_interface, only : assert, max_errmsg_len
     real(rkind) :: temperature_, pressure_
     namelist/state_list/ temperature_, pressure_

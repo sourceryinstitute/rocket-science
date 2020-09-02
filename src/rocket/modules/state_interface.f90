@@ -24,7 +24,7 @@ module state_interface
 
     module subroutine define(this, input_file, gas, volume, time, burn_depth)
       !! set all components of this gas_t object
-      use gas_module, only : gas_t
+      use gas_interface, only : gas_t
       implicit none
       class(state_t), intent(out) :: this
       character(len=*), intent(in) :: input_file
