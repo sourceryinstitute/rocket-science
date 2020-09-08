@@ -83,7 +83,7 @@ contains
 
     associate(e => state%energy(), m => state%mass())
       associate(c_p => this%gas_%c_p(), T=>this%gas_%T(e,m), m_dot => this%mdotos(state))
-        rate = flow_rate_t(mass_outflow_rate = m_dot, energy_outflow_rate = m_dot*c_p*T)
+        rate = flow_rate_t(mass_flow_rate = m_dot, energy_flow_rate = m_dot*c_p*T)
       end associate
     end associate
 
