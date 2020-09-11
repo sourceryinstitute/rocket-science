@@ -3,5 +3,5 @@ add_library(legacy
 )
 target_link_libraries(legacy
   PRIVATE utilities
-  PRIVATE modules
+  PRIVATE rocket
 )

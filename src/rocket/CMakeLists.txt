@@ -1,4 +1,4 @@
-add_library(modules
+add_library(rocket
   numerics_interface.f90
   numerics_implementation.f90
   chamber_interface.f90
@@ -25,6 +25,6 @@ add_library(modules
   results_implementation.f90
 )
 
-target_link_libraries(modules
+target_link_libraries(rocket
   PRIVATE utilities
 )
