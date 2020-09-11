@@ -1,7 +1,7 @@
-add_library(reference
+add_library(legacy
   legacy_rocket.f90
 )
-target_link_libraries(reference
+target_link_libraries(legacy
   PRIVATE utilities
   PRIVATE modules
 )
