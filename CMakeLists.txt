@@ -11,6 +11,10 @@ else()
   set_property (CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${ALLOWED_BUILD_TYPES})
 endif()
 
+file    (READ ${CMAKE_CURRENT_LIST_DIR}/doc/text-art.txt LOGO)
+string  (JOIN "\n " GREETING "${LOGO}" "Version: ${ROCKET_VERSION}\n Build type: ${CMAKE_BUILD_TYPE}\n")
+message (STATUS "\n${GREETING}")
+
 project(rocket
   VERSION "${ROCKET_VERSION}"
   LANGUAGES Fortran
@@ -94,7 +98,7 @@ foreach(integration_test
   rocket
 )
   add_test( NAME "${integration_test}"
-    COMMAND ${CMAKE_BINARY_DIR}/src/rocket_science
+    COMMAND ${CMAKE_BINARY_DIR}/src/rocket-science
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/integration/${integration_test}"
   )
   set_tests_properties(${integration_test}

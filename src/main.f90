@@ -1,5 +1,8 @@
 program main
-  !! Test the new rocket motor simulator against the legacy simulator
+  !! A mini-application for rocket motor simulation:
+  !! demonstrating an object-oriented, functional programming style in Fortran 2018
+  !! with automatic graphinf of results in gnuplot for comparison against a legacy,
+  !! procedural simulator written in Fortran 90.
   use motor_interface, only : motor_t
   use state_interface, only : state_t
   use kind_parameters, only : rkind

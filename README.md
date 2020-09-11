@@ -1,47 +1,71 @@
-rocket-science
+Rocket Science
 ==============
 
-Welcome to Fortran 2018!
+```
+__________               __           __          ^
+\______   \ ____   ____ |  | __ _____/  |_       / \
+ |       _//  _ \_/ ___\|  |/ // __ \   __\      | |
+ |    |   (  <_> )  \___|    <\  ___/|  |       /| |\
+ |____|_  /\____/ \___  >__|_ \\___  >__|      /_| |_\
+        \/            \/     \/    \/            vvv
+  _________       __                             ***
+ /   _____/ ____ |__| ____   ____   ____  ____    *
+ \_____  \_/ ___\|  |/ __ \ /    \ / ___\/ __ \   .
+ /        \  \_  |  |  ___/|   |  \  \__|   __/
+/_______  /\___/ |__|\____ |___|  /\___/ \____
+```
 
-A mini-app for simulating solid rocket motors.
+This repository contains
 
-Account Setup
+* A modern mini-application for simulating solid rocket motors using an
+  object-oriented, functional programming style in Fortran 2018.
+* A legacy kernel function for solving the same governing equations
+  using a procedural programming style in Fortran 77/90.
+
+The simulator includes a capability for launching gnuplot to
+compare results between the two solvers.
+
+Prerequisites
 -------------
-Execute
-```bash
-cd 
-atom .
-```
-Then select the `.bashrc` file and add the following lines at the bottom:
-```bash
-alias pbcopy='xclip -selection clipboard'
-alias pbpaste='xclip -selection clipboard -o'
+### Compiler
 
-export sourcerer_bashrc=/home/sourcerer/.bashrc
-if [[ -f "$sourcerer_bashrc" ]]; then
-  source "$sourcerer_bashrc"
-fi
+* [GNU Compiler Collection] Fortran compiler (gfortran 11.0.0)
+* [OpenCoarrays] parallel runtime library (caf 2.9.0) and
 
-eval "$(ssh-agent -s)"
-ssh-add
-```
-The select File->Save.
+Version 1.0.0 does not yet explicitly rely upon OpenCoarrays,
+but it's expected that future versions will.
 
-Download and Build
-------------------
-If you have two-factor authentication set up, download the repository
-```bash
-git clone git@github.com:sourceryinstitute/rocket-science
-```
-Otherwise, use
+### Supported operating systems
+
+The following are the systems on which this `rocket-science` is expected
+to build with the tested version information in parentheses:
+
+* Linux (Sourcery Institute [Fortran 2018 Development Enviroment]),
+* macOS (macOS 10.15.6 Catalina), and
+* Windows Subsystem for Linux
+
+### Optional
+* [gnuplot] for graphing results.
+
+Download, Build, and Graph
+--------------------------
 ```bash
 git clone https://github.com/sourceryinstitute/rocket-science
-```
-then build with 
-```bash
 mkdir -p rocket-science/build
 cd rocket-science/build
 cmake ..
 make
 ctest
 ```
+and then graph the results with the following commands
+```bash
+cd tests/integration/rocket
+ ../../../src/rocket-science --graph
+```
+which should produce plots much like below.
+
+[Fortran 2018 Development Enviroment]: http://www.sourceryinstitute.org
+[GNU Compiler Collection]: https://gcc.gnu.org
+[OpenCoarrays]: https://github.com/sourceryinstitute/opencoarrays
+[gnuplot]: http://www.gnuplot.info
+
