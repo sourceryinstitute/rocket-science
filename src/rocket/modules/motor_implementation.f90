@@ -18,9 +18,9 @@ contains
         associate( &
           p => this%chamber_%pressure(energy=E, mass=m, volume=V), &
           temperature => this%chamber_%temperature(energy=E, mass=m), &
-          mdotos => this%chamber_%mdotos(states) &
+          flow_rate => this%chamber_%outflow(states) &
           )
-          associate(thrust => this%chamber_%thrust(p))
+          associate(thrust => this%chamber_%thrust(p), mdotos => flow_rate%m_dot())
             derived_variables = reshape([t,p,temperature,mdotos,thrust,V], [size(t),6])
           end associate
         end associate
@@ -51,8 +51,8 @@ contains
     )
       dState_dt = state_rate_t( &
         time_rate = 1._rkind, &
-        mass_rate = generation_rate%m_dot_gen() - outflow_rate%m_dot_out(), &
-        energy_rate = generation_rate%E_dot_gen() - outflow_rate%E_dot_out(), &
+        mass_rate = generation_rate%m_dot_gen() - outflow_rate%m_dot(), &
+        energy_rate = generation_rate%E_dot_gen() - outflow_rate%E_dot(), &
         burn_depth_rate = this%chamber_%burn_rate(state) &
       )
     end associate

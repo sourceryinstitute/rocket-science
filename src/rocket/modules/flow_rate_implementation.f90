@@ -8,16 +8,16 @@ submodule(flow_rate_interface) flow_rate_implementation
 contains
 
   module procedure new_flow_rate
-    new_flow_rate%m_dot_out_ = mass_outflow_rate
-    new_flow_rate%e_dot_out_ = energy_outflow_rate
+    new_flow_rate%m_dot_ = mass_flow_rate
+    new_flow_rate%e_dot_ = energy_flow_rate
   end procedure
 
-  module procedure m_dot_out
-    m_dot_out = this%m_dot_out_
+  module procedure m_dot
+    m_dot = this%m_dot_
   end procedure
 
-  module procedure e_dot_out
-    e_dot_out = this%e_dot_out_
+  module procedure e_dot
+    e_dot = this%e_dot_
   end procedure
 
 end submodule flow_rate_implementation

@@ -20,7 +20,6 @@ module chamber_interface
     procedure :: define
     procedure :: gas
     procedure :: thrust
-    procedure :: mdotos
     procedure :: pressure
     procedure :: volume
     procedure :: temperature
@@ -93,21 +92,13 @@ module chamber_interface
       type(generation_rate_t) rate
     end function
 
-    pure module function outflow(this, state) result(rate)
+    elemental module function outflow(this, state) result(rate)
       use flow_rate_interface, only : flow_rate_t
       use state_interface, only : state_t
       implicit none
       class(chamber_t), intent(in) :: this
       type(state_t), intent(in) :: state
       type(flow_rate_t) rate
-    end function
-
-    elemental module function mdotos(this, state)
-      use state_interface, only : state_t
-      implicit none
-      class(chamber_t), intent(in) :: this
-      type(state_t), intent(in) :: state
-      real(rkind) mdotos
     end function
 
     elemental module function pressure(this, energy, mass, volume)
