@@ -94,7 +94,7 @@ foreach(integration_test
   rocket
 )
   add_test( NAME "${integration_test}"
-    COMMAND ${CMAKE_BINARY_DIR}/src/rocket/rocket_science
+    COMMAND ${CMAKE_BINARY_DIR}/src/rocket_science
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/tests/integration/${integration_test}"
   )
   set_tests_properties(${integration_test}
