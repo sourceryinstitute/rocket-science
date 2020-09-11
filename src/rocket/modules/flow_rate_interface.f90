@@ -28,7 +28,7 @@ module flow_rate_interface
       type(flow_rate_t) new_flow_rate
     end function
 
-    pure module function m_dot(this)
+    elemental module function m_dot(this)
       implicit none
       class(flow_rate_t), intent(in) :: this
       real(rkind) m_dot

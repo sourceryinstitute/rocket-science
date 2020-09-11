@@ -80,17 +80,6 @@ contains
   module procedure outflow
     use flow_rate_interface, only : flow_rate_t
     use state_interface, only : state_t
-
-    associate(e => state%energy(), m => state%mass())
-      associate(c_p => this%gas_%c_p(), T=>this%gas_%T(e,m), m_dot => this%mdotos(state))
-        rate = flow_rate_t(mass_flow_rate = m_dot, energy_flow_rate = m_dot*c_p*T)
-      end associate
-    end associate
-
-  end procedure
-
-  module procedure mdotos
-    use state_interface, only : state_t
     real(rkind), parameter :: p2 = p_ambient, sqrt_2 = sqrt(2._rkind)
 
     associate(e => state%energy(), m => state%mass(), V => this%grain_%volume(state%burn_depth()), c_p => this%gas_%c_p())
@@ -105,12 +94,16 @@ contains
             associate(hx=>c_p*tx, choked_flow => (1./p_ratio) < p_crit)
               if (choked_flow) then
                 associate(c_star => sqrt((1./gx)*((gx+1.)/2.)**((gx+1.)/(gx-1.))*rx*tx))
-                  mdotos = px*ax/c_star
+                  associate(mdotos => px*ax/c_star)
+                    rate = flow_rate_t(mass_flow_rate = mdotos, energy_flow_rate = mdotos*hx)
+                  end associate
                 end associate
               else
                 associate(facx =>p_ratio**((gx-1.)/gx))
                   associate(term1 => sqrt(gx*rx*tx/facx), term2 => sqrt((facx-1.)/(gx-1.)))
-                    mdotos = d_sign_g*sqrt_2*px/p_ratio/rx/tx*facx*term1*term2*ax
+                    associate(mdotos => d_sign_g*sqrt_2*px/p_ratio/rx/tx*facx*term1*term2*ax)
+                      rate = flow_rate_t(mass_flow_rate = mdotos, energy_flow_rate = mdotos*hx)
+                    end associate
                   end associate
                 end associate
               end if
@@ -119,6 +112,7 @@ contains
         end associate
       end associate
     end associate
+
   end procedure
 
   module procedure pressure

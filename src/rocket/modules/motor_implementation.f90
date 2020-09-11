@@ -18,9 +18,9 @@ contains
         associate( &
           p => this%chamber_%pressure(energy=E, mass=m, volume=V), &
           temperature => this%chamber_%temperature(energy=E, mass=m), &
-          mdotos => this%chamber_%mdotos(states) &
+          flow_rate => this%chamber_%outflow(states) &
           )
-          associate(thrust => this%chamber_%thrust(p))
+          associate(thrust => this%chamber_%thrust(p), mdotos => flow_rate%m_dot())
             derived_variables = reshape([t,p,temperature,mdotos,thrust,V], [size(t),6])
           end associate
         end associate
