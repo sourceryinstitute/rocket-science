@@ -30,10 +30,11 @@ Prerequisites
 ### Compiler
 
 * [GNU Compiler Collection] Fortran compiler (gfortran 11.0.0)
-* [OpenCoarrays] parallel runtime library (caf 2.9.0) and
+* [OpenCoarrays] parallel runtime library (caf 2.9.0).
 
-Version 1.0.0 does not yet explicitly rely upon OpenCoarrays,
-but it's expected that future versions will.
+Version 1.0.0 does not yet explicitly rely upon OpenCoarrays, but it's 
+expected that future versions will use parallel features to demonstrate
+parametric studies.
 
 ### Supported operating systems
 
