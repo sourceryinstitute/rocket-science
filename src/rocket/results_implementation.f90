@@ -37,4 +37,23 @@ contains
 
   end procedure
 
+  module procedure norm
+    norm_of_this = maxval(abs(this%body))
+  end procedure
+
+  module procedure subtract
+
+    type(results_t) local_difference
+
+    select type(rhs)
+      class is (results_t)
+        if (allocated(this%header) .and. allocated(rhs%header)) then
+          local_difference%header = "difference of " // this%header // "-" // rhs%header
+        end if
+        local_difference%body = this%body - rhs%body
+      class default
+        error stop "results_t%difference: unsupported rhs class"
+    end select
+    difference = local_difference
+  end procedure
 end submodule results_implementation
