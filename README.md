@@ -64,6 +64,9 @@ cd tests/integration/rocket
 ```
 which should produce plots much like below.
 
+![Thrust history](https://github.com/sourceryinstitute/rocket-science/files/5211924/thrust.pdf)
+
+
 [Fortran 2018 Development Enviroment]: http://www.sourceryinstitute.org
 [GNU Compiler Collection]: https://gcc.gnu.org
 [OpenCoarrays]: https://github.com/sourceryinstitute/opencoarrays
