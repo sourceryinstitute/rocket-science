@@ -1,11 +1,30 @@
-add_subdirectory(modules)
-add_subdirectory(reference)
-
-add_executable(rocket_science
-  main.f90
+add_library(rocket
+  numerics_interface.f90
+  numerics_implementation.f90
+  chamber_interface.f90
+  chamber_implementation.f90
+  gas_interface.f90
+  gas_implementation.f90
+  nozzle_interface.f90
+  nozzle_implementation.f90
+  motor_interface.f90
+  motor_implementation.f90
+  combustion_interface.f90
+  combustion_implementation.f90
+  state_interface.f90
+  state_implementation.f90
+  flow_rate_interface.f90
+  flow_rate_implementation.f90
+  generation_rate_interface.f90
+  generation_rate_implementation.f90
+  state_rate_interface.f90
+  state_rate_implementation.f90
+  grain_interface.f90
+  grain_implementation.f90
+  results_interface.f90
+  results_implementation.f90
 )
-target_link_libraries(rocket_science
-  PRIVATE modules
-  PRIVATE reference
+
+target_link_libraries(rocket
   PRIVATE utilities
 )
