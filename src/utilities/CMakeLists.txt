@@ -7,4 +7,8 @@ add_library(utilities
   universal_constants.f90
   array_functions_interface.f90
   array_functions_implementation.f90
+  oracle_interface.f90
+  oracle_implementation.f90
+  object_interface.f90
+  object_implementation.f90
 )
