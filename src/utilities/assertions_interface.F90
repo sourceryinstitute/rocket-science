@@ -5,7 +5,7 @@
 !     contract # NRC-HQ-60-17-C-0007
 !
 #ifndef USE_ASSERTIONS
-# define USE_ASSERTIONS .false.
+# define USE_ASSERTIONS .true.
 #endif
 module assertions_interface
   !! summary: Utility for runtime checking of logical assertions.
