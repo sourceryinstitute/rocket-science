@@ -62,9 +62,10 @@ and then graph the results with the following commands
 cd tests/integration/rocket
  ../../../src/rocket-science --graph
 ```
-which should produce plots much like below.
+which should produce plots much like the thrust history below.  Press any button to bring up the next plot.  
+If the run completed successfully, the modern and legacy curves will be indistinguishable.
 
-![Thrust history](https://github.com/sourceryinstitute/rocket-science/files/5211924/thrust.pdf)
+![Thrust history](https://user-images.githubusercontent.com/13108868/92982607-b6873a80-f453-11ea-950f-294275381502.png)
 
 
 [Fortran 2018 Development Enviroment]: http://www.sourceryinstitute.org
