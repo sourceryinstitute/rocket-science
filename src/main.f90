@@ -1,7 +1,7 @@
 program main
   !! A mini-application for rocket motor simulation:
   !! demonstrating an object-oriented, functional programming style in Fortran 2018
-  !! with automatic graphinf of results in gnuplot for comparison against a legacy,
+  !! with automatic graphing of results in gnuplot for comparison against a legacy,
   !! procedural simulator written in Fortran 90.
   use motor_interface, only : motor_t
   use state_interface, only : state_t
@@ -32,47 +32,54 @@ program main
   end associate
 
   call write_histories
-  call graph_results_if_requested
+  call graph_if_requested
 
   print *,"Test passed."
 
 contains
 
-  subroutine graph_results_if_requested
+  subroutine write_history(results, file_name)
+    use assertions_interface, only : assert, max_errmsg_len
+    use results_interface, only : results_t
+    type(results_t), intent(in) :: results
+    character(len=*), intent(in) :: file_name
+    character(len=max_errmsg_len) error_message
+    integer io_status, file_unit
+    integer, parameter :: success = 0
+
+    open(newunit=file_unit, file=file_name, status="unknown", iostat=io_status, iomsg=error_message)
+    call assert(io_status == success, "main (opening "//file_name//"): io_status == success", diagnostic_data=error_message)
+    write(unit=file_unit, fmt=*) results
+    close(file_unit)
+  end subroutine
+
+  subroutine write_histories
+    use results_interface, only : results_t
+    character(len=*), parameter :: header(*) = &
+        [character(len=len("temperature")) :: "time", "pressure", "temperature", "mdotos", "thrust", "volume"]
+
+    interface
+     function legacy_rocket(input_file)
+       import results_t
+       implicit none
+       character(len=*), intent(in) :: input_file
+       type(results_t) legacy_rocket
+     end function
+   end interface
+
+    associate(modern_results => results_t(header, motor%derived_variables(history)))
+      associate(legacy_results => legacy_rocket(input_file))
+        call write_history(modern_results, "rocket.out")
+        call write_history(legacy_results, "legacy_rocket.out")
+      end associate
+    end associate
+  end subroutine
+
+  subroutine graph_if_requested()
     use command_line_interface, only : command_line_t
     type(command_line_t) command
     character(len=*), parameter :: graph(*) = [character(len=len("--graph")):: "--graph", "-g", "/graph", "/g"]
 
     if (command%argument_present(graph)) call execute_command_line('gnuplot gnuplot.inp')
   end subroutine
-
-  subroutine write_histories
-    use assertions_interface, only : assert, max_errmsg_len
-    use results_interface, only : results_t
-    character(len=*), parameter :: header(*) = &
-       [ character(len=len("temperature")) :: "time", "pressure", "temperature", "mdotos", "thrust", "volume"]
-    character(len=max_errmsg_len) error_message
-    integer io_status, file_unit
-    integer, parameter :: success = 0
-
-    interface
-      function legacy_rocket(input_file)
-        use results_interface, only : results_t
-        implicit none
-        character(len=*), intent(in) :: input_file
-        type(results_t) legacy_rocket
-      end function
-    end interface
-
-    open(newunit=file_unit, file="rocket.out", status="unknown", iostat=io_status, iomsg=error_message)
-    call assert(io_status == success, "main (opening rocket.out): io_status == success", diagnostic_data=error_message)
-    write(unit=file_unit, fmt=*) results_t(header, motor%derived_variables(history))
-    close(file_unit)
-
-    open(newunit=file_unit, file="legacy_rocket.out", status="unknown", iostat=io_status, iomsg=error_message)
-    call assert(io_status == success, "main (opening legacy_rocket.out): io_status == success", diagnostic_data=error_message)
-    write(unit=file_unit, fmt=*) legacy_rocket(input_file)
-    close(file_unit)
-  end subroutine
-
 end program
