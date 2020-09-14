@@ -18,7 +18,9 @@ program main
   call motor%define(input_file)
 
   associate(chamber => motor%chamber())
-    call state%define(input_file, gas=chamber%gas(), volume=chamber%initial_volume(), time=zero, burn_depth=zero)
+    associate(gas => chamber%gas())
+      call state%define(input_file, R_gas=gas%R_gas(), c_v=gas%c_v(), volume=chamber%initial_volume(), time=zero, burn_depth=zero)
+    end associate
   end associate
 
   associate(dt => motor%dt() )

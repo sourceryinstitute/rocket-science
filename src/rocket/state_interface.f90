@@ -22,14 +22,12 @@ module state_interface
 
   interface
 
-    module subroutine define(this, input_file, gas, volume, time, burn_depth)
+    module subroutine define(this, input_file, R_gas, c_v, volume, time, burn_depth)
       !! set all components of this gas_t object
-      use gas_interface, only : gas_t
       implicit none
       class(state_t), intent(out) :: this
       character(len=*), intent(in) :: input_file
-      type(gas_t), intent(in) :: gas
-      real(rkind), intent(in) :: volume, time, burn_depth
+      real(rkind), intent(in) :: R_gas, c_v, volume, time, burn_depth
     end subroutine
 
     pure module function new_state(mass, energy, burn_depth, time)
