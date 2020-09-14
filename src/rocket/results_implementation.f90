@@ -56,4 +56,60 @@ contains
     end select
     difference = local_difference
   end procedure
+
+  module procedure distance
+
+    call assert(all([shape(this%body)==shape(rhs%body)]), "percent_difference: all([shape(this%body)==shape(rhs%body))")
+    allocate(distance%body, mold=this%body)
+
+    if (allocated(this%header) .and. allocated(rhs%header)) &
+      distance%header = "dist(" // this%header // "," // rhs%header // ")"
+
+    block
+      integer row, col
+      integer, parameter :: window=4, time=1
+
+      associate(rows => size(distance%body,1), cols => size(distance%body,2))
+        do concurrent(row=1:rows, col=1:cols)
+          associate(first_row => max(1, row-window), last_row=>min(row+window, rows))
+            distance%body(row,col) = minval(hypot( &
+              this%body(first_row:last_row, time) - rhs%body(row, time), &
+              this%body(first_row:last_row,  col) - rhs%body(row,  col) &
+            ))
+          end associate
+        end do
+      end associate
+
+    end block
+
+  end procedure
+
+  module procedure max_filtered_normalized_distance
+
+    integer, parameter :: mdotos_column=4, thrust_column=5
+    real(rkind), allocatable :: rhs_filtered(:,:)
+    type(results_t) distance
+
+    distance = this%distance(rhs)
+
+    rhs_filtered = rhs%body
+
+    associate( &
+     thrust_noise_threshold => 0.01*maxval(rhs%body(:,thrust_column)), &
+     mdotos_noise_threshold => 0.01*maxval(rhs%body(:,mdotos_column)) &
+    )
+      where(rhs_filtered(:,thrust_column) < thrust_noise_threshold) rhs_filtered(:,thrust_column) = 0._rkind
+      where(rhs_filtered(:,mdotos_column) < mdotos_noise_threshold) rhs_filtered(:,mdotos_column) = 0._rkind
+    end associate
+
+    where(rhs_filtered/=0._rkind)
+      distance%body = distance%body/rhs_filtered
+    elsewhere
+      distance%body = 0.
+    end where
+
+    max_filtered_normalized_distance = maxval(distance%body)
+
+  end procedure
+
 end submodule results_implementation
