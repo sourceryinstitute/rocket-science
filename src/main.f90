@@ -60,8 +60,8 @@ contains
 
     interface
      function legacy_rocket(input_file)
-       use results_interface, only : results_t
-        implicit none
+       import results_t
+       implicit none
        character(len=*), intent(in) :: input_file
        type(results_t) legacy_rocket
      end function
