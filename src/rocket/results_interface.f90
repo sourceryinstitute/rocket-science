@@ -14,6 +14,8 @@ module results_interface
     procedure :: write_formatted
     procedure :: norm
     procedure :: subtract
+    procedure :: distance
+    procedure :: max_filtered_normalized_distance
   end type
 
   interface results_t
@@ -35,6 +37,13 @@ module results_interface
   end interface
 
   interface
+
+    pure module function  max_filtered_normalized_distance(this, rhs)
+      implicit none
+      class(results_t), intent(in) :: this
+      type(results_t), intent(in) :: rhs
+      real(rkind) max_filtered_normalized_distance
+    end function
 
     module subroutine write_formatted(this, unit, iotype, vlist, iostat, iomsg)
       implicit none
@@ -59,6 +68,14 @@ module results_interface
       class(results_t), intent(in) :: this
       class(oracle), intent(in) :: rhs
       class(oracle), allocatable :: difference
+    end function
+
+    pure module function distance(this, rhs)
+      !! result has components corresponding to subtracting rhs's components fron this object's components
+      implicit none
+      class(results_t), intent(in) :: this
+      type(results_t), intent(in) :: rhs
+      type(results_t) distance
     end function
 
   end interface
