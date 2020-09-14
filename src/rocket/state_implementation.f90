@@ -5,7 +5,6 @@ submodule(state_interface) state_implementation
 contains
 
   module procedure define
-    use gas_interface, only : gas_t
     use assertions_interface, only : assert, max_errmsg_len
     real(rkind) :: temperature_, pressure_
     namelist/state_list/ temperature_, pressure_
@@ -25,10 +24,8 @@ contains
     end block
 
     associate(V => (volume), T => (temperature_), p => (pressure_))
-      associate(R_gas => gas%R_gas(), c_v => gas%c_v())
-        this%mass_ = p*V/(R_gas*T)
-        this%energy_ = this%mass_*c_v*T
-      end associate
+      this%mass_ = p*V/(R_gas*T)
+      this%energy_ = this%mass_*c_v*T
     end associate
   end procedure
 
