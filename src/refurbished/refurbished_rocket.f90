@@ -22,7 +22,7 @@ module refurbished_rocket_module
 contains
 
   subroutine calculate_burn_rate
-    use global_variables
+    use global_variables, only : r, rref, p, pref, n, db, dt
     implicit none
     r=rref*(p/pref)**n ! calculate burn rate
     db=db+r*dt  ! calculate incremental burn distance
@@ -31,7 +31,7 @@ contains
 
   subroutine calculate_surface_area
     ! cylinder burning from id outward and from both ends along the length
-    use global_variables
+    use global_variables, only : surf, pi, db, length, id, od, r, vol, dt
     implicit none
 
     surf=pi*(id+2.0d0*db)*(length-2.0d0*db)+0.5d0*pi*(od**2.0d0-(id+2.0*db)**2.0d0)
@@ -45,7 +45,7 @@ contains
   end subroutine
 
   subroutine calculate_m_dot_generated
-    use global_variables
+    use global_variables, only : mdotgen, edotgen, rhos, r, surf, mdotgen, cp, Tflame
     implicit none
     mdotgen=rhos*r*surf
     edotgen=mdotgen*cp*Tflame
@@ -53,7 +53,7 @@ contains
   end subroutine
 
   subroutine calculate_mass_flow
-     USE global_variables
+     USE global_variables, only : pamb, area, rgas, g, cp, dsigng, edotos, mdotos, p, t
      implicit none
      REAL (8)::mdtx,engyx
      REAL (8)::tx,gx,rx,px,cpx,pcrit,facx,term1,term2,pratio,cstar,ax,hx
@@ -103,33 +103,30 @@ contains
   end subroutine
 
   subroutine calculate_add_mass
-      use global_variables
+      use global_variables, only : mcham, echam, mdotgen, mdotos, edotgen, edotos, dt
       implicit none
       mcham=mcham+(mdotgen-mdotos)*dt
       echam=echam+(edotgen-edotos)*dt
   end subroutine
 
   subroutine calculate_temperature
-      use global_variables
+      use global_variables, only : t, echam, mcham, cv
       implicit none
       t=echam/mcham/cv
   end subroutine
 
   subroutine calculcate_calculate_pressure
-      use global_variables
+      use global_variables, only : p, mcham, rgas, t, vol
       implicit none
       p=mcham*rgas*t/vol
     !  print *,'pt',time,p,t
   end subroutine
 
   subroutine calculate_thrust
-      use global_variables
+      use global_variables, only : thrust, p, pamb, area, cf
       implicit none
       thrust=(p-pamb)*area*cf ! correction to thrust (actual vs vacuum thrust)
   end subroutine
-
-  !!  Main program
-
 
   function refurbished_rocket(input_file)
     !! this is a basic program of a single stage
@@ -139,7 +136,9 @@ contains
 
   use assertions_interface, only : assert, max_errmsg_len
   use results_interface, only : results_t
-  use global_variables
+  use global_variables, only : &
+    dt, tmax, cp, mw, t, p, Tflame, rref, n, id, od, length, rhos, dia, cf, vol, rgas, cv, g, area, pamb, dp, output, db, echam, &
+    mcham, pi, mdotos, nsteps, pref, psipa, ru, time, i, thrust, t
   implicit none
 
   character(len=*), intent(in) :: input_file
