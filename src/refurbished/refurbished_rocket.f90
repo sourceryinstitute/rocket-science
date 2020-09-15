@@ -9,7 +9,7 @@ real(dp), parameter :: RU=8314d0
 real(dp):: cp,cv,g,rgas,mw,vol,dia,cf,id,od,length,rref,rhos,psipa,pref
 real(dp):: db,dt,tmax,Tflame
 real(dp):: thrust, area, r, n, surf,mdotgen,mdotout,edotgen,edotout,energy
-real(dp):: mdotos, edotos, texit, dsigng,pamb,p,t
+real(dp):: mdotos, edotos, texit, pamb,p,t
 real(dp):: mcham,echam,time
 integer nsteps,i
 real(dp), allocatable :: output(:,:)
@@ -21,18 +21,19 @@ module refurbished_rocket_module
 
 contains
 
-  subroutine calculate_burn_rate
-    use global_variables, only : r, rref, p, pref, n, db, dt
-    implicit none
+  subroutine calculate_burn_rate(rref, p, pref, n, dt, r, db)
+    use global_variables, only : dp
+    real(dp), intent(in) :: rref, p, pref, n, dt
+    real(dp), intent(inout) :: r, db
     r=rref*(p/pref)**n ! calculate burn rate
     db=db+r*dt  ! calculate incremental burn distance
-    !print * , 'i,r',i,r
   end subroutine
 
-  subroutine calculate_surface_area
+  subroutine calculate_surface_area(db, length, id, od, dt, r, surf, vol )
     ! cylinder burning from id outward and from both ends along the length
-    use global_variables, only : surf, pi, db, length, id, od, r, vol, dt
-    implicit none
+    use global_variables, only : dp, pi
+    real(dp), intent(in) :: db, length, id, od, dt
+    real(dp), intent(out) :: r, surf, vol
 
     surf=pi*(id+2.0d0*db)*(length-2.0d0*db)+0.5d0*pi*(od**2.0d0-(id+2.0*db)**2.0d0)
 
@@ -44,20 +45,23 @@ contains
   vol=vol+r*surf*dt ! increment the interior volume of the chamber a little
   end subroutine
 
-  subroutine calculate_m_dot_generated
-    use global_variables, only : mdotgen, edotgen, rhos, r, surf, mdotgen, cp, Tflame
-    implicit none
+  subroutine calculate_m_dot_generated(rhos, r, surf, cp, Tflame, mdotgen, edotgen)
+    use global_variables, only : dp
+    real(dp), intent(in) :: rhos, r, surf, cp, Tflame
+    real(dp), intent(out) :: mdotgen, edotgen
+
     mdotgen=rhos*r*surf
     edotgen=mdotgen*cp*Tflame
-    !print *,'mgen,egen',mdotgen,edotgen
   end subroutine
 
-  subroutine calculate_mass_flow
-     USE global_variables, only : pamb, area, rgas, g, cp, dsigng, edotos, mdotos, p, t
-     implicit none
-     REAL (8)::mdtx,engyx
-     REAL (8)::tx,gx,rx,px,cpx,pcrit,facx,term1,term2,pratio,cstar,ax,hx
-     REAL (8):: p1,p2
+  subroutine calculate_mass_flow(pamb, area, rgas, g, cp, edotos, mdotos, p, t)
+     USE global_variables, only : dp
+     real(dp), intent(in) :: pamb, area, rgas, g, cp, p, t
+     real(dp), intent(out) :: edotos, mdotos
+
+     REAL (dp)::mdtx,engyx, dsigng
+     REAL (dp)::tx,gx,rx,px,cpx,pcrit,facx,term1,term2,pratio,cstar,ax,hx
+     REAL (dp):: p1,p2
 
      mdotos=0.
      edotos=0.  ! initially set them to zero prior to running this loop
@@ -102,29 +106,32 @@ contains
       edotos=engyx*dsigng ! exiting enthalpy
   end subroutine
 
-  subroutine calculate_add_mass
-      use global_variables, only : mcham, echam, mdotgen, mdotos, edotgen, edotos, dt
-      implicit none
+  subroutine add_mass(mdotgen, mdotos, edotgen, edotos, dt, mcham, echam)
+      use global_variables, only : dp
+      real(dp), intent(in) :: mdotgen, mdotos, edotgen, edotos, dt
+      real(dp), intent(inout) :: mcham, echam
       mcham=mcham+(mdotgen-mdotos)*dt
       echam=echam+(edotgen-edotos)*dt
   end subroutine
 
-  subroutine calculate_temperature
-      use global_variables, only : t, echam, mcham, cv
-      implicit none
-      t=echam/mcham/cv
+  subroutine calculate_temperature(echam, mcham, cv, t)
+     use global_variables, only : dp
+     real(dp), intent(in) :: echam, mcham, cv
+     real(dp), intent(out) :: t
+     t=echam/mcham/cv
   end subroutine
 
-  subroutine calculcate_calculate_pressure
-      use global_variables, only : p, mcham, rgas, t, vol
-      implicit none
+  subroutine calculcate_pressure(mcham, rgas, t, vol, p)
+      use global_variables, only : dp
+      real(dp), intent(in) :: mcham, rgas, t, vol
+      real(dp), intent(out) :: p
       p=mcham*rgas*t/vol
-    !  print *,'pt',time,p,t
   end subroutine
 
-  subroutine calculate_thrust
-      use global_variables, only : thrust, p, pamb, area, cf
-      implicit none
+  subroutine calculate_thrust(p, pamb, area, cf, thrust)
+      use global_variables, only : dp
+      real(dp), intent(in) :: p, pamb, area, cf
+      real(dp), intent(out) :: thrust
       thrust=(p-pamb)*area*cf ! correction to thrust (actual vs vacuum thrust)
   end subroutine
 
@@ -132,14 +139,13 @@ contains
     !! this is a basic program of a single stage
     !! rocket motor flowing out of a nozzle, assuming
     !! a thrust coefficient and ignoring the complexities of
-    !! what happens to thrust at low calculcate_calculate_pressures, i.e. shock in the nozzle
+    !! what happens to thrust at low pressures, i.e. shock in the nozzle
 
   use assertions_interface, only : assert, max_errmsg_len
   use results_interface, only : results_t
   use global_variables, only : &
     dt, tmax, cp, mw, t, p, Tflame, rref, n, id, od, length, rhos, dia, cf, vol, rgas, cv, g, area, pamb, dp, output, db, echam, &
-    mcham, pi, mdotos, nsteps, pref, psipa, ru, time, i, thrust, t
-  implicit none
+    mcham, pi, edotos, mdotos, nsteps, pref, psipa, ru, time, i, thrust, t, r, surf, mdotgen, edotgen
 
   character(len=*), intent(in) :: input_file
   type(results_t) refurbished_rocket
@@ -203,7 +209,7 @@ contains
 
     ! propellant burn rate information
     psipa=6894.76d0 ! pascals per psi (constant)
-    pref=3000d0*psipa ! reference calculcate_calculate_pressure (constant)
+    pref=3000d0*psipa ! reference calculcate_pressure (constant)
     db=0d0 ! initial burn distance
 
     nsteps=nint(tmax/dt) ! number of time steps
@@ -223,7 +229,7 @@ contains
 
     area=pi/4d0*dia**2.0d0 ! nozzle area
 
-    pamb=101325d0 ! atmospheric calculcate_calculate_pressure
+    pamb=101325d0 ! atmospheric calculcate_pressure
 
   !  calculate initial mass and energy in the chamber
     mcham=p*vol/rgas/t  ! use ideal gas law to determine mass in chamber
@@ -234,14 +240,15 @@ contains
     output(0,:)=[time,p,t,mdotos,thrust,vol]
 
     do i=1,nsteps
-     call calculate_burn_rate
-     call calculate_surface_area
-     call calculate_m_dot_generated  ! [mdot,engy,dsign]= calculate_mass_flow(p1,pamb,t1,tamb,cp,cp,rgas,rgas,g,g,area)
-     call calculate_add_mass
-     call calculate_temperature
-     call calculcate_calculate_pressure
-     call calculate_mass_flow
-     call calculate_thrust
+     call calculate_burn_rate(rref, p, pref, n, dt, r, db)
+     call calculate_surface_area(db, length, id, od, dt, r, surf, vol)
+     call calculate_m_dot_generated(rhos, r, surf, cp, Tflame, mdotgen, edotgen)
+       ! [mdot,engy,dsign]= calculate_mass_flow(p1,pamb,t1,tamb,cp,cp,rgas,rgas,g,g,area)
+     call add_mass(mdotgen, mdotos, edotgen, edotos, dt, mcham, echam)
+     call calculate_temperature(echam, mcham, cv, t)
+     call calculcate_pressure(mcham, rgas, t, vol, p)
+     call calculate_mass_flow(pamb, area, rgas, g, cp, edotos, mdotos, p, t)
+     call calculate_thrust(p, pamb, area, cf, thrust)
      time=time+dt
      output(i,:)=[time,p,t,mdotos,thrust,vol]
     enddo
