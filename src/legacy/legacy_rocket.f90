@@ -1,4 +1,3 @@
-
 module mod1
 implicit none
 save

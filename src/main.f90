@@ -55,6 +55,7 @@ contains
 
   subroutine write_and_verify_results
     use results_interface, only : results_t
+    use refurbished_rocket_module, only : refurbished_rocket
     character(len=*), parameter :: header(*) = &
         [character(len=len("temperature")) :: "time", "pressure", "temperature", "mdotos", "thrust", "volume"]
 
@@ -67,17 +68,20 @@ contains
      end function
    end interface
 
-    associate(modern_results => results_t(header, motor%derived_variables(history)))
-      associate(legacy_results => legacy_rocket(input_file))
-        call write_history(modern_results, "rocket.out")
-        call write_history(legacy_results, "legacy_rocket.out")
-        block
-          use assertions_interface, only : assert
-          real(rkind), parameter :: tolerance = 0.01_rkind
-          call assert(modern_results%max_filtered_normalized_distance(legacy_results) < tolerance, &
-                     "modern_results%max_filtered_normalized_distance(legacy_results)")
-        end block
-      end associate
+    associate( &
+      modern_results => results_t(header, motor%derived_variables(history)), &
+      legacy_results => legacy_rocket(input_file), &
+      refurbished_results => refurbished_rocket(input_file) &
+    )
+      call write_history(modern_results, "rocket.out")
+      call write_history(legacy_results, "legacy_rocket.out")
+      call write_history(refurbished_results, "refurbished_rocket.out")
+      block
+        use assertions_interface, only : assert
+        real(rkind), parameter :: tolerance = 0.01_rkind
+        call assert(modern_results%max_filtered_normalized_distance(legacy_results) < tolerance, &
+                   "modern_results%max_filtered_normalized_distance(legacy_results)")
+      end block
     end associate
   end subroutine
 
