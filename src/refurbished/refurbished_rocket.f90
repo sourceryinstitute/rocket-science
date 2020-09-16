@@ -7,8 +7,8 @@ real(dp), parameter :: pi=3.1415926539
 real(dp), parameter :: RU=8314d0
 
 real(dp):: cp,cv,g,rgas,mw,vol,dia,cf,id,od,length,rref,rhos,psipa,pref
-real(dp):: db,dt,tmax,Tflame
-real(dp):: thrust, area, r, n, surf,mdotgen,mdotout,edotgen,edotout,energy
+real(dp):: dt,tmax,Tflame
+real(dp):: thrust, area, n, surf,mdotgen,mdotout,edotgen,edotout,energy
 real(dp):: mdotos, edotos, texit, pamb,p,t
 real(dp):: mcham,echam,time
 integer nsteps,i
@@ -16,42 +16,124 @@ real(dp), allocatable :: output(:,:)
 
 end module
 
+module burn_state_interface
+  use global_variables, only : dp
+  implicit none
+
+  private
+
+  type, public :: burn_state_t
+    private
+    real(dp):: r_, db_
+  contains
+    procedure :: set_db
+    procedure :: set_r
+    procedure :: r
+    procedure :: db
+    procedure :: calculate_burn_rate
+  end type
+
+  interface
+
+    module subroutine calculate_burn_rate(this, rref, p, pref, n, dt)
+      implicit none
+      class(burn_state_t), intent(inout) :: this
+      real(dp), intent(in) :: rref, p, pref, n, dt
+    end subroutine
+
+    module subroutine set_db(this, db)
+      implicit none
+      class(burn_state_t), intent(inout) :: this
+      real(dp), intent(in) :: db
+    end subroutine
+
+    module subroutine set_r(this, r)
+      implicit none
+      class(burn_state_t), intent(inout) :: this
+      real(dp), intent(in) :: r
+    end subroutine
+
+    pure module function db(this)
+      implicit none
+      class(burn_state_t), intent(in) :: this
+      real(dp) db
+    end function
+
+    pure module function r(this)
+      implicit none
+      class(burn_state_t), intent(in) :: this
+      real(dp) r
+    end function
+
+  end interface
+
+end module
+
+submodule(burn_state_interface) burn_state_implementation
+  implicit none
+contains
+
+  module procedure calculate_burn_rate
+    this%r_ = rref*(p/pref)**n ! calculate burn rate
+    this%db_ = this%db_+this%r_*dt  ! calculate incremental burn distance
+  end procedure
+
+  module procedure set_r
+    this%r_ = r
+  end procedure
+
+  module procedure set_db
+    this%db_ = db
+  end procedure
+
+  module procedure db
+    db = this%db_
+  end procedure
+
+  module procedure r
+    r = this%r_
+  end procedure
+
+end submodule
+
 module refurbished_rocket_module
   implicit none
 
 contains
 
-  subroutine calculate_burn_rate(rref, p, pref, n, dt, r, db)
-    use global_variables, only : dp
-    real(dp), intent(in) :: rref, p, pref, n, dt
-    real(dp), intent(inout) :: r, db
-    r=rref*(p/pref)**n ! calculate burn rate
-    db=db+r*dt  ! calculate incremental burn distance
-  end subroutine
-
-  subroutine calculate_surface_area(db, length, id, od, dt, r, surf, vol )
+  subroutine calculate_surface_area(burn_state, length, id, od, dt, surf, vol )
     ! cylinder burning from id outward and from both ends along the length
     use global_variables, only : dp, pi
-    real(dp), intent(in) :: db, length, id, od, dt
-    real(dp), intent(out) :: r, surf, vol
+    use burn_state_interface, only : burn_state_t
+    real(dp), intent(in) :: length, id, od, dt
+    real(dp), intent(out) :: surf, vol
+    type(burn_state_t), intent(inout) :: burn_state
 
-    surf=pi*(id+2.0d0*db)*(length-2.0d0*db)+0.5d0*pi*(od**2.0d0-(id+2.0*db)**2.0d0)
+    associate(db => burn_state%db())
+      surf=pi*(id+2.0d0*db)*(length-2.0d0*db)+0.5d0*pi*(od**2.0d0-(id+2.0*db)**2.0d0)
 
-    if(id+2d0*db.gt.od.or.db.gt.length/2d0) THEN
-       surf=0d0  ! we hit the wall and burned out
-       r=0  ! turn off burn rate so burn distance stops increasing
-     endif
+      if(id+2d0*db.gt.od.or.db.gt.length/2d0) THEN
+         surf=0d0  ! we hit the wall and burned out
+         call burn_state%set_r(0._dp)  ! turn off burn rate so burn distance stops increasing
+       endif
 
-  vol=vol+r*surf*dt ! increment the interior volume of the chamber a little
+      associate(r => burn_state%r())
+        vol=vol+r*surf*dt ! increment the interior volume of the chamber a little
+      end associate
+    end associate
   end subroutine
 
-  subroutine calculate_m_dot_generated(rhos, r, surf, cp, Tflame, mdotgen, edotgen)
+  subroutine calculate_m_dot_generated(burn_state, rhos, surf, cp, Tflame, mdotgen, edotgen)
     use global_variables, only : dp
-    real(dp), intent(in) :: rhos, r, surf, cp, Tflame
+    use burn_state_interface , only : burn_state_t
+    real(dp), intent(in) :: rhos, surf, cp, Tflame
     real(dp), intent(out) :: mdotgen, edotgen
+    type(burn_state_t), intent(in) :: burn_state
 
-    mdotgen=rhos*r*surf
-    edotgen=mdotgen*cp*Tflame
+    associate(r=>burn_state%r())
+      mdotgen=rhos*r*surf
+      edotgen=mdotgen*cp*Tflame
+    end associate
   end subroutine
 
   subroutine calculate_mass_flow(pamb, area, rgas, g, cp, edotos, mdotos, p, t)
@@ -144,8 +226,11 @@ contains
   use assertions_interface, only : assert, max_errmsg_len
   use results_interface, only : results_t
   use global_variables, only : &
-    dt, tmax, cp, mw, t, p, Tflame, rref, n, id, od, length, rhos, dia, cf, vol, rgas, cv, g, area, pamb, dp, output, db, echam, &
-    mcham, pi, edotos, mdotos, nsteps, pref, psipa, ru, time, i, thrust, t, r, surf, mdotgen, edotgen
+    dt, tmax, cp, mw, t, p, Tflame, rref, n, id, od, length, rhos, dia, cf, vol, rgas, cv, g, area, pamb, dp, output, echam, &
+    mcham, pi, edotos, mdotos, nsteps, pref, psipa, ru, time, i, thrust, t, surf, mdotgen, edotgen
+  use burn_state_interface, only : burn_state_t
+
+  type(burn_state_t) burn_state
 
   character(len=*), intent(in) :: input_file
   type(results_t) refurbished_rocket
@@ -210,7 +295,7 @@ contains
     ! propellant burn rate information
     psipa=6894.76d0 ! pascals per psi (constant)
     pref=3000d0*psipa ! reference calculcate_pressure (constant)
-    db=0d0 ! initial burn distance
+    call burn_state%set_db(0d0) ! initial burn distance
 
     nsteps=nint(tmax/dt) ! number of time steps
 
@@ -240,9 +325,9 @@ contains
     output(0,:)=[time,p,t,mdotos,thrust,vol]
 
     do i=1,nsteps
-     call calculate_burn_rate(rref, p, pref, n, dt, r, db)
-     call calculate_surface_area(db, length, id, od, dt, r, surf, vol)
-     call calculate_m_dot_generated(rhos, r, surf, cp, Tflame, mdotgen, edotgen)
+     call burn_state%calculate_burn_rate(rref, p, pref, n, dt)
+     call calculate_surface_area(burn_state, length, id, od, dt, surf, vol)
+     call calculate_m_dot_generated(burn_state, rhos, surf, cp, Tflame, mdotgen, edotgen)
        ! [mdot,engy,dsign]= calculate_mass_flow(p1,pamb,t1,tamb,cp,cp,rgas,rgas,g,g,area)
      call add_mass(mdotgen, mdotos, edotgen, edotos, dt, mcham, echam)
      call calculate_temperature(echam, mcham, cv, t)
