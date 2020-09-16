@@ -8,7 +8,7 @@ real(dp), parameter :: RU=8314d0
 
 real(dp):: cp,cv,g,rgas,mw,dia,cf,id,od,length,rref,rhos,psipa,pref
 real(dp):: dt,tmax,Tflame
-real(dp):: thrust, area, n, mdotgen,mdotout,edotgen,edotout,energy
+real(dp):: thrust, area, n, mdotout,edotout,energy
 real(dp):: mdotos, edotos, texit, pamb,p,t
 real(dp):: mcham,echam,time
 integer nsteps,i
@@ -193,23 +193,96 @@ contains
 
 end submodule
 
+module generation_rate_interface
+  use global_variables, only : dp
+  implicit none
+
+  private
+
+  type, public :: generation_rate_t
+    private
+    real(dp):: edotgen_, mdotgen_
+  contains
+    procedure :: set_mdotgen
+    procedure :: set_edotgen
+    procedure :: edotgen
+    procedure :: mdotgen
+    procedure :: calculate_m_dot_generated
+  end type
+
+  interface
+
+    module subroutine calculate_m_dot_generated(this, burn_state, geometry, rhos, cp, Tflame)
+      use global_variables, only : dp
+      use burn_state_interface , only : burn_state_t
+      use geometry_interface , only : geometry_t
+      class(generation_rate_t), intent(inout) :: this
+      type(burn_state_t), intent(in) :: burn_state
+      type(geometry_t), intent(in) :: geometry
+      real(dp), intent(in) :: rhos, cp, Tflame
+    end subroutine
+
+    module subroutine set_mdotgen(this, mdotgen)
+      implicit none
+      class(generation_rate_t), intent(inout) :: this
+      real(dp), intent(in) :: mdotgen
+    end subroutine
+
+    module subroutine set_edotgen(this, edotgen)
+      implicit none
+      class(generation_rate_t), intent(inout) :: this
+      real(dp), intent(in) :: edotgen
+    end subroutine
+
+    pure module function mdotgen(this)
+      implicit none
+      class(generation_rate_t), intent(in) :: this
+      real(dp) mdotgen
+    end function
+
+    pure module function edotgen(this)
+      implicit none
+      class(generation_rate_t), intent(in) :: this
+      real(dp) edotgen
+    end function
+
+  end interface
+
+end module
+
+submodule(generation_rate_interface) generation_rate_implementation
+  implicit none
+contains
+
+   module procedure calculate_m_dot_generated
+    associate(r=>burn_state%r(), surf => geometry%surf())
+      this%mdotgen_ = rhos*r*surf
+      this%edotgen_ = this%mdotgen_*cp*Tflame
+    end associate
+  end procedure
+
+  module procedure set_mdotgen
+    this%mdotgen_ = mdotgen
+  end procedure
+
+  module procedure set_edotgen
+    this%edotgen_ = edotgen
+  end procedure
+
+  module procedure edotgen
+    edotgen = this%edotgen_
+  end procedure
+
+  module procedure mdotgen
+    mdotgen = this%mdotgen_
+  end procedure
+
+end submodule
+
 module refurbished_rocket_module
   implicit none
 
 contains
-
-  subroutine calculate_m_dot_generated(burn_state, rhos, surf, cp, Tflame, mdotgen, edotgen)
-    use global_variables, only : dp
-    use burn_state_interface , only : burn_state_t
-    real(dp), intent(in) :: rhos, surf, cp, Tflame
-    real(dp), intent(out) :: mdotgen, edotgen
-    type(burn_state_t), intent(in) :: burn_state
-
-    associate(r=>burn_state%r())
-      mdotgen=rhos*r*surf
-      edotgen=mdotgen*cp*Tflame
-    end associate
-  end subroutine
 
   subroutine calculate_mass_flow(pamb, area, rgas, g, cp, edotos, mdotos, p, t)
      USE global_variables, only : dp
@@ -263,12 +336,16 @@ contains
       edotos=engyx*dsigng ! exiting enthalpy
   end subroutine
 
-  subroutine add_mass(mdotgen, mdotos, edotgen, edotos, dt, mcham, echam)
+  subroutine add_mass(generation_rate, mdotos, edotos, dt, mcham, echam)
       use global_variables, only : dp
-      real(dp), intent(in) :: mdotgen, mdotos, edotgen, edotos, dt
+      use generation_rate_interface, only : generation_rate_t
+      type(generation_rate_t), intent(in) :: generation_rate
+      real(dp), intent(in) :: mdotos, edotos, dt
       real(dp), intent(inout) :: mcham, echam
-      mcham=mcham+(mdotgen-mdotos)*dt
-      echam=echam+(edotgen-edotos)*dt
+      associate(mdotgen => generation_rate%mdotgen(), edotgen => generation_rate%edotgen())
+        mcham=mcham+(mdotgen-mdotos)*dt
+        echam=echam+(edotgen-edotos)*dt
+      end associate
   end subroutine
 
   subroutine calculate_temperature(echam, mcham, cv, t)
@@ -302,12 +379,14 @@ contains
   use results_interface, only : results_t
   use global_variables, only : &
     dt, tmax, cp, mw, t, p, Tflame, rref, n, id, od, length, rhos, dia, cf, rgas, cv, g, area, pamb, dp, output, echam, &
-    mcham, pi, edotos, mdotos, nsteps, pref, psipa, ru, time, i, thrust, t, mdotgen, edotgen
+    mcham, pi, edotos, mdotos, nsteps, pref, psipa, ru, time, i, thrust, t
   use burn_state_interface, only : burn_state_t
   use geometry_interface, only : geometry_t
+  use generation_rate_interface, only : generation_rate_t
 
   type(burn_state_t) burn_state
   type(geometry_t) geometry
+  type(generation_rate_t) generation_rate
 
   character(len=*), intent(in) :: input_file
   type(results_t) refurbished_rocket
@@ -404,9 +483,8 @@ contains
     do i=1,nsteps
      call burn_state%calculate_burn_rate(rref, p, pref, n, dt)
      call geometry%calculate_surface_area(burn_state, length, id, od, dt)
-     call calculate_m_dot_generated(burn_state, rhos, geometry%surf(), cp, Tflame, mdotgen, edotgen)
-       ! [mdot,engy,dsign]= calculate_mass_flow(p1,pamb,t1,tamb,cp,cp,rgas,rgas,g,g,area)
-     call add_mass(mdotgen, mdotos, edotgen, edotos, dt, mcham, echam)
+     call generation_rate%calculate_m_dot_generated(burn_state, geometry, rhos, cp, Tflame)
+     call add_mass(generation_rate, mdotos, edotos, dt, mcham, echam)
      call calculate_temperature(echam, mcham, cv, t)
      call calculcate_pressure(mcham, rgas, t, geometry%vol(), p)
      call calculate_mass_flow(pamb, area, rgas, g, cp, edotos, mdotos, p, t)
