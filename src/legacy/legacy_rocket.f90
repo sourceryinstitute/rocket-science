@@ -5,12 +5,13 @@ integer, parameter :: precision=15, range=307
 integer, parameter :: dp = selected_real_kind(precision, range)
 real(dp), parameter :: pi=3.1415926539
 real(dp), parameter :: RU=8314d0
+real(dp), parameter :: zero=0._dp, one=1._dp
 
-real(dp):: cp,cv,g,rgas,mw,vol,dia,cf,id,od,length,rref,rhos,psipa,pref
-real(dp):: db,dt,tmax,Tflame
-real(dp):: thrust, area, r, n, surf,mdotgen,mdotout,edotgen,edotout,energy
-real(dp):: mdotos, edotos, texit, dsigng,pamb,p,t
-real(dp):: mcham,echam,time
+real(dp):: cp,cv,g,rgas,mw,vol=one,dia,cf,id,od,length,rref,rhos,psipa,pref
+real(dp):: db=zero,dt,tmax,Tflame
+real(dp):: thrust=zero, area, r, n, surf,mdotgen,mdotout,edotgen,edotout,energy
+real(dp):: mdotos=zero, edotos, texit, dsigng,pamb,p,t
+real(dp):: mcham,echam,time=zero
 integer nsteps,i
 real(dp), allocatable :: output(:,:)
 
@@ -190,8 +191,6 @@ cf  = C_f_
 
 close(file_unit)
 
-! define geometry
-  vol= 1.0d0 ! cubic meters
 
 !  propellent grain is a cylinder burning radially outward and axially inward.
 ! outer diameter is inhibited because this is a cast propellent: it was poured
@@ -200,15 +199,12 @@ close(file_unit)
   ! propellant burn rate information
   psipa=6894.76d0 ! pascals per psi (constant)
   pref=3000d0*psipa ! reference pressure (constant)
-  db=0d0 ! initial burn distance
 
   nsteps=nint(tmax/dt) ! number of time steps
 
 ! preallocate an output file for simulation infomration
   allocate(output(0:nsteps,6))
-  output=0d0 ! initialize to zero
 
-  thrust=0d0
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 
 !! now begin calculating and initializing
@@ -225,18 +221,16 @@ close(file_unit)
   mcham=p*vol/rgas/t  ! use ideal gas law to determine mass in chamber
   echam=mcham*cv*t ! initial internal energy in chamber
 
-  time=0d0
-
   output(0,:)=[time,p,t,mdotos,thrust,vol]
 
   do i=1,nsteps
    call burnrate
    call calcsurf
    call calmdotgen  ! [mdot,engy,dsign]= massflow(p1,pamb,t1,tamb,cp,cp,rgas,rgas,g,g,area)
+   call massflow
    call addmass
    call calct
    call calcp
-   call massflow
    call calcthrust
    time=time+dt
    output(i,:)=[time,p,t,mdotos,thrust,vol]
