@@ -107,7 +107,6 @@ module geometry_interface
     real(dp):: surf_, vol_
   contains
     procedure :: set_vol
-    procedure :: set_surf
     procedure :: surf
     procedure :: vol
     procedure :: calculate_surface_area
@@ -129,12 +128,6 @@ module geometry_interface
       implicit none
       class(geometry_t), intent(inout) :: this
       real(dp), intent(in) :: vol
-    end subroutine
-
-    module subroutine set_surf(this, surf)
-      implicit none
-      class(geometry_t), intent(inout) :: this
-      real(dp), intent(in) :: surf
     end subroutine
 
     pure module function vol(this)
@@ -173,10 +166,6 @@ contains
       end associate
     end associate
 
-  end procedure
-
-  module procedure set_surf
-    this%surf_ = surf
   end procedure
 
   module procedure set_vol
