@@ -6,9 +6,9 @@ integer, parameter :: dp = selected_real_kind(precision, range)
 real(dp), parameter :: pi=3.1415926539
 real(dp), parameter :: RU=8314d0
 
-real(dp):: cp,cv,g,rgas,mw,vol,dia,cf,id,od,length,rref,rhos,psipa,pref
+real(dp):: cp,cv,g,rgas,mw,dia,cf,id,od,length,rref,rhos,psipa,pref
 real(dp):: dt,tmax,Tflame
-real(dp):: thrust, area, n, surf,mdotgen,mdotout,edotgen,edotout,energy
+real(dp):: thrust, area, n, mdotgen,mdotout,edotgen,edotout,energy
 real(dp):: mdotos, edotos, texit, pamb,p,t
 real(dp):: mcham,echam,time
 integer nsteps,i
@@ -96,32 +96,107 @@ contains
 
 end submodule
 
-module refurbished_rocket_module
+module geometry_interface
+  use global_variables, only : dp
   implicit none
 
+  private
+
+  type, public :: geometry_t
+    private
+    real(dp):: surf_, vol_
+  contains
+    procedure :: set_vol
+    procedure :: set_surf
+    procedure :: surf
+    procedure :: vol
+    procedure :: calculate_surface_area
+  end type
+
+  interface
+
+    module subroutine calculate_surface_area(this, burn_state, length, id, od, dt)
+      ! cylinder burning from id outward and from both ends along the length
+      use global_variables, only : dp
+      use burn_state_interface, only : burn_state_t
+      implicit none
+      class(geometry_t), intent(inout) :: this
+      type(burn_state_t), intent(inout) :: burn_state
+      real(dp), intent(in) :: length, id, od, dt
+    end subroutine
+
+    module subroutine set_vol(this, vol)
+      implicit none
+      class(geometry_t), intent(inout) :: this
+      real(dp), intent(in) :: vol
+    end subroutine
+
+    module subroutine set_surf(this, surf)
+      implicit none
+      class(geometry_t), intent(inout) :: this
+      real(dp), intent(in) :: surf
+    end subroutine
+
+    pure module function vol(this)
+      implicit none
+      class(geometry_t), intent(in) :: this
+      real(dp) vol
+    end function
+
+    pure module function surf(this)
+      implicit none
+      class(geometry_t), intent(in) :: this
+      real(dp) surf
+    end function
+
+  end interface
+
+end module
+
+submodule(geometry_interface) geometry_implementation
+  implicit none
 contains
 
-  subroutine calculate_surface_area(burn_state, length, id, od, dt, surf, vol )
-    ! cylinder burning from id outward and from both ends along the length
+  module procedure calculate_surface_area
     use global_variables, only : dp, pi
-    use burn_state_interface, only : burn_state_t
-    real(dp), intent(in) :: length, id, od, dt
-    real(dp), intent(out) :: surf, vol
-    type(burn_state_t), intent(inout) :: burn_state
 
     associate(db => burn_state%db())
-      surf=pi*(id+2.0d0*db)*(length-2.0d0*db)+0.5d0*pi*(od**2.0d0-(id+2.0*db)**2.0d0)
+      this%surf_=pi*(id+2.0d0*db)*(length-2.0d0*db)+0.5d0*pi*(od**2.0d0-(id+2.0*db)**2.0d0)
 
       if(id+2d0*db.gt.od.or.db.gt.length/2d0) THEN
-         surf=0d0  ! we hit the wall and burned out
+         this%surf_=0d0  ! we hit the wall and burned out
          call burn_state%set_r(0._dp)  ! turn off burn rate so burn distance stops increasing
        endif
 
       associate(r => burn_state%r())
-        vol=vol+r*surf*dt ! increment the interior volume of the chamber a little
+        this%vol_=this%vol_+r*this%surf_*dt ! increment the interior volume of the chamber a little
       end associate
     end associate
-  end subroutine
+
+  end procedure
+
+  module procedure set_surf
+    this%surf_ = surf
+  end procedure
+
+  module procedure set_vol
+    this%vol_ = vol
+  end procedure
+
+  module procedure vol
+    vol = this%vol_
+  end procedure
+
+  module procedure surf
+    surf = this%surf_
+  end procedure
+
+end submodule
+
+module refurbished_rocket_module
+  implicit none
+
+contains
 
   subroutine calculate_m_dot_generated(burn_state, rhos, surf, cp, Tflame, mdotgen, edotgen)
     use global_variables, only : dp
@@ -226,11 +301,13 @@ contains
   use assertions_interface, only : assert, max_errmsg_len
   use results_interface, only : results_t
   use global_variables, only : &
-    dt, tmax, cp, mw, t, p, Tflame, rref, n, id, od, length, rhos, dia, cf, vol, rgas, cv, g, area, pamb, dp, output, echam, &
-    mcham, pi, edotos, mdotos, nsteps, pref, psipa, ru, time, i, thrust, t, surf, mdotgen, edotgen
+    dt, tmax, cp, mw, t, p, Tflame, rref, n, id, od, length, rhos, dia, cf, rgas, cv, g, area, pamb, dp, output, echam, &
+    mcham, pi, edotos, mdotos, nsteps, pref, psipa, ru, time, i, thrust, t, mdotgen, edotgen
   use burn_state_interface, only : burn_state_t
+  use geometry_interface, only : geometry_t
 
   type(burn_state_t) burn_state
+  type(geometry_t) geometry
 
   character(len=*), intent(in) :: input_file
   type(results_t) refurbished_rocket
@@ -286,7 +363,7 @@ contains
   close(file_unit)
 
   ! define geometry
-    vol= 1.0d0 ! cubic meters
+    call geometry%set_vol(1.0d0) ! cubic meters
 
   !  propellent grain is a cylinder burning radially outward and axially inward.
   ! outer diameter is inhibited because this is a cast propellent: it was poured
@@ -317,25 +394,25 @@ contains
     pamb=101325d0 ! atmospheric calculcate_pressure
 
   !  calculate initial mass and energy in the chamber
-    mcham=p*vol/rgas/t  ! use ideal gas law to determine mass in chamber
+    mcham=p*geometry%vol()/rgas/t  ! use ideal gas law to determine mass in chamber
     echam=mcham*cv*t ! initial internal energy in chamber
 
     time=0d0
 
-    output(0,:)=[time,p,t,mdotos,thrust,vol]
+    output(0,:)=[time,p,t,mdotos,thrust,geometry%vol()]
 
     do i=1,nsteps
      call burn_state%calculate_burn_rate(rref, p, pref, n, dt)
-     call calculate_surface_area(burn_state, length, id, od, dt, surf, vol)
-     call calculate_m_dot_generated(burn_state, rhos, surf, cp, Tflame, mdotgen, edotgen)
+     call geometry%calculate_surface_area(burn_state, length, id, od, dt)
+     call calculate_m_dot_generated(burn_state, rhos, geometry%surf(), cp, Tflame, mdotgen, edotgen)
        ! [mdot,engy,dsign]= calculate_mass_flow(p1,pamb,t1,tamb,cp,cp,rgas,rgas,g,g,area)
      call add_mass(mdotgen, mdotos, edotgen, edotos, dt, mcham, echam)
      call calculate_temperature(echam, mcham, cv, t)
-     call calculcate_pressure(mcham, rgas, t, vol, p)
+     call calculcate_pressure(mcham, rgas, t, geometry%vol(), p)
      call calculate_mass_flow(pamb, area, rgas, g, cp, edotos, mdotos, p, t)
      call calculate_thrust(p, pamb, area, cf, thrust)
      time=time+dt
-     output(i,:)=[time,p,t,mdotos,thrust,vol]
+     output(i,:)=[time,p,t,mdotos,thrust,geometry%vol()]
     enddo
 
     block
