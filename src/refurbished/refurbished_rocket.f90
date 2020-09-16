@@ -5,12 +5,13 @@ integer, parameter :: precision=15, range=307
 integer, parameter :: dp = selected_real_kind(precision, range)
 real(dp), parameter :: pi=3.1415926539
 real(dp), parameter :: RU=8314d0
+real(dp), parameter :: zero=0._dp, one=1._dp
 
-real(dp):: cp,cv,g,rgas,mw,dia,cf,id,od,length,rref,rhos,psipa,pref
+real(dp):: cp,cv,g,rgas,mw,vol=one,dia,cf,id,od,length,rref,rhos,psipa,pref
 real(dp):: dt,tmax,Tflame
-real(dp):: thrust, area, n, mdotout,edotout,energy
-real(dp):: mdotos, edotos, texit, pamb,p,t
-real(dp):: mcham,echam,time
+real(dp):: thrust=zero, area, n, surf,mdotgen,mdotout,edotgen,edotout,energy
+real(dp):: mdotos=zero, edotos, texit, dsigng,pamb,p,t
+real(dp):: mcham,echam,time=zero
 integer nsteps,i
 real(dp), allocatable :: output(:,:)
 
@@ -24,42 +25,47 @@ module burn_state_interface
 
   type, public :: burn_state_t
     private
-    real(dp):: r_, db_
+    real(dp) r_, db_
   contains
+    procedure :: burnrate
     procedure :: set_db
     procedure :: set_r
-    procedure :: r
     procedure :: db
-    procedure :: calculate_burn_rate
+    procedure :: r
   end type
 
   interface
 
-    module subroutine calculate_burn_rate(this, rref, p, pref, n, dt)
+    module subroutine burnrate(this, rref, p, pref, n, dt)
+      use global_variables, only : dp
       implicit none
       class(burn_state_t), intent(inout) :: this
       real(dp), intent(in) :: rref, p, pref, n, dt
     end subroutine
 
     module subroutine set_db(this, db)
+      use global_variables, only : dp
       implicit none
       class(burn_state_t), intent(inout) :: this
       real(dp), intent(in) :: db
     end subroutine
 
     module subroutine set_r(this, r)
+      use global_variables, only : dp
       implicit none
       class(burn_state_t), intent(inout) :: this
       real(dp), intent(in) :: r
     end subroutine
 
     pure module function db(this)
+      use global_variables, only : dp
       implicit none
       class(burn_state_t), intent(in) :: this
       real(dp) db
     end function
 
     pure module function r(this)
+      use global_variables, only : dp
       implicit none
       class(burn_state_t), intent(in) :: this
       real(dp) r
@@ -73,17 +79,20 @@ submodule(burn_state_interface) burn_state_implementation
   implicit none
 contains
 
-  module procedure calculate_burn_rate
-    this%r_ = rref*(p/pref)**n ! calculate burn rate
-    this%db_ = this%db_+this%r_*dt  ! calculate incremental burn distance
-  end procedure
-
-  module procedure set_r
-    this%r_ = r
+  module procedure burnrate
+    this%r_=rref*(p/pref)**n ! calculate burn rate
+    associate(r => (this%r_))
+      this%db_=this%db_+r*dt  ! calculate incremental burn distance
+    end associate
+    !print * , 'i,r_',i,r
   end procedure
 
   module procedure set_db
     this%db_ = db
+  end procedure
+
+  module procedure set_r
+    this%r_ = r
   end procedure
 
   module procedure db
@@ -96,398 +105,239 @@ contains
 
 end submodule
 
-module geometry_interface
-  use global_variables, only : dp
-  implicit none
-
-  private
-
-  type, public :: geometry_t
-    private
-    real(dp):: surf_, vol_
-  contains
-    procedure :: set_vol
-    procedure :: surf
-    procedure :: vol
-    procedure :: calculate_surface_area
-  end type
-
-  interface
-
-    module subroutine calculate_surface_area(this, burn_state, length, id, od, dt)
-      ! cylinder burning from id outward and from both ends along the length
-      use global_variables, only : dp
-      use burn_state_interface, only : burn_state_t
-      implicit none
-      class(geometry_t), intent(inout) :: this
-      type(burn_state_t), intent(inout) :: burn_state
-      real(dp), intent(in) :: length, id, od, dt
-    end subroutine
-
-    module subroutine set_vol(this, vol)
-      implicit none
-      class(geometry_t), intent(inout) :: this
-      real(dp), intent(in) :: vol
-    end subroutine
-
-    pure module function vol(this)
-      implicit none
-      class(geometry_t), intent(in) :: this
-      real(dp) vol
-    end function
-
-    pure module function surf(this)
-      implicit none
-      class(geometry_t), intent(in) :: this
-      real(dp) surf
-    end function
-
-  end interface
-
-end module
-
-submodule(geometry_interface) geometry_implementation
-  implicit none
-contains
-
-  module procedure calculate_surface_area
-    use global_variables, only : dp, pi
-
-    associate(db => burn_state%db())
-      this%surf_=pi*(id+2.0d0*db)*(length-2.0d0*db)+0.5d0*pi*(od**2.0d0-(id+2.0*db)**2.0d0)
-
-      if(id+2d0*db.gt.od.or.db.gt.length/2d0) THEN
-         this%surf_=0d0  ! we hit the wall and burned out
-         call burn_state%set_r(0._dp)  ! turn off burn rate so burn distance stops increasing
-       endif
-
-      associate(r => burn_state%r())
-        this%vol_=this%vol_+r*this%surf_*dt ! increment the interior volume of the chamber a little
-      end associate
-    end associate
-
-  end procedure
-
-  module procedure set_vol
-    this%vol_ = vol
-  end procedure
-
-  module procedure vol
-    vol = this%vol_
-  end procedure
-
-  module procedure surf
-    surf = this%surf_
-  end procedure
-
-end submodule
-
-module generation_rate_interface
-  use global_variables, only : dp
-  implicit none
-
-  private
-
-  type, public :: generation_rate_t
-    private
-    real(dp):: edotgen_, mdotgen_
-  contains
-    procedure :: set_mdotgen
-    procedure :: set_edotgen
-    procedure :: edotgen
-    procedure :: mdotgen
-    procedure :: calculate_m_dot_generated
-  end type
-
-  interface
-
-    module subroutine calculate_m_dot_generated(this, burn_state, geometry, rhos, cp, Tflame)
-      use global_variables, only : dp
-      use burn_state_interface , only : burn_state_t
-      use geometry_interface , only : geometry_t
-      class(generation_rate_t), intent(inout) :: this
-      type(burn_state_t), intent(in) :: burn_state
-      type(geometry_t), intent(in) :: geometry
-      real(dp), intent(in) :: rhos, cp, Tflame
-    end subroutine
-
-    module subroutine set_mdotgen(this, mdotgen)
-      implicit none
-      class(generation_rate_t), intent(inout) :: this
-      real(dp), intent(in) :: mdotgen
-    end subroutine
-
-    module subroutine set_edotgen(this, edotgen)
-      implicit none
-      class(generation_rate_t), intent(inout) :: this
-      real(dp), intent(in) :: edotgen
-    end subroutine
-
-    pure module function mdotgen(this)
-      implicit none
-      class(generation_rate_t), intent(in) :: this
-      real(dp) mdotgen
-    end function
-
-    pure module function edotgen(this)
-      implicit none
-      class(generation_rate_t), intent(in) :: this
-      real(dp) edotgen
-    end function
-
-  end interface
-
-end module
-
-submodule(generation_rate_interface) generation_rate_implementation
-  implicit none
-contains
-
-   module procedure calculate_m_dot_generated
-    associate(r=>burn_state%r(), surf => geometry%surf())
-      this%mdotgen_ = rhos*r*surf
-      this%edotgen_ = this%mdotgen_*cp*Tflame
-    end associate
-  end procedure
-
-  module procedure set_mdotgen
-    this%mdotgen_ = mdotgen
-  end procedure
-
-  module procedure set_edotgen
-    this%edotgen_ = edotgen
-  end procedure
-
-  module procedure edotgen
-    edotgen = this%edotgen_
-  end procedure
-
-  module procedure mdotgen
-    mdotgen = this%mdotgen_
-  end procedure
-
-end submodule
-
 module refurbished_rocket_module
   implicit none
 
 contains
 
-  subroutine calculate_mass_flow(pamb, area, rgas, g, cp, edotos, mdotos, p, t)
-     USE global_variables, only : dp
-     real(dp), intent(in) :: pamb, area, rgas, g, cp, p, t
-     real(dp), intent(out) :: edotos, mdotos
-
-     REAL (dp)::mdtx,engyx, dsigng
-     REAL (dp)::tx,gx,rx,px,cpx,pcrit,facx,term1,term2,pratio,cstar,ax,hx
-     REAL (dp):: p1,p2
-
-     mdotos=0.
-     edotos=0.  ! initially set them to zero prior to running this loop
-
-       p1=p
-       p2=pamb
-       ax=area
-       IF(p1.GT.p2) THEN
-          dsigng=1
-          tx=t
-          gx=g
-          rx=rgas
-          px=p
-          cpx=cp
-          hx=cp*t
-          pratio=p1/p2
-       else
-          dsigng=-1
-          tx=300d0
-          gx=g
-          rx=rgas
-          px=pamb
-          cpx=cp
-          hx=cp*300d0
-          pratio=p2/p1
-      end if
-
-      pcrit=(2./(gx+1.))**(gx/(gx-1.))
-      IF((1./pratio).LT.pcrit) then
-          ! choked flow
-          cstar=sqrt((1./gx)*((gx+1.)/2.)**((gx+1.)/(gx-1.))*rx*tx)
-          mdtx=px*ax/cstar
-      else
-          ! unchoked flow
-        facx=pratio**((gx-1.)/gx)
-        term1=SQRT(gx*rx*tx/facx)
-        term2=SQRT((facx-1.)/(gx-1.))
-        mdtx=SQRT(2.)*px/pratio/rx/tx*facx*term1*term2*ax
-      end if
-      engyx=mdtx*hx  ! reformulate based on enthalpy of the chamber
-      mdotos=mdtx*dsigng ! exiting mass flow (could be negative "dsigng")
-      edotos=engyx*dsigng ! exiting enthalpy
-  end subroutine
-
-  subroutine add_mass(generation_rate, mdotos, edotos, dt, mcham, echam)
-      use global_variables, only : dp
-      use generation_rate_interface, only : generation_rate_t
-      type(generation_rate_t), intent(in) :: generation_rate
-      real(dp), intent(in) :: mdotos, edotos, dt
-      real(dp), intent(inout) :: mcham, echam
-      associate(mdotgen => generation_rate%mdotgen(), edotgen => generation_rate%edotgen())
-        mcham=mcham+(mdotgen-mdotos)*dt
-        echam=echam+(edotgen-edotos)*dt
-      end associate
-  end subroutine
-
-  subroutine calculate_temperature(echam, mcham, cv, t)
-     use global_variables, only : dp
-     real(dp), intent(in) :: echam, mcham, cv
-     real(dp), intent(out) :: t
-     t=echam/mcham/cv
-  end subroutine
-
-  subroutine calculcate_pressure(mcham, rgas, t, vol, p)
-      use global_variables, only : dp
-      real(dp), intent(in) :: mcham, rgas, t, vol
-      real(dp), intent(out) :: p
-      p=mcham*rgas*t/vol
-  end subroutine
-
-  subroutine calculate_thrust(p, pamb, area, cf, thrust)
-      use global_variables, only : dp
-      real(dp), intent(in) :: p, pamb, area, cf
-      real(dp), intent(out) :: thrust
-      thrust=(p-pamb)*area*cf ! correction to thrust (actual vs vacuum thrust)
-  end subroutine
-
-  function refurbished_rocket(input_file)
-    !! this is a basic program of a single stage
-    !! rocket motor flowing out of a nozzle, assuming
-    !! a thrust coefficient and ignoring the complexities of
-    !! what happens to thrust at low pressures, i.e. shock in the nozzle
-
-  use assertions_interface, only : assert, max_errmsg_len
-  use results_interface, only : results_t
-  use global_variables, only : &
-    dt, tmax, cp, mw, t, p, Tflame, rref, n, id, od, length, rhos, dia, cf, rgas, cv, g, area, pamb, dp, output, echam, &
-    mcham, pi, edotos, mdotos, nsteps, pref, psipa, ru, time, i, thrust, t
+subroutine calcsurf(burn_state)
+  ! cylinder burning from id outward and from both ends along the length
   use burn_state_interface, only : burn_state_t
-  use geometry_interface, only : geometry_t
-  use generation_rate_interface, only : generation_rate_t
+  use global_variables
+  implicit none
+  type(burn_state_t), intent(inout) :: burn_state
 
-  type(burn_state_t) burn_state
-  type(geometry_t) geometry
-  type(generation_rate_t) generation_rate
+  associate(db => burn_state%db())
+    surf=pi*(id+2.0d0*db)*(length-2.0d0*db)+0.5d0*pi*(od**2.0d0-(id+2.0*db)**2.0d0)
 
-  character(len=*), intent(in) :: input_file
-  type(results_t) refurbished_rocket
+    if(id+2d0*db.gt.od.or.db.gt.length/2d0) THEN
+      surf=0d0  ! we hit the wall and burned out
+      call burn_state%set_r(0._dp)  ! turn off burn rate so burn distance stops increasing
+    endif
+  end associate
 
-  character(len=max_errmsg_len) error_message
-  integer io_status, file_unit
-  integer, parameter :: success = 0
+  associate(r => burn_state%r())
+    vol=vol+r*surf*dt ! increment the interior volume of the chamber a little
+  end associate
+end subroutine
 
-  real(dp) dt_, t_max_
-  real(dp) c_p_, MW_
-  real(dp) temperature_, pressure_
-  real(dp) T_flame_, r_ref_, n_
-  real(dp) id_, od_, length_, rho_solid_
-  real(dp) dia_, C_f_
+subroutine calmdotgen(rl)
+  use global_variables
+  implicit none
+  real(dp), intent(in) :: rl
+  mdotgen=rhos*rl*surf
+  edotgen=mdotgen*cp*Tflame
+  !print *,'mgen,egen',mdotgen,edotgen
+end subroutine
 
-  namelist/numerics_list/ dt_, t_max_
-  namelist/gas_list/ c_p_, MW_
-  namelist/state_list/  temperature_, pressure_
-  namelist/combustion_list/ T_flame_, r_ref_, n_
-  namelist/grain_list/ id_, od_, length_, rho_solid_
-  namelist/nozzle_list/ dia_, C_f_
+subroutine massflow
+   USE global_variables
+   implicit none
+   REAL (8)::mdtx,engyx
+   REAL (8)::tx,gx,rx,px,cpx,pcrit,facx,term1,term2,pratio,cstar,ax,hx
+   REAL (8):: p1,p2
 
-  open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
-  call assert(io_status == success, "legcy_rocket: io_status == success", error_message)
+   mdotos=0.
+   edotos=0.  ! initially set them to zero prior to running this loop
 
-  read(file_unit, nml=numerics_list)
-  dt   = dt_
-  tmax = t_max_
+     p1=p
+     p2=pamb
+     ax=area
+     IF(p1.GT.p2) THEN
+        dsigng=1
+        tx=t
+        gx=g
+        rx=rgas
+        px=p
+        cpx=cp
+        hx=cp*t
+        pratio=p1/p2
+     else
+        dsigng=-1
+        tx=300d0
+        gx=g
+        rx=rgas
+        px=pamb
+        cpx=cp
+        hx=cp*300d0
+        pratio=p2/p1
+    end if
 
-  read(file_unit, nml=gas_list)
-  cp = c_p_
-  mw = MW_
+    pcrit=(2./(gx+1.))**(gx/(gx-1.))
+    IF((1./pratio).LT.pcrit) then
+        ! choked flow
+        cstar=sqrt((1./gx)*((gx+1.)/2.)**((gx+1.)/(gx-1.))*rx*tx)
+        mdtx=px*ax/cstar
+    else
+        ! unchoked flow
+      facx=pratio**((gx-1.)/gx)
+      term1=SQRT(gx*rx*tx/facx)
+      term2=SQRT((facx-1.)/(gx-1.))
+      mdtx=SQRT(2.)*px/pratio/rx/tx*facx*term1*term2*ax
+    end if
+    engyx=mdtx*hx  ! reformulate based on enthalpy of the chamber
+    mdotos=mdtx*dsigng ! exiting mass flow (could be negative "dsigng")
+    edotos=engyx*dsigng ! exiting enthalpy
+end subroutine
 
-  read(file_unit, nml=state_list)
-  t = temperature_
-  p = pressure_
+subroutine addmass
+    use global_variables
+    implicit none
+    mcham=mcham+(mdotgen-mdotos)*dt
+    echam=echam+(edotgen-edotos)*dt
+end subroutine
 
-  read(file_unit, nml=combustion_list)
-  Tflame = T_flame_
-  rref   = r_ref_
-  n      = n_
+subroutine calct
+    use global_variables
+    implicit none
+    t=echam/mcham/cv
+end subroutine
 
-  read(file_unit, nml=grain_list)
-  id     = id_
-  od     = od_
-  length = length_
-  rhos   = rho_solid_
+subroutine calcp
+    use global_variables
+    implicit none
+    p=mcham*rgas*t/vol
+  !  print *,'pt',time,p,t
+end subroutine
 
-  read(file_unit, nml=nozzle_list)
-  dia = dia_
-  cf  = C_f_
+subroutine calcthrust
+    use global_variables
+    implicit none
+    thrust=(p-pamb)*area*cf ! correction to thrust (actual vs vacuum thrust)
+end subroutine
 
-  close(file_unit)
+!!  Main program
 
-  ! define geometry
-    call geometry%set_vol(1.0d0) ! cubic meters
 
-  !  propellent grain is a cylinder burning radially outward and axially inward.
-  ! outer diameter is inhibited because this is a cast propellent: it was poured
-  ! into the tube/chamber and only the inner diameter burns when ignited.
+function refurbished_rocket(input_file)
+  !! this is a basic program of a single stage
+  !! rocket motor flowing out of a nozzle, assuming
+  !! a thrust coefficient and ignoring the complexities of
+  !! what happens to thrust at low pressures, i.e. shock in the nozzle
 
-    ! propellant burn rate information
-    psipa=6894.76d0 ! pascals per psi (constant)
-    pref=3000d0*psipa ! reference calculcate_pressure (constant)
-    call burn_state%set_db(0d0) ! initial burn distance
+use assertions_interface, only : assert, max_errmsg_len
+use results_interface, only : results_t
+use burn_state_interface, only : burn_state_t
+use global_variables
+implicit none
 
-    nsteps=nint(tmax/dt) ! number of time steps
+character(len=*), intent(in) :: input_file
+type(results_t) refurbished_rocket
 
-  ! preallocate an output file for simulation infomration
-    allocate(output(0:nsteps,6))
-    output=0d0 ! initialize to zero
+character(len=max_errmsg_len) error_message
+integer io_status, file_unit
+integer, parameter :: success = 0
 
-    thrust=0d0
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+type(burn_state_t) burn_state
 
-  !! now begin calculating and initializing
-  ! gas variables
-    rgas=ru/mw
-    cv=cp-rgas
-    g=cp/cv
+real(dp) dt_, t_max_
+real(dp) c_p_, MW_
+real(dp) temperature_, pressure_
+real(dp) T_flame_, r_ref_, n_
+real(dp) id_, od_, length_, rho_solid_
+real(dp) dia_, C_f_
 
-    area=pi/4d0*dia**2.0d0 ! nozzle area
+namelist/numerics_list/ dt_, t_max_
+namelist/gas_list/ c_p_, MW_
+namelist/state_list/  temperature_, pressure_
+namelist/combustion_list/ T_flame_, r_ref_, n_
+namelist/grain_list/ id_, od_, length_, rho_solid_
+namelist/nozzle_list/ dia_, C_f_
 
-    pamb=101325d0 ! atmospheric calculcate_pressure
+open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
+call assert(io_status == success, "legcy_rocket: io_status == success", error_message)
 
-  !  calculate initial mass and energy in the chamber
-    mcham=p*geometry%vol()/rgas/t  ! use ideal gas law to determine mass in chamber
-    echam=mcham*cv*t ! initial internal energy in chamber
+read(file_unit, nml=numerics_list)
+dt   = dt_
+tmax = t_max_
 
-    time=0d0
+read(file_unit, nml=gas_list)
+cp = c_p_
+mw = MW_
 
-    output(0,:)=[time,p,t,mdotos,thrust,geometry%vol()]
+read(file_unit, nml=state_list)
+t = temperature_
+p = pressure_
 
-    do i=1,nsteps
-     call burn_state%calculate_burn_rate(rref, p, pref, n, dt)
-     call geometry%calculate_surface_area(burn_state, length, id, od, dt)
-     call generation_rate%calculate_m_dot_generated(burn_state, geometry, rhos, cp, Tflame)
-     call add_mass(generation_rate, mdotos, edotos, dt, mcham, echam)
-     call calculate_temperature(echam, mcham, cv, t)
-     call calculcate_pressure(mcham, rgas, t, geometry%vol(), p)
-     call calculate_mass_flow(pamb, area, rgas, g, cp, edotos, mdotos, p, t)
-     call calculate_thrust(p, pamb, area, cf, thrust)
-     time=time+dt
-     output(i,:)=[time,p,t,mdotos,thrust,geometry%vol()]
-    enddo
+read(file_unit, nml=combustion_list)
+Tflame = T_flame_
+rref   = r_ref_
+n      = n_
 
-    block
-      character(len=*), parameter :: header(*) = [ character(len=len("temperatureRefurbished)")) :: "timeRefurbished", &
-        "pressureRefurbished", "temperatureRefurbished", "mdotosRefurbished", "thrustRefurbished", "volumeRefurbished"]
-      refurbished_rocket = results_t(header, output)
-    end block
+read(file_unit, nml=grain_list)
+id     = id_
+od     = od_
+length = length_
+rhos   = rho_solid_
 
-  end function refurbished_rocket
+read(file_unit, nml=nozzle_list)
+dia = dia_
+cf  = C_f_
 
-end module  refurbished_rocket_module
+close(file_unit)
+
+call burn_state%set_db(0._dp)
+!  propellent grain is a cylinder burning radially outward and axially inward.
+! outer diameter is inhibited because this is a cast propellent: it was poured
+! into the tube/chamber and only the inner diameter burns when ignited.
+
+  ! propellant burn rate information
+  psipa=6894.76d0 ! pascals per psi (constant)
+  pref=3000d0*psipa ! reference pressure (constant)
+
+  nsteps=nint(tmax/dt) ! number of time steps
+
+! preallocate an output file for simulation infomration
+  allocate(output(0:nsteps,6))
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+
+!! now begin calculating and initializing
+! gas variables
+  rgas=ru/mw
+  cv=cp-rgas
+  g=cp/cv
+
+  area=pi/4d0*dia**2.0d0 ! nozzle area
+
+  pamb=101325d0 ! atmospheric pressure
+
+!  calculate initial mass and energy in the chamber
+  mcham=p*vol/rgas/t  ! use ideal gas law to determine mass in chamber
+  echam=mcham*cv*t ! initial internal energy in chamber
+
+  output(0,:)=[time,p,t,mdotos,thrust,vol]
+
+  do i=1,nsteps
+   call burn_state%burnrate(rref, p, pref, n, dt)
+   call calcsurf(burn_state)
+   call calmdotgen(burn_state%r())  ! [mdot,engy,dsign]= massflow(p1,pamb,t1,tamb,cp,cp,rgas,rgas,g,g,area)
+   call massflow
+   call addmass
+   call calct
+   call calcp
+   call calcthrust
+   time=time+dt
+   output(i,:)=[time,p,t,mdotos,thrust,vol]
+
+  enddo
+
+  block
+    character(len=*), parameter :: header(*) = [ character(len=len("temperatureLegacy)")) :: &
+      "timeLegacy", "pressureLegacy", "temperatureLegacy", "mdotosLegacy", "thrustLegacy", "volumeLegacy"]
+    refurbished_rocket = results_t(header, output)
+  end block
+
+end function refurbished_rocket
+
+end module refurbished_rocket_module
