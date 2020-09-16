@@ -113,7 +113,7 @@ contains
 subroutine calcsurf(burn_state)
   ! cylinder burning from id outward and from both ends along the length
   use burn_state_interface, only : burn_state_t
-  use global_variables
+  use global_variables, only : dp, surf, pi, id, length, od, vol, dt
   implicit none
   type(burn_state_t), intent(inout) :: burn_state
 
