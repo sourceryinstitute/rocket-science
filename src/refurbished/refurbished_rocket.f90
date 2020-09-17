@@ -4,13 +4,12 @@ save
 integer, parameter :: precision=15, range=307
 integer, parameter :: dp = selected_real_kind(precision, range)
 real(dp), parameter :: pi=3.1415926539
-real(dp), parameter :: RU=8314d0
-real(dp), parameter :: zero=0._dp, one=1._dp
+real(dp), parameter :: zero=0._dp
 
-real(dp):: cp,cv,g,rgas,mw,dia,cf,rref,rhos,psipa,pref
+real(dp):: dia,cf,rref,rhos,psipa,pref
 real(dp):: Tflame
 real(dp):: thrust=zero, area, n
-real(dp):: texit, pamb,p,t
+real(dp):: texit, pamb,p
 real(dp):: mcham,echam
 
 end module
@@ -385,11 +384,114 @@ contains
 
 end submodule flow_rate_implementation
 
+module chamber_gas_interface
+  use global_variables, only : dp
+  implicit none
+
+  private
+
+  type, public :: chamber_gas_t
+    real(dp) MW_, c_p_, T_
+  contains
+    procedure :: define
+    procedure :: R_gas
+    procedure :: c_p
+    procedure :: c_v
+    procedure :: T
+    procedure :: g
+    procedure :: set_T => calct
+  end type
+
+  interface
+
+    module subroutine define(this, MW, c_p, T)
+      implicit none
+      class(chamber_gas_t), intent(out) :: this
+      real(dp), intent(in) :: MW, c_p, T
+    end subroutine
+
+    pure module function R_gas(this)
+      implicit none
+      class(chamber_gas_t), intent(in) :: this
+      real(dp) R_gas
+    end function
+
+    pure module function c_p(this)
+      implicit none
+      class(chamber_gas_t), intent(in) :: this
+      real(dp) c_p
+    end function
+
+    pure module function c_v(this)
+      implicit none
+      class(chamber_gas_t), intent(in) :: this
+      real(dp) c_v
+    end function
+
+    pure module function T(this)
+      implicit none
+      class(chamber_gas_t), intent(in) :: this
+      real(dp) T
+    end function
+
+    pure module function g(this)
+      implicit none
+      class(chamber_gas_t), intent(in) :: this
+      real(dp) g
+    end function
+
+    module subroutine calct(this, T)
+      implicit none
+      class(chamber_gas_t), intent(inout) :: this
+      real(dp), intent(in) :: T
+    end subroutine
+
+  end interface
+
+end module chamber_gas_interface
+
+submodule(chamber_gas_interface) chamber_gas_implementation
+  implicit none
+contains
+
+  module procedure define
+    this%MW_  = MW
+    this%c_p_ = c_p
+    this%T_ = T
+  end procedure
+
+  module procedure R_gas
+    real(dp), parameter :: R_universal=8314d0
+    R_gas = R_universal/this%MW_
+  end procedure
+
+  module procedure c_p
+    real(dp), parameter :: R_universal=8314d0
+    c_p = this%c_p_
+  end procedure
+
+  module procedure c_v
+    c_v = this%c_p() - this%R_gas()
+  end procedure
+
+  module procedure T
+    T = this%T_
+  end procedure
+
+  module procedure g
+    g = this%c_p_/this%c_v()
+  end procedure
+
+  module procedure calct
+    this%T_ = T
+  end procedure
+
+end submodule chamber_gas_implementation
+
 module refurbished_rocket_module
   implicit none
 
 contains
-
 
 subroutine addmass(mdotgen, edotgen, mdotos, edotos, dt)
     use global_variables, only : dp, mcham, echam
@@ -399,17 +501,12 @@ subroutine addmass(mdotgen, edotgen, mdotos, edotos, dt)
     echam=echam+(edotgen-edotos)*dt
 end subroutine
 
-subroutine calct
-    use global_variables, only : mcham, echam, cv, t
-    implicit none
-    t=echam/mcham/cv
-end subroutine
 
-subroutine calcp(vol)
-    use global_variables, only : dp, p, mcham, rgas, t
+subroutine calcp(vol, rgas, T)
+    use global_variables, only : dp, p, mcham
     implicit none
-    real(dp), intent(in) :: vol
-    p=mcham*rgas*t/vol
+    real(dp), intent(in) :: vol, rgas, T
+    p=mcham*rgas*T/vol
 end subroutine
 
 subroutine calcthrust
@@ -431,6 +528,7 @@ use burn_state_interface, only : burn_state_t
 use geometry_interface, only : geometry_t
 use generation_rate_interface, only : generation_rate_t
 use flow_rate_interface, only : flow_rate_t
+use chamber_gas_interface, only : chamber_gas_t
 use global_variables
 implicit none
 
@@ -443,8 +541,9 @@ integer, parameter :: success = 0
 
 type(burn_state_t) burn_state
 type(geometry_t) geometry
-real(dp) :: time, dt,tmax
+type(chamber_gas_t) chamber_gas
 
+real(dp) :: time, dt, tmax
 real(dp), allocatable :: output(:,:)
 integer nsteps, i
 
@@ -472,12 +571,9 @@ dt   = dt_
 tmax = t_max_
 
 read(file_unit, nml=gas_list)
-cp = c_p_
-mw = MW_
-
 read(file_unit, nml=state_list)
-t = temperature_
 p = pressure_
+call chamber_gas%define(MW_, c_p_, temperature_)
 
 read(file_unit, nml=combustion_list)
 Tflame = T_flame_
@@ -503,49 +599,42 @@ nsteps=nint(tmax/dt) ! number of time steps
 
 allocate(output(0:nsteps,6)) ! preallocate an output array
 
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
-
-!! now begin calculating and initializing
-! gas variables
-  rgas=ru/mw
-  cv=cp-rgas
-  g=cp/cv
 
   area=pi/4d0*dia**2.0d0 ! nozzle area
 
   pamb=101325d0 ! atmospheric pressure
 
-!  calculate initial mass and energy in the chamber
-  associate(vol => geometry%vol(), mdotos => 0._dp)
-    mcham=p*vol/rgas/t  ! use ideal gas law to determine mass in chamber
-    output(0,:)=[time,p,t,mdotos,thrust,vol]
+  associate(V => geometry%vol(), mdotos => 0._dp, T=>chamber_gas%T(), c_v=>chamber_gas%c_v(), R_gas => chamber_gas%R_gas())
+    output(0,:)=[time,p,T,mdotos,thrust,V]
+    mcham = p*V/R_gas/T  ! use ideal gas law to determine mass in chamber
+    echam = mcham*c_v*T                   ! initial internal energy in chamber
   end associate
-  echam=mcham*cv*t ! initial internal energy in chamber
-
 
   do i=1,nsteps
-   call burn_state%burnrate(rref, p, pref, n, dt)
-   call geometry%calcsurf(burn_state, dt)
-   associate( &
-     flow_rate => flow_rate_t(t, g, rgas, p, cp, pamb, area), &
-     generation_rate => generation_rate_t(rhos, burn_state%r(), geometry%surf(burn_state%db()), cp, Tflame) &
-     )
-       associate( &
-         mdotos => flow_rate%mdotos(), &
-         edotos => flow_rate%edotos(), &
-         mdotgen => generation_rate%mdotgen(), &
-         edotgen => generation_rate%edotgen() &
-       )
-       call addmass(mdotgen, edotgen, mdotos, edotos, dt)
-       call calct
-       associate(vol => geometry%vol())
-         call calcp(vol)
-         call calcthrust
-         time=time+dt
-         output(i,:)=[time,p,t,mdotos,thrust,vol]
-       end associate
-     end associate
+    call burn_state%burnrate(rref, p, pref, n, dt)
+    call geometry%calcsurf(burn_state, dt)
+    associate(R_gas => chamber_gas%R_gas(), c_v => chamber_gas%c_v(), g => chamber_gas%g(), c_p => chamber_gas%c_p())
+      associate( &
+        flow_rate => flow_rate_t(chamber_gas%T(), g, R_gas, p, c_p, pamb, area), &
+        generation_rate => generation_rate_t(rhos, burn_state%r(), geometry%surf(burn_state%db()), chamber_gas%c_p(), Tflame) &
+        )
+          associate( &
+            mdotos => flow_rate%mdotos(), &
+            edotos => flow_rate%edotos(), &
+            mdotgen => generation_rate%mdotgen(), &
+            edotgen => generation_rate%edotgen() &
+          )
+          call addmass(mdotgen, edotgen, mdotos, edotos, dt)
+          call chamber_gas%set_T(echam/mcham/c_v)
+          associate(vol => geometry%vol(), T => chamber_gas%T())
+            call calcp(vol, R_gas, T)
+            call calcthrust
+            time=time+dt
+            output(i,:)=[time,p,T,mdotos,thrust,vol]
+          end associate
+        end associate
+      end associate
     end associate
   enddo
 
