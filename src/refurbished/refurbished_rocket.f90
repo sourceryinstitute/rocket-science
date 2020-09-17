@@ -3,15 +3,12 @@ implicit none
 save
 integer, parameter :: precision=15, range=307
 integer, parameter :: dp = selected_real_kind(precision, range)
-real(dp), parameter :: pi=3.1415926539
-real(dp), parameter :: zero=0._dp
-real(dp), parameter :: pamb=101325d0 ! atmospheric pressure
+real(dp), parameter :: pi = 3.1415926539
+real(dp), parameter :: zero = 0._dp, one = 1._dp
+real(dp), parameter :: p_amb = 101325d0 ! atmospheric pressure
 
-real(dp):: dia,cf,rhos
+real(dp):: rhos
 real(dp):: Tflame
-real(dp):: thrust=zero, area
-real(dp):: texit, p
-real(dp):: mcham,echam
 
 end module
 
@@ -25,7 +22,7 @@ module burn_state_interface
     private
     real(dp) r_, db_
   contains
-    procedure :: burnrate
+    procedure :: define => burnrate
     procedure :: set_db
     procedure :: set_r
     procedure :: db
@@ -120,10 +117,10 @@ module geometry_interface
     real(dp) vol_, id_, od_, length_
   contains
     procedure :: define
-    procedure :: calcsurf
+    procedure :: increment_volume => calcsurf
     procedure :: surf
     procedure :: vol
-    procedure, private :: burnout
+    procedure :: burnout
   end type
 
   interface
@@ -135,13 +132,11 @@ module geometry_interface
       real(dp), intent(in) :: vol, id, od, length
     end subroutine
 
-    module subroutine calcsurf(this, burn_state, dt)
+    module subroutine calcsurf(this, increment)
       !! cylinder burning from id outward and from both ends along the length
-      use burn_state_interface, only : burn_state_t
       implicit none
       class(geometry_t), intent(inout) :: this
-      type(burn_state_t), intent(inout) :: burn_state
-      real(dp), intent(in) :: dt
+      real(dp), intent(in) :: increment
     end subroutine
 
     pure module function surf(this, burn_depth)
@@ -184,15 +179,7 @@ contains
   end procedure
 
   module procedure calcsurf
-    use global_variables, only : dp
-
-    associate(db => burn_state%db())
-      if(this%burnout(db)) call burn_state%set_r(0._dp)  ! turn off burn rate so burn distance stops increasing
-      associate(r => burn_state%r(), surf => this%surf(db))
-        this%vol_ = this%vol_ + r*surf*dt ! increment the interior volume of the chamber a little
-      end associate
-    end associate
-
+    this%vol_ = this%vol_ + increment ! increment the interior volume of the chamber a little
   end procedure
 
   module procedure surf
@@ -329,12 +316,12 @@ submodule(flow_rate_interface) flow_rate_implementation
 contains
 
   module procedure massflow
-    use global_variables, only : pamb
+    use global_variables, only : p_amb
 
     REAL (dp):: mdtx, tx,gx,rx,px,cpx,pcrit,facx,term1,term2,pratio,cstar,ax,hx, p1, p2, dsigng
 
     p1=p
-    p2=pamb
+    p2=p_amb
     ax=area
 
     IF(p1>p2) THEN
@@ -351,7 +338,7 @@ contains
         tx=300d0
         gx=g
         rx=rgas
-        px=pamb
+        px=p_amb
         cpx=cp
         hx=cp*300d0
         pratio=p2/p1
@@ -396,23 +383,31 @@ module chamber_gas_interface
   private
 
   type, public :: chamber_gas_t
-    real(dp) MW_, c_p_, T_
+    private
+    real(dp) MW_, c_p_, mcham_, echam_
   contains
     procedure :: define
     procedure :: R_gas
     procedure :: c_p
     procedure :: c_v
     procedure :: T
+    procedure :: p => calcp
     procedure :: g
-    procedure :: set_T => calct
+    procedure :: increment => addmass
   end type
 
   interface
 
-    module subroutine define(this, MW, c_p, T)
+    module subroutine define(this, MW, c_p, T, p, V)
       implicit none
       class(chamber_gas_t), intent(out) :: this
-      real(dp), intent(in) :: MW, c_p, T
+      real(dp), intent(in) :: MW, c_p, T, p, V
+    end subroutine
+
+    module subroutine addmass(this, mass_increment, energy_increment)
+      implicit none
+      class(chamber_gas_t), intent(inout) :: this
+      real(dp), intent(in) :: mass_increment, energy_increment
     end subroutine
 
     pure module function R_gas(this)
@@ -445,11 +440,12 @@ module chamber_gas_interface
       real(dp) g
     end function
 
-    module subroutine calct(this, T)
+    pure module function calcp(this, V)
       implicit none
-      class(chamber_gas_t), intent(inout) :: this
-      real(dp), intent(in) :: T
-    end subroutine
+      class(chamber_gas_t), intent(in) :: this
+      real(dp), intent(in) :: V
+      real(dp) :: calcp
+    end function
 
   end interface
 
@@ -462,7 +458,13 @@ contains
   module procedure define
     this%MW_  = MW
     this%c_p_ = c_p
-    this%T_ = T
+    this%mcham_ = p*V/(this%R_gas()*T)
+    this%echam_  = this%mcham_*this%c_v()*T
+  end procedure
+
+  module procedure addmass
+    this%mcham_ = this%mcham_ + mass_increment
+    this%echam_ = this%echam_ + energy_increment
   end procedure
 
   module procedure R_gas
@@ -480,46 +482,84 @@ contains
   end procedure
 
   module procedure T
-    T = this%T_
+    T = this%echam_/(this%mcham_*this%c_v())
+  end procedure
+
+  module procedure calcp
+    calcp = this%mcham_*this%R_gas()*this%T()/V
   end procedure
 
   module procedure g
     g = this%c_p_/this%c_v()
   end procedure
 
-  module procedure calct
-    this%T_ = T
+end submodule chamber_gas_implementation
+
+module nozzle_interface
+  use global_variables, only : dp
+  implicit none
+
+  private
+
+  type, public :: nozzle_t
+    private
+    real(dp) area_, C_f_
+  contains
+    procedure :: define
+    procedure :: thrust => calcthrust
+    procedure :: area
+  end type
+
+  interface
+
+    module subroutine define(this, dia, C_f)
+      implicit none
+      class(nozzle_t), intent(inout) :: this
+      real(dp), intent(in) ::  dia, C_f
+    end subroutine
+
+    pure module function calcthrust(this, p)
+      implicit none
+      class(nozzle_t), intent(in) :: this
+      real(dp), intent(in) :: p
+      real(dp) calcthrust
+    end function
+
+    pure module function area(this)
+      implicit none
+      class(nozzle_t), intent(in) :: this
+      real(dp) area
+    end function
+
+  end interface
+
+end module nozzle_interface
+
+submodule(nozzle_interface) nozzle_implementation
+  implicit none
+contains
+
+  module procedure define
+   use global_variables, only : pi
+   this%area_ = pi/4d0*dia**2 ! nozzle area
+   this%C_f_ = C_f
   end procedure
 
-end submodule chamber_gas_implementation
+  module procedure calcthrust
+    use global_variables, only : p_amb
+    calcthrust = (p-p_amb)*this%area_*this%C_f_ ! correction to thrust (actual vs vacuum thrust)
+  end procedure
+
+  module procedure area
+    area = this%area_
+  end procedure
+
+end submodule nozzle_implementation
 
 module refurbished_rocket_module
   implicit none
 
 contains
-
-subroutine addmass(mdotgen, edotgen, mdotos, edotos, dt)
-    use global_variables, only : dp, mcham, echam
-    implicit none
-    real(dp), intent(in) :: mdotgen, edotgen, mdotos, edotos, dt
-    mcham=mcham+(mdotgen-mdotos)*dt
-    echam=echam+(edotgen-edotos)*dt
-end subroutine
-
-
-subroutine calcp(vol, rgas, T)
-    use global_variables, only : dp, p, mcham
-    implicit none
-    real(dp), intent(in) :: vol, rgas, T
-    p=mcham*rgas*T/vol
-end subroutine
-
-subroutine calcthrust
-    use global_variables, only : pamb, p, area, cf, thrust
-    implicit none
-    thrust=(p-pamb)*area*cf ! correction to thrust (actual vs vacuum thrust)
-end subroutine
-
 
 function refurbished_rocket(input_file)
   !! this driver function simulates a single stage
@@ -534,6 +574,7 @@ use geometry_interface, only : geometry_t
 use generation_rate_interface, only : generation_rate_t
 use flow_rate_interface, only : flow_rate_t
 use chamber_gas_interface, only : chamber_gas_t
+use nozzle_interface, only : nozzle_t
 use global_variables
 implicit none
 
@@ -547,7 +588,9 @@ integer, parameter :: success = 0
 type(burn_state_t) burn_state
 type(geometry_t) geometry
 type(chamber_gas_t) chamber_gas
+type(nozzle_t) nozzle
 
+real(dp), parameter :: initial_volume = one
 real(dp) :: time, dt, tmax
 real(dp), allocatable :: output(:,:)
 integer nsteps, i
@@ -569,32 +612,27 @@ namelist/nozzle_list/ dia_, C_f_
 open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
 call assert(io_status == success, "legcy_rocket: io_status == success", error_message)
 
-time = zero
-
 read(file_unit, nml=numerics_list)
 dt   = dt_
 tmax = t_max_
 
 read(file_unit, nml=gas_list)
 read(file_unit, nml=state_list)
-p = pressure_
-call chamber_gas%define(MW_, c_p_, temperature_)
+call chamber_gas%define(MW = MW_, c_p = c_p_, T = temperature_, p = pressure_, V = initial_volume)
 
 read(file_unit, nml=combustion_list)
 Tflame = T_flame_
 
 read(file_unit, nml=grain_list)
-call geometry%define(vol = 1._dp, id = id_, od = od_, length = length_)
+call geometry%define(vol = initial_volume, id = id_, od = od_, length = length_)
 rhos   = rho_solid_
 
 read(file_unit, nml=nozzle_list)
-dia = dia_
-cf  = C_f_
+call nozzle%define(dia=dia_, C_f=C_f_)
 
 close(file_unit)
 
-call burn_state%set_db(0._dp)   ! initialize propellant burn distance
-
+call burn_state%set_db(zero) ! initialize propellant burn distance
 
 nsteps=nint(tmax/dt) ! number of time steps
 
@@ -602,40 +640,46 @@ allocate(output(0:nsteps,6)) ! preallocate an output array
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 
-  area=pi/4d0*dia**2.0d0 ! nozzle area
-
-  associate(V => geometry%vol(), mdotos => 0._dp, T=>chamber_gas%T(), c_v=>chamber_gas%c_v(), R_gas => chamber_gas%R_gas())
-    output(0,:)=[time,p,T,mdotos,thrust,V]
-    mcham = p*V/R_gas/T  ! use ideal gas law to determine mass in chamber
-    echam = mcham*c_v*T                   ! initial internal energy in chamber
+  time = zero
+  associate(mdotos => zero, thrust => zero, volume => geometry%vol())
+    output(0,:)=[time, chamber_gas%p(volume), chamber_gas%T(), mdotos, thrust, volume]
   end associate
 
-  do i=1,nsteps
-    call burn_state%burnrate(r_ref_, p, n_, dt)
-    call geometry%calcsurf(burn_state, dt)
-    associate(R_gas => chamber_gas%R_gas(), c_v => chamber_gas%c_v(), g => chamber_gas%g(), c_p => chamber_gas%c_p())
-      associate( &
-        flow_rate => flow_rate_t(chamber_gas%T(), g, R_gas, p, c_p, area), &
-        generation_rate => generation_rate_t(rhos, burn_state%r(), geometry%surf(burn_state%db()), chamber_gas%c_p(), Tflame) &
-        )
-          associate( &
-            mdotos => flow_rate%mdotos(), &
-            edotos => flow_rate%edotos(), &
-            mdotgen => generation_rate%mdotgen(), &
-            edotgen => generation_rate%edotgen() &
-          )
-          call addmass(mdotgen, edotgen, mdotos, edotos, dt)
-          call chamber_gas%set_T(echam/mcham/c_v)
-          associate(vol => geometry%vol(), T => chamber_gas%T())
-            call calcp(vol, R_gas, T)
-            call calcthrust
-            time=time+dt
-            output(i,:)=[time,p,T,mdotos,thrust,vol]
+  associate(R_gas => chamber_gas%R_gas(), c_v => chamber_gas%c_v(), g => chamber_gas%g(), c_p => chamber_gas%c_p())
+
+    do i=1,nsteps
+
+      associate(p => chamber_gas%p(geometry%vol()))
+
+        call burn_state%define((r_ref_), p, (n_), (dt))
+
+        associate(db => burn_state%db(), r => burn_state%r())
+          associate(surf => geometry%surf(db))
+
+            call geometry%increment_volume( merge(zero, r*surf*dt, geometry%burnout(db)) )
+
+            associate( &
+              flow_rate => flow_rate_t(chamber_gas%T(), g, R_gas, p, c_p, nozzle%area()), &
+              generation_rate => generation_rate_t(rhos, r, surf, c_p, Tflame) &
+            )
+              associate(mdotos => flow_rate%mdotos())
+                call chamber_gas%increment( &
+                  mass_increment   = (generation_rate%mdotgen() - mdotos)*dt, &
+                  energy_increment = (generation_rate%edotgen() - flow_rate%edotos())*dt  &
+                )
+                associate(volume => geometry%vol())
+                  associate(p => chamber_gas%p(volume))
+                    time = time + dt
+                    output(i,:)=[time, p, chamber_gas%T(), mdotos, nozzle%thrust(p), volume]
+                  end associate
+                end associate
+              end associate
+            end associate
           end associate
         end associate
       end associate
-    end associate
-  enddo
+    end do
+  end associate
 
   block
     character(len=*), parameter :: header(*) = [ character(len=len("temperatureRefurbished)")) :: &
