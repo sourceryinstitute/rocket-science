@@ -5,11 +5,12 @@ integer, parameter :: precision=15, range=307
 integer, parameter :: dp = selected_real_kind(precision, range)
 real(dp), parameter :: pi=3.1415926539
 real(dp), parameter :: zero=0._dp
+real(dp), parameter :: pamb=101325d0 ! atmospheric pressure
 
 real(dp):: dia,cf,rhos
 real(dp):: Tflame
 real(dp):: thrust=zero, area, n
-real(dp):: texit, pamb,p
+real(dp):: texit, p
 real(dp):: mcham,echam
 
 end module
@@ -301,9 +302,9 @@ module flow_rate_interface
 
   interface
 
-    pure module function massflow(t, g, rgas, p, cp, pamb, area) result(new_flow_rate)
+    pure module function massflow(t, g, rgas, p, cp, area) result(new_flow_rate)
        implicit none
-       real(dp), intent(in) :: t, g, rgas, p, cp, pamb, area
+       real(dp), intent(in) :: t, g, rgas, p, cp, area
        type(flow_rate_t) new_flow_rate
     end function
 
@@ -328,6 +329,7 @@ submodule(flow_rate_interface) flow_rate_implementation
 contains
 
   module procedure massflow
+    use global_variables, only : pamb
 
     REAL (dp):: mdtx, tx,gx,rx,px,cpx,pcrit,facx,term1,term2,pratio,cstar,ax,hx, p1, p2, dsigng
 
@@ -513,7 +515,7 @@ subroutine calcp(vol, rgas, T)
 end subroutine
 
 subroutine calcthrust
-    use global_variables
+    use global_variables, only : pamb, p, area, cf, thrust
     implicit none
     thrust=(p-pamb)*area*cf ! correction to thrust (actual vs vacuum thrust)
 end subroutine
@@ -603,8 +605,6 @@ allocate(output(0:nsteps,6)) ! preallocate an output array
 
   area=pi/4d0*dia**2.0d0 ! nozzle area
 
-  pamb=101325d0 ! atmospheric pressure
-
   associate(V => geometry%vol(), mdotos => 0._dp, T=>chamber_gas%T(), c_v=>chamber_gas%c_v(), R_gas => chamber_gas%R_gas())
     output(0,:)=[time,p,T,mdotos,thrust,V]
     mcham = p*V/R_gas/T  ! use ideal gas law to determine mass in chamber
@@ -616,7 +616,7 @@ allocate(output(0:nsteps,6)) ! preallocate an output array
     call geometry%calcsurf(burn_state, dt)
     associate(R_gas => chamber_gas%R_gas(), c_v => chamber_gas%c_v(), g => chamber_gas%g(), c_p => chamber_gas%c_p())
       associate( &
-        flow_rate => flow_rate_t(chamber_gas%T(), g, R_gas, p, c_p, pamb, area), &
+        flow_rate => flow_rate_t(chamber_gas%T(), g, R_gas, p, c_p, area), &
         generation_rate => generation_rate_t(rhos, burn_state%r(), geometry%surf(burn_state%db()), chamber_gas%c_p(), Tflame) &
         )
           associate( &
