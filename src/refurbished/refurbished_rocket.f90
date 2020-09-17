@@ -9,7 +9,7 @@ real(dp), parameter :: zero=0._dp, one=1._dp
 
 real(dp):: cp,cv,g,rgas,mw,dia,cf,rref,rhos,psipa,pref
 real(dp):: dt,tmax,Tflame
-real(dp):: thrust=zero, area, n,mdotout,edotout,energy
+real(dp):: thrust=zero, area, n
 real(dp):: texit, dsigng,pamb,p,t
 real(dp):: mcham,echam,time=zero
 integer nsteps,i
