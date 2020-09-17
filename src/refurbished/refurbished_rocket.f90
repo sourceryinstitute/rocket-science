@@ -227,19 +227,22 @@ module generation_rate_interface
     private
     real(dp) mdotgen_, edotgen_
   contains
-    procedure :: calmdotgen
     procedure :: mdotgen
     procedure :: edotgen
   end type
 
+  interface generation_rate_t
+    module procedure calmdotgen
+  end interface
+
   interface
 
-    module subroutine calmdotgen(this, rhos, r, surf, cp, Tflame)
+    pure module function calmdotgen(rhos, r, surf, cp, Tflame) result(new_generation_rate)
       use global_variables, only : dp
       implicit none
-      class(generation_rate_t), intent(out) :: this
       real(dp), intent(in) :: rhos, r, surf, cp, Tflame
-    end subroutine
+      type(generation_rate_t) new_generation_rate
+    end function
 
     pure module function mdotgen(this)
       use global_variables, only : dp
@@ -264,8 +267,10 @@ submodule(generation_rate_interface) generation_rate_implementation
 contains
 
   module procedure calmdotgen
-    this%mdotgen_ = rhos*r*surf
-    this%edotgen_ = this%mdotgen_*cp*Tflame
+    associate(mdotgen => rhos*r*surf)
+      new_generation_rate%mdotgen_ = mdotgen
+      new_generation_rate%edotgen_ = mdotgen*cp*Tflame
+    end associate
   end procedure
 
   module procedure edotgen
@@ -385,7 +390,6 @@ integer, parameter :: success = 0
 
 type(burn_state_t) burn_state
 type(geometry_t) geometry
-type(generation_rate_t) generation_rate
 
 real(dp) dt_, t_max_
 real(dp) c_p_, MW_
@@ -464,9 +468,10 @@ allocate(output(0:nsteps,6)) ! preallocate an output array
   do i=1,nsteps
    call burn_state%burnrate(rref, p, pref, n, dt)
    call geometry%calcsurf(burn_state, dt)
-   call generation_rate%calmdotgen(rhos, burn_state%r(), geometry%surf(burn_state%db()), cp, Tflame)  ! [mdot,engy,dsign]= massflow(p1,pamb,t1,tamb,cp,cp,rgas,rgas,g,g,area)
    call massflow
-   call addmass(generation_rate%mdotgen(), generation_rate%edotgen(), dt)
+   associate(generation_rate => generation_rate_t(rhos, burn_state%r(), geometry%surf(burn_state%db()), cp, Tflame))  ! [mdot,engy,dsign]= massflow(p1,pamb,t1,tamb,cp,cp,rgas,rgas,g,g,area)
+     call addmass(generation_rate%mdotgen(), generation_rate%edotgen(), dt)
+   end associate
    call calct
    associate(vol=>geometry%vol())
      call calcp(vol)
