@@ -9,7 +9,7 @@ real(dp), parameter :: pamb=101325d0 ! atmospheric pressure
 
 real(dp):: dia,cf,rhos
 real(dp):: Tflame
-real(dp):: thrust=zero, area, n
+real(dp):: thrust=zero, area
 real(dp):: texit, p
 real(dp):: mcham,echam
 
@@ -582,7 +582,6 @@ call chamber_gas%define(MW_, c_p_, temperature_)
 
 read(file_unit, nml=combustion_list)
 Tflame = T_flame_
-n      = n_
 
 read(file_unit, nml=grain_list)
 call geometry%define(vol = 1._dp, id = id_, od = od_, length = length_)
@@ -612,7 +611,7 @@ allocate(output(0:nsteps,6)) ! preallocate an output array
   end associate
 
   do i=1,nsteps
-    call burn_state%burnrate(r_ref_, p, n, dt)
+    call burn_state%burnrate(r_ref_, p, n_, dt)
     call geometry%calcsurf(burn_state, dt)
     associate(R_gas => chamber_gas%R_gas(), c_v => chamber_gas%c_v(), g => chamber_gas%g(), c_p => chamber_gas%c_p())
       associate( &
