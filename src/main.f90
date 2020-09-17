@@ -81,6 +81,8 @@ contains
         real(rkind), parameter :: tolerance = 0.01_rkind
         call assert(modern_results%max_filtered_normalized_distance(legacy_results) < tolerance, &
                    "modern_results%max_filtered_normalized_distance(legacy_results)")
+        call assert(refurbished_results%max_filtered_normalized_distance(legacy_results) < tolerance, &
+                   "refurbished_results%max_filtered_normalized_distance(legacy_results)")
       end block
     end associate
   end subroutine
