@@ -6,7 +6,7 @@ integer, parameter :: dp = selected_real_kind(precision, range)
 real(dp), parameter :: pi=3.1415926539
 real(dp), parameter :: zero=0._dp
 
-real(dp):: dia,cf,rref,rhos,psipa,pref
+real(dp):: dia,cf,rhos
 real(dp):: Tflame
 real(dp):: thrust=zero, area, n
 real(dp):: texit, pamb,p
@@ -33,11 +33,11 @@ module burn_state_interface
 
   interface
 
-    module subroutine burnrate(this, rref, p, pref, n, dt)
+    module subroutine burnrate(this, rref, p, n, dt)
       use global_variables, only : dp
       implicit none
       class(burn_state_t), intent(inout) :: this
-      real(dp), intent(in) :: rref, p, pref, n, dt
+      real(dp), intent(in) :: rref, p, n, dt
     end subroutine
 
     module subroutine set_db(this, db)
@@ -77,7 +77,10 @@ submodule(burn_state_interface) burn_state_implementation
 contains
 
   module procedure burnrate
-    this%r_=rref*(p/pref)**n ! calculate burn rate
+    real(dp), parameter :: psipa=6894.76d0   ! unit conversion factor: pascals per psi
+    real(dp), parameter :: pref=3000d0*psipa ! constant reference pressure for burn-rate calculation
+
+    this%r_ = rref*(p/pref)**n ! calculate burn rate
     associate(r => (this%r_))
       this%db_=this%db_+r*dt  ! calculate incremental burn distance
     end associate
@@ -577,7 +580,6 @@ call chamber_gas%define(MW_, c_p_, temperature_)
 
 read(file_unit, nml=combustion_list)
 Tflame = T_flame_
-rref   = r_ref_
 n      = n_
 
 read(file_unit, nml=grain_list)
@@ -592,8 +594,6 @@ close(file_unit)
 
 call burn_state%set_db(0._dp)   ! initialize propellant burn distance
 
-psipa=6894.76d0   ! unit conversion factor: pascals per psi
-pref=3000d0*psipa ! constant reference pressure for burn-rate calculation
 
 nsteps=nint(tmax/dt) ! number of time steps
 
@@ -612,7 +612,7 @@ allocate(output(0:nsteps,6)) ! preallocate an output array
   end associate
 
   do i=1,nsteps
-    call burn_state%burnrate(rref, p, pref, n, dt)
+    call burn_state%burnrate(r_ref_, p, n, dt)
     call geometry%calcsurf(burn_state, dt)
     associate(R_gas => chamber_gas%R_gas(), c_v => chamber_gas%c_v(), g => chamber_gas%g(), c_p => chamber_gas%c_p())
       associate( &
