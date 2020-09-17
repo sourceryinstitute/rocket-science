@@ -228,7 +228,6 @@ subroutine calmdotgen(r, surf)
   real(dp), intent(in) :: r, surf
   mdotgen=rhos*r*surf
   edotgen=mdotgen*cp*Tflame
-  !print *,'mgen,egen',mdotgen,edotgen
 end subroutine
 
 subroutine massflow
@@ -299,7 +298,6 @@ subroutine calcp(vol)
     implicit none
     real(dp), intent(in) :: vol
     p=mcham*rgas*t/vol
-  !  print *,'pt',time,p,t
 end subroutine
 
 subroutine calcthrust

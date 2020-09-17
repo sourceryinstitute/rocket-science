@@ -22,7 +22,6 @@ subroutine burnrate
   implicit none
   r=rref*(p/pref)**n ! calculate burn rate
   db=db+r*dt  ! calculate incremental burn distance
-  !print * , 'i,r',i,r
 end subroutine
 
 subroutine calcsurf
@@ -45,7 +44,6 @@ subroutine calmdotgen
   implicit none
   mdotgen=rhos*r*surf
   edotgen=mdotgen*cp*Tflame
-  !print *,'mgen,egen',mdotgen,edotgen
 end subroutine
 
 subroutine massflow
@@ -115,7 +113,6 @@ subroutine calcp
     use mod1
     implicit none
     p=mcham*rgas*t/vol
-  !  print *,'pt',time,p,t
 end subroutine
 
 subroutine calcthrust
