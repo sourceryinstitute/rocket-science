@@ -8,12 +8,10 @@ real(dp), parameter :: RU=8314d0
 real(dp), parameter :: zero=0._dp, one=1._dp
 
 real(dp):: cp,cv,g,rgas,mw,dia,cf,rref,rhos,psipa,pref
-real(dp):: dt,tmax,Tflame
+real(dp):: Tflame
 real(dp):: thrust=zero, area, n
-real(dp):: texit, dsigng,pamb,p,t
-real(dp):: mcham,echam,time=zero
-integer nsteps,i
-real(dp), allocatable :: output(:,:)
+real(dp):: texit, pamb,p,t
+real(dp):: mcham,echam
 
 end module
 
@@ -445,6 +443,10 @@ integer, parameter :: success = 0
 
 type(burn_state_t) burn_state
 type(geometry_t) geometry
+real(dp) :: time, dt,tmax
+
+real(dp), allocatable :: output(:,:)
+integer nsteps, i
 
 real(dp) dt_, t_max_
 real(dp) c_p_, MW_
@@ -462,6 +464,8 @@ namelist/nozzle_list/ dia_, C_f_
 
 open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
 call assert(io_status == success, "legcy_rocket: io_status == success", error_message)
+
+time = zero
 
 read(file_unit, nml=numerics_list)
 dt   = dt_
