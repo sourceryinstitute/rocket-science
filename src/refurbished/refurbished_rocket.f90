@@ -10,7 +10,7 @@ real(dp), parameter :: zero=0._dp, one=1._dp
 real(dp):: cp,cv,g,rgas,mw,dia,cf,rref,rhos,psipa,pref
 real(dp):: dt,tmax,Tflame
 real(dp):: thrust=zero, area, n,mdotout,edotout,energy
-real(dp):: mdotos=zero, edotos, texit, dsigng,pamb,p,t
+real(dp):: texit, dsigng,pamb,p,t
 real(dp):: mcham,echam,time=zero
 integer nsteps,i
 real(dp), allocatable :: output(:,:)
@@ -73,7 +73,7 @@ module burn_state_interface
 
   end interface
 
-end module
+end module burn_state_interface
 
 submodule(burn_state_interface) burn_state_implementation
   implicit none
@@ -103,7 +103,7 @@ contains
     r = this%r_
   end procedure
 
-end submodule
+end submodule burn_state_implementation
 
 module geometry_interface
   !! propellent grain is a cylinder burning radially outward and axially inward.
@@ -238,21 +238,18 @@ module generation_rate_interface
   interface
 
     pure module function calmdotgen(rhos, r, surf, cp, Tflame) result(new_generation_rate)
-      use global_variables, only : dp
       implicit none
       real(dp), intent(in) :: rhos, r, surf, cp, Tflame
       type(generation_rate_t) new_generation_rate
     end function
 
     pure module function mdotgen(this)
-      use global_variables, only : dp
       implicit none
       class(generation_rate_t), intent(in) :: this
       real(dp) mdotgen
     end function
 
     pure module function edotgen(this)
-      use global_variables, only : dp
       implicit none
       class(generation_rate_t), intent(in) :: this
       real(dp) edotgen
@@ -260,7 +257,7 @@ module generation_rate_interface
 
   end interface
 
-end module
+end module generation_rate_interface
 
 submodule(generation_rate_interface) generation_rate_implementation
   implicit none
@@ -281,27 +278,64 @@ contains
     mdotgen = this%mdotgen_
   end procedure
 
-end submodule
+end submodule generation_rate_implementation
 
-module refurbished_rocket_module
+
+module flow_rate_interface
+  use global_variables, only : dp
   implicit none
 
+  private
+
+  type, public :: flow_rate_t
+    private
+    real(dp) mdotos_, edotos_
+  contains
+    procedure :: mdotos
+    procedure :: edotos
+  end type
+
+  interface flow_rate_t
+    module procedure massflow
+  end interface
+
+  interface
+
+    pure module function massflow(t, g, rgas, p, cp, pamb, area) result(new_flow_rate)
+       implicit none
+       real(dp), intent(in) :: t, g, rgas, p, cp, pamb, area
+       type(flow_rate_t) new_flow_rate
+    end function
+
+    pure module function mdotos(this)
+      implicit none
+      class(flow_rate_t), intent(in) :: this
+      real(dp) mdotos
+    end function
+
+    pure module function edotos(this)
+      implicit none
+      class(flow_rate_t), intent(in) :: this
+      real(dp) edotos
+    end function
+
+  end interface
+
+end module flow_rate_interface
+
+submodule(flow_rate_interface) flow_rate_implementation
+  implicit none
 contains
 
-subroutine massflow
-   USE global_variables
-   implicit none
-   REAL (8)::mdtx,engyx
-   REAL (8)::tx,gx,rx,px,cpx,pcrit,facx,term1,term2,pratio,cstar,ax,hx
-   REAL (8):: p1,p2
+  module procedure massflow
 
-   mdotos=0.
-   edotos=0.  ! initially set them to zero prior to running this loop
+    REAL (dp):: mdtx, tx,gx,rx,px,cpx,pcrit,facx,term1,term2,pratio,cstar,ax,hx, p1, p2, dsigng
 
-     p1=p
-     p2=pamb
-     ax=area
-     IF(p1.GT.p2) THEN
+    p1=p
+    p2=pamb
+    ax=area
+
+    IF(p1>p2) THEN
         dsigng=1
         tx=t
         gx=g
@@ -322,26 +356,47 @@ subroutine massflow
     end if
 
     pcrit=(2./(gx+1.))**(gx/(gx-1.))
-    IF((1./pratio).LT.pcrit) then
-        ! choked flow
+
+    associate(choked_flow => (1./pratio)<pcrit)
+      calculate_mdtx: &
+      IF(choked_flow) then
         cstar=sqrt((1./gx)*((gx+1.)/2.)**((gx+1.)/(gx-1.))*rx*tx)
         mdtx=px*ax/cstar
-    else
-        ! unchoked flow
-      facx=pratio**((gx-1.)/gx)
-      term1=SQRT(gx*rx*tx/facx)
-      term2=SQRT((facx-1.)/(gx-1.))
-      mdtx=SQRT(2.)*px/pratio/rx/tx*facx*term1*term2*ax
-    end if
-    engyx=mdtx*hx  ! reformulate based on enthalpy of the chamber
-    mdotos=mdtx*dsigng ! exiting mass flow (could be negative "dsigng")
-    edotos=engyx*dsigng ! exiting enthalpy
-end subroutine
+      else
+        facx=pratio**((gx-1.)/gx)
+        term1=SQRT(gx*rx*tx/facx)
+        term2=SQRT((facx-1.)/(gx-1.))
+        mdtx=SQRT(2.)*px/pratio/rx/tx*facx*term1*term2*ax
+      end if calculate_mdtx
+    end associate
 
-subroutine addmass(mdotgen, edotgen, dt)
-    use global_variables, only : dp, mdotos, edotos, mcham, echam
+    new_flow_rate%mdotos_ = mdtx*dsigng ! exiting mass flow (could be negative "dsigng")
+    associate(engyx => mdtx*hx)  ! reformulate based on enthalpy of the chamber
+      new_flow_rate%edotos_ = engyx*dsigng ! exiting enthalpy
+    end associate
+
+  end procedure
+
+  module procedure edotos
+    edotos = this%edotos_
+  end procedure
+
+  module procedure mdotos
+    mdotos = this%mdotos_
+  end procedure
+
+end submodule flow_rate_implementation
+
+module refurbished_rocket_module
+  implicit none
+
+contains
+
+
+subroutine addmass(mdotgen, edotgen, mdotos, edotos, dt)
+    use global_variables, only : dp, mcham, echam
     implicit none
-    real(dp), intent(in) :: mdotgen, edotgen, dt
+    real(dp), intent(in) :: mdotgen, edotgen, mdotos, edotos, dt
     mcham=mcham+(mdotgen-mdotos)*dt
     echam=echam+(edotgen-edotos)*dt
 end subroutine
@@ -366,7 +421,6 @@ subroutine calcthrust
 end subroutine
 
 
-
 function refurbished_rocket(input_file)
   !! this driver function simulates a single stage
   !! rocket motor flowing out of a nozzle, assuming
@@ -378,6 +432,7 @@ use results_interface, only : results_t
 use burn_state_interface, only : burn_state_t
 use geometry_interface, only : geometry_t
 use generation_rate_interface, only : generation_rate_t
+use flow_rate_interface, only : flow_rate_t
 use global_variables
 implicit none
 
@@ -458,9 +513,9 @@ allocate(output(0:nsteps,6)) ! preallocate an output array
   pamb=101325d0 ! atmospheric pressure
 
 !  calculate initial mass and energy in the chamber
-  associate(V=>geometry%vol())
-    mcham=p*V/rgas/t  ! use ideal gas law to determine mass in chamber
-    output(0,:)=[time,p,t,mdotos,thrust,V]
+  associate(vol => geometry%vol(), mdotos => 0._dp)
+    mcham=p*vol/rgas/t  ! use ideal gas law to determine mass in chamber
+    output(0,:)=[time,p,t,mdotos,thrust,vol]
   end associate
   echam=mcham*cv*t ! initial internal energy in chamber
 
@@ -468,17 +523,26 @@ allocate(output(0:nsteps,6)) ! preallocate an output array
   do i=1,nsteps
    call burn_state%burnrate(rref, p, pref, n, dt)
    call geometry%calcsurf(burn_state, dt)
-   call massflow
-   associate(generation_rate => generation_rate_t(rhos, burn_state%r(), geometry%surf(burn_state%db()), cp, Tflame))  ! [mdot,engy,dsign]= massflow(p1,pamb,t1,tamb,cp,cp,rgas,rgas,g,g,area)
-     call addmass(generation_rate%mdotgen(), generation_rate%edotgen(), dt)
-   end associate
-   call calct
-   associate(vol=>geometry%vol())
-     call calcp(vol)
-     call calcthrust
-     time=time+dt
-     output(i,:)=[time,p,t,mdotos,thrust,vol]
-   end associate
+   associate( &
+     flow_rate => flow_rate_t(t, g, rgas, p, cp, pamb, area), &
+     generation_rate => generation_rate_t(rhos, burn_state%r(), geometry%surf(burn_state%db()), cp, Tflame) &
+     )
+       associate( &
+         mdotos => flow_rate%mdotos(), &
+         edotos => flow_rate%edotos(), &
+         mdotgen => generation_rate%mdotgen(), &
+         edotgen => generation_rate%edotgen() &
+       )
+       call addmass(mdotgen, edotgen, mdotos, edotos, dt)
+       call calct
+       associate(vol => geometry%vol())
+         call calcp(vol)
+         call calcthrust
+         time=time+dt
+         output(i,:)=[time,p,t,mdotos,thrust,vol]
+       end associate
+     end associate
+    end associate
   enddo
 
   block
