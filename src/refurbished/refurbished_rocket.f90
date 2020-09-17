@@ -9,7 +9,7 @@ real(dp), parameter :: zero=0._dp, one=1._dp
 
 real(dp):: cp,cv,g,rgas,mw,dia,cf,rref,rhos,psipa,pref
 real(dp):: dt,tmax,Tflame
-real(dp):: thrust=zero, area, n,mdotgen,mdotout,edotgen,edotout,energy
+real(dp):: thrust=zero, area, n,mdotout,edotout,energy
 real(dp):: mdotos=zero, edotos, texit, dsigng,pamb,p,t
 real(dp):: mcham,echam,time=zero
 integer nsteps,i
@@ -217,18 +217,71 @@ contains
 
 end submodule geometry_implementation
 
+module generation_rate_interface
+  use global_variables, only : dp
+  implicit none
+
+  private
+
+  type, public :: generation_rate_t
+    private
+    real(dp) mdotgen_, edotgen_
+  contains
+    procedure :: calmdotgen
+    procedure :: mdotgen
+    procedure :: edotgen
+  end type
+
+  interface
+
+    module subroutine calmdotgen(this, rhos, r, surf, cp, Tflame)
+      use global_variables, only : dp
+      implicit none
+      class(generation_rate_t), intent(out) :: this
+      real(dp), intent(in) :: rhos, r, surf, cp, Tflame
+    end subroutine
+
+    pure module function mdotgen(this)
+      use global_variables, only : dp
+      implicit none
+      class(generation_rate_t), intent(in) :: this
+      real(dp) mdotgen
+    end function
+
+    pure module function edotgen(this)
+      use global_variables, only : dp
+      implicit none
+      class(generation_rate_t), intent(in) :: this
+      real(dp) edotgen
+    end function
+
+  end interface
+
+end module
+
+submodule(generation_rate_interface) generation_rate_implementation
+  implicit none
+contains
+
+  module procedure calmdotgen
+    this%mdotgen_ = rhos*r*surf
+    this%edotgen_ = this%mdotgen_*cp*Tflame
+  end procedure
+
+  module procedure edotgen
+    edotgen = this%edotgen_
+  end procedure
+
+  module procedure mdotgen
+    mdotgen = this%mdotgen_
+  end procedure
+
+end submodule
+
 module refurbished_rocket_module
   implicit none
 
 contains
-
-subroutine calmdotgen(r, surf)
-  use global_variables
-  implicit none
-  real(dp), intent(in) :: r, surf
-  mdotgen=rhos*r*surf
-  edotgen=mdotgen*cp*Tflame
-end subroutine
 
 subroutine massflow
    USE global_variables
@@ -280,21 +333,22 @@ subroutine massflow
     edotos=engyx*dsigng ! exiting enthalpy
 end subroutine
 
-subroutine addmass
-    use global_variables
+subroutine addmass(mdotgen, edotgen, dt)
+    use global_variables, only : dp, mdotos, edotos, mcham, echam
     implicit none
+    real(dp), intent(in) :: mdotgen, edotgen, dt
     mcham=mcham+(mdotgen-mdotos)*dt
     echam=echam+(edotgen-edotos)*dt
 end subroutine
 
 subroutine calct
-    use global_variables
+    use global_variables, only : mcham, echam, cv, t
     implicit none
     t=echam/mcham/cv
 end subroutine
 
 subroutine calcp(vol)
-    use global_variables
+    use global_variables, only : dp, p, mcham, rgas, t
     implicit none
     real(dp), intent(in) :: vol
     p=mcham*rgas*t/vol
@@ -306,7 +360,6 @@ subroutine calcthrust
     thrust=(p-pamb)*area*cf ! correction to thrust (actual vs vacuum thrust)
 end subroutine
 
-!!  Main program
 
 
 function refurbished_rocket(input_file)
@@ -319,6 +372,7 @@ use assertions_interface, only : assert, max_errmsg_len
 use results_interface, only : results_t
 use burn_state_interface, only : burn_state_t
 use geometry_interface, only : geometry_t
+use generation_rate_interface, only : generation_rate_t
 use global_variables
 implicit none
 
@@ -331,6 +385,7 @@ integer, parameter :: success = 0
 
 type(burn_state_t) burn_state
 type(geometry_t) geometry
+type(generation_rate_t) generation_rate
 
 real(dp) dt_, t_max_
 real(dp) c_p_, MW_
@@ -409,9 +464,9 @@ allocate(output(0:nsteps,6)) ! preallocate an output array
   do i=1,nsteps
    call burn_state%burnrate(rref, p, pref, n, dt)
    call geometry%calcsurf(burn_state, dt)
-   call calmdotgen(burn_state%r(), geometry%surf(burn_state%db()))  ! [mdot,engy,dsign]= massflow(p1,pamb,t1,tamb,cp,cp,rgas,rgas,g,g,area)
+   call generation_rate%calmdotgen(rhos, burn_state%r(), geometry%surf(burn_state%db()), cp, Tflame)  ! [mdot,engy,dsign]= massflow(p1,pamb,t1,tamb,cp,cp,rgas,rgas,g,g,area)
    call massflow
-   call addmass
+   call addmass(generation_rate%mdotgen(), generation_rate%edotgen(), dt)
    call calct
    associate(vol=>geometry%vol())
      call calcp(vol)
