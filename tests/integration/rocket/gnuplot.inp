@@ -1,14 +1,14 @@
-plot 'rocket.out' using 1:2 with lines title columnheader, 'legacy_rocket.out' using 1:2 with lines title columnheader
+plot 'rocket.out' using 1:2 with lines title columnheader, 'legacy_rocket.out' using 1:2 with lines title columnheader, 'refurbished_rocket.out' using 1:2 with lines title columnheader
 pause mouse any "Plot 1 of 4. Press any key to continue.\n"
 
-plot 'rocket.out' using 1:3 with lines title columnheader, 'legacy_rocket.out' using 1:3 with lines title columnheader
+plot 'rocket.out' using 1:3 with lines title columnheader, 'legacy_rocket.out' using 1:3 with lines title columnheader, 'refurbished_rocket.out' using 1:3 with lines title columnheader
 pause mouse any "Plot 2 of 4. Press any key to continue.\n"
 
-plot 'rocket.out' using 1:4 with lines title columnheader, 'legacy_rocket.out' using 1:4 with lines title columnheader
+plot 'rocket.out' using 1:4 with lines title columnheader, 'legacy_rocket.out' using 1:4 with lines title columnheader, 'refurbished_rocket.out' using 1:4 with lines title columnheader
 pause mouse any "Plot 3 of 4. Press any key to continue.\n"
 
-plot 'rocket.out' using 1:5 with lines title columnheader, 'legacy_rocket.out' using 1:5 with lines title columnheader
+plot 'rocket.out' using 1:5 with lines title columnheader, 'legacy_rocket.out' using 1:5 with lines title columnheader, 'refurbished_rocket.out' using 1:5 with lines title columnheader
 pause mouse any "Plot 4 of 4. Press any key to continue.\n"
 
-plot 'rocket.out' using 1:6 with lines title columnheader, 'legacy_rocket.out' using 1:6 with lines title columnheader
+plot 'rocket.out' using 1:6 with lines title columnheader, 'legacy_rocket.out' using 1:6 with lines title columnheader, 'refurbished_rocket.out' using 1:6 with lines title columnheader
 pause mouse any "Plot 5 of 4. Press any key to exit.\n"
