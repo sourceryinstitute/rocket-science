@@ -82,7 +82,6 @@ contains
     associate(r => (this%r_))
       this%db_=this%db_+r*dt  ! calculate incremental burn distance
     end associate
-    !print * , 'i,r_',i,r
   end procedure
 
   module procedure set_db
