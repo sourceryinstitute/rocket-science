@@ -1,19 +1,18 @@
-module global_variables
-implicit none
-save
-integer, parameter :: precision=15, range=307
-integer, parameter :: dp = selected_real_kind(precision, range)
-real(dp), parameter :: pi = 3.1415926539
-real(dp), parameter :: zero = 0._dp, one = 1._dp
-real(dp), parameter :: p_amb = 101325d0 ! atmospheric pressure
+module constants
+  implicit none
 
-real(dp):: rhos
-real(dp):: Tflame
+  integer, parameter :: precision=15, range=307
+  integer, parameter :: dp = selected_real_kind(precision, range)
+
+  real(dp), parameter :: pi = 3.1415926539
+  real(dp), parameter :: zero = 0._dp
+  real(dp), parameter :: one = 1._dp
+  real(dp), parameter :: p_amb = 101325d0 ! atmospheric pressure
 
 end module
 
 module burn_state_interface
-  use global_variables, only : dp
+  use constants, only : dp
   implicit none
 
   private
@@ -32,35 +31,30 @@ module burn_state_interface
   interface
 
     module subroutine burnrate(this, rref, p, n, dt)
-      use global_variables, only : dp
       implicit none
       class(burn_state_t), intent(inout) :: this
       real(dp), intent(in) :: rref, p, n, dt
     end subroutine
 
     module subroutine set_db(this, db)
-      use global_variables, only : dp
       implicit none
       class(burn_state_t), intent(inout) :: this
       real(dp), intent(in) :: db
     end subroutine
 
     module subroutine set_r(this, r)
-      use global_variables, only : dp
       implicit none
       class(burn_state_t), intent(inout) :: this
       real(dp), intent(in) :: r
     end subroutine
 
     pure module function db(this)
-      use global_variables, only : dp
       implicit none
       class(burn_state_t), intent(in) :: this
       real(dp) db
     end function
 
     pure module function r(this)
-      use global_variables, only : dp
       implicit none
       class(burn_state_t), intent(in) :: this
       real(dp) r
@@ -106,7 +100,7 @@ module geometry_interface
   !! propellent grain is a cylinder burning radially outward and axially inward.
   !! outer diameter is inhibited because this is a cast propellent: it was poured
   !! into the tube/chamber and only the inner diameter burns when ignited.
-  use global_variables, only : dp
+  use constants, only : dp
   implicit none
 
   private
@@ -125,7 +119,6 @@ module geometry_interface
   interface
 
     module subroutine define(this, vol, id, od, length)
-      use global_variables, only : dp
       implicit none
       class(geometry_t), intent(out) :: this
       real(dp), intent(in) :: vol, id, od, length
@@ -139,8 +132,6 @@ module geometry_interface
     end subroutine
 
     pure module function surf(this, burn_depth)
-      use global_variables, only : dp
-      use burn_state_interface, only : burn_state_t
       implicit none
       class(geometry_t), intent(in) :: this
       real(dp), intent(in) :: burn_depth
@@ -148,14 +139,12 @@ module geometry_interface
     end function
 
     pure module function vol(this)
-      use global_variables, only : dp
       implicit none
       class(geometry_t), intent(in) :: this
       real(dp) vol
     end function
 
     pure module function burnout(this, db)
-      use burn_state_interface, only : burn_state_t
       implicit none
       class(geometry_t), intent(in) :: this
       real(dp), intent(in) :: db
@@ -182,7 +171,7 @@ contains
   end procedure
 
   module procedure surf
-    use global_variables, only : pi
+    use constants, only : pi
 
     associate(db=>(burn_depth))
       associate(id=>(this%id_), od=>(this%od_), length=>(this%length_))
@@ -205,7 +194,7 @@ contains
 end submodule geometry_implementation
 
 module generation_rate_interface
-  use global_variables, only : dp
+  use constants, only : dp
   implicit none
 
   private
@@ -269,7 +258,7 @@ end submodule generation_rate_implementation
 
 
 module flow_rate_interface
-  use global_variables, only : dp
+  use constants, only : dp
   implicit none
 
   private
@@ -315,7 +304,7 @@ submodule(flow_rate_interface) flow_rate_implementation
 contains
 
   module procedure massflow
-    use global_variables, only : p_amb
+    use constants, only : p_amb
 
     REAL (dp):: mdtx, tx,gx,rx,px,cpx,pcrit,facx,term1,term2,pratio,cstar,ax,hx, p1, p2, dsigng
 
@@ -376,7 +365,7 @@ contains
 end submodule flow_rate_implementation
 
 module chamber_gas_interface
-  use global_variables, only : dp
+  use constants, only : dp
   implicit none
 
   private
@@ -495,7 +484,7 @@ contains
 end submodule chamber_gas_implementation
 
 module nozzle_interface
-  use global_variables, only : dp
+  use constants, only : dp
   implicit none
 
   private
@@ -539,13 +528,13 @@ submodule(nozzle_interface) nozzle_implementation
 contains
 
   module procedure define
-   use global_variables, only : pi
+   use constants, only : pi
    this%area_ = pi/4d0*dia**2 ! nozzle area
    this%C_f_ = C_f
   end procedure
 
   module procedure calcthrust
-    use global_variables, only : p_amb
+    use constants, only : p_amb
     calcthrust = (p-p_amb)*this%area_*this%C_f_ ! correction to thrust (actual vs vacuum thrust)
   end procedure
 
@@ -574,7 +563,7 @@ use generation_rate_interface, only : generation_rate_t
 use flow_rate_interface, only : flow_rate_t
 use chamber_gas_interface, only : chamber_gas_t
 use nozzle_interface, only : nozzle_t
-use global_variables
+use constants, only : dp, zero, one
 implicit none
 
 character(len=*), intent(in) :: input_file
@@ -590,8 +579,9 @@ type(chamber_gas_t) chamber_gas
 type(nozzle_t) nozzle
 
 real(dp), parameter :: initial_volume = one
-real(dp) :: time, dt, tmax
+real(dp) time, dt, tmax, rhos, Tflame
 real(dp), allocatable :: output(:,:)
+
 integer nsteps, i
 
 real(dp) dt_, t_max_
