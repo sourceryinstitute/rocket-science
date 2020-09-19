@@ -25,19 +25,17 @@ module burn_state_interface
     procedure :: set_r
     procedure :: db
     procedure :: r
-  end type
-
-  interface burn_state_t
-    module procedure new_burn_state
-  end interface
+    procedure, private :: new_burn_state
+    generic :: burn_state_t => new_burn_state ! This prevents extending this type.
+  end type                                    ! To allow extension, make this a non-type-bound generic interface.
 
   interface
 
-    pure module function new_burn_state(old_burn_state, rref, p, n, dt)
+    pure module function new_burn_state(this, rref, p, n, dt)
       implicit none
-      type(burn_state_t) :: new_burn_state
-      type(burn_state_t), intent(in) :: old_burn_state
+      class(burn_state_t), intent(in) :: this
       real(dp), intent(in) :: rref, p, n, dt
+      type(burn_state_t) :: new_burn_state
     end function
 
     module subroutine set_db(this, db)
@@ -78,7 +76,7 @@ contains
 
     new_burn_state%r_ = rref*(p/pref)**n ! calculate burn rate
     associate(r => (new_burn_state%r_))
-      new_burn_state%db_ = old_burn_state%db_+r*dt  ! calculate incremental burn distance
+      new_burn_state%db_ = this%db_+r*dt  ! calculate incremental burn distance
     end associate
   end procedure
 
@@ -647,7 +645,7 @@ allocate(output(0:nsteps,6)) ! preallocate an output array
 
       associate(p => chamber_gas%p(geometry%vol()))
 
-        burn_state = burn_state_t(burn_state, r_ref_, p, n_, dt)
+        burn_state = burn_state%burn_state_t(r_ref_, p, n_, dt)
 
         associate(db => burn_state%db(), r => burn_state%r())
           associate(surf => geometry%surf(db))
