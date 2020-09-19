@@ -21,20 +21,24 @@ module burn_state_interface
     private
     real(dp) r_, db_
   contains
-    procedure :: define => burnrate
     procedure :: set_db
     procedure :: set_r
     procedure :: db
     procedure :: r
   end type
 
+  interface burn_state_t
+    module procedure new_burn_state
+  end interface
+
   interface
 
-    module subroutine burnrate(this, rref, p, n, dt)
+    pure module function new_burn_state(old_burn_state, rref, p, n, dt)
       implicit none
-      class(burn_state_t), intent(inout) :: this
+      type(burn_state_t) :: new_burn_state
+      type(burn_state_t), intent(in) :: old_burn_state
       real(dp), intent(in) :: rref, p, n, dt
-    end subroutine
+    end function
 
     module subroutine set_db(this, db)
       implicit none
@@ -68,13 +72,13 @@ submodule(burn_state_interface) burn_state_implementation
   implicit none
 contains
 
-  module procedure burnrate
+  module procedure new_burn_state
     real(dp), parameter :: psipa=6894.76d0   ! unit conversion factor: pascals per psi
     real(dp), parameter :: pref=3000d0*psipa ! constant reference pressure for burn-rate calculation
 
-    this%r_ = rref*(p/pref)**n ! calculate burn rate
-    associate(r => (this%r_))
-      this%db_=this%db_+r*dt  ! calculate incremental burn distance
+    new_burn_state%r_ = rref*(p/pref)**n ! calculate burn rate
+    associate(r => (new_burn_state%r_))
+      new_burn_state%db_ = old_burn_state%db_+r*dt  ! calculate incremental burn distance
     end associate
   end procedure
 
@@ -493,18 +497,21 @@ module nozzle_interface
     private
     real(dp) area_, C_f_
   contains
-    procedure :: define
     procedure :: thrust => calcthrust
     procedure :: area
   end type
 
+  interface nozzle_t
+    module procedure new_nozzle_t
+  end interface
+
   interface
 
-    module subroutine define(this, dia, C_f)
+    pure module function new_nozzle_t(dia, C_f)
       implicit none
-      class(nozzle_t), intent(inout) :: this
       real(dp), intent(in) ::  dia, C_f
-    end subroutine
+      type(nozzle_t) new_nozzle_t
+    end function
 
     pure module function calcthrust(this, p)
       implicit none
@@ -527,10 +534,10 @@ submodule(nozzle_interface) nozzle_implementation
   implicit none
 contains
 
-  module procedure define
-   use constants, only : pi
-   this%area_ = pi/4d0*dia**2 ! nozzle area
-   this%C_f_ = C_f
+  module procedure new_nozzle_t
+    use constants, only : pi
+    new_nozzle_t%area_ = pi/4d0*dia**2 ! nozzle area
+    new_nozzle_t%C_f_ = C_f
   end procedure
 
   module procedure calcthrust
@@ -617,7 +624,7 @@ call geometry%define(vol = initial_volume, id = id_, od = od_, length = length_)
 rhos   = rho_solid_
 
 read(file_unit, nml=nozzle_list)
-call nozzle%define(dia=dia_, C_f=C_f_)
+nozzle = nozzle_t(dia=dia_, C_f=C_f_)
 
 close(file_unit)
 
@@ -640,7 +647,7 @@ allocate(output(0:nsteps,6)) ! preallocate an output array
 
       associate(p => chamber_gas%p(geometry%vol()))
 
-        call burn_state%define((r_ref_), p, (n_), (dt))
+        burn_state = burn_state_t(burn_state, r_ref_, p, n_, dt)
 
         associate(db => burn_state%db(), r => burn_state%r())
           associate(surf => geometry%surf(db))
