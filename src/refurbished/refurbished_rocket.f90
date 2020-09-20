@@ -27,14 +27,14 @@ module burn_state_interface
   end type
 
   interface burn_state_t
-    module procedure new_burn_state
+    module procedure new_burn_state_t
   end interface
 
   interface
 
-    pure module function new_burn_state(old_burn_state, rref, p, n, dt)
+    pure module function new_burn_state_t(old_burn_state, rref, p, n, dt)
       implicit none
-      type(burn_state_t) :: new_burn_state
+      type(burn_state_t) :: new_burn_state_t
       type(burn_state_t), intent(in) :: old_burn_state
       real(dp), intent(in) :: rref, p, n, dt
     end function
@@ -65,13 +65,13 @@ submodule(burn_state_interface) burn_state_implementation
   implicit none
 contains
 
-  module procedure new_burn_state
+  module procedure new_burn_state_t
     real(dp), parameter :: psipa=6894.76d0   ! unit conversion factor: pascals per psi
     real(dp), parameter :: pref=3000d0*psipa ! constant reference pressure for burn-rate calculation
 
-    new_burn_state%r_ = rref*(p/pref)**n ! calculate burn rate
-    associate(r => (new_burn_state%r_))
-      new_burn_state%db_ = old_burn_state%db_+r*dt  ! calculate incremental burn distance
+    new_burn_state_t%r_ = rref*(p/pref)**n ! calculate burn rate
+    associate(r => (new_burn_state_t%r_))
+      new_burn_state_t%db_ = old_burn_state%db_+r*dt  ! calculate incremental burn distance
     end associate
   end procedure
 
