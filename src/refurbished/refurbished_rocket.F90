@@ -1,4 +1,6 @@
 module refurbished_rocket_module
+  !! A driver funtion for the object-oriented and purely functional refurbished_rocket library,
+  !! which in turn resulted from an evolutionary refactoring of legacy_rocket.f90.
   implicit none
 
   private
