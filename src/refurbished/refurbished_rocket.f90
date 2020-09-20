@@ -378,29 +378,32 @@ module chamber_gas_interface
     private
     real(dp) MW_, c_p_, mcham_, echam_
   contains
-    procedure :: define
     procedure :: R_gas
     procedure :: c_p
     procedure :: c_v
     procedure :: T
     procedure :: p => calcp
     procedure :: g
-    procedure :: increment => addmass
   end type
+
+  interface chamber_gas_t
+    module procedure new_chamber_gas_t, incremented_chamber_gas_t
+  end interface
 
   interface
 
-    module subroutine define(this, MW, c_p, T, p, V)
+    pure module function new_chamber_gas_t(MW, c_p, T, p, V)
       implicit none
-      class(chamber_gas_t), intent(out) :: this
       real(dp), intent(in) :: MW, c_p, T, p, V
-    end subroutine
+      type(chamber_gas_t) new_chamber_gas_t
+    end function
 
-    module subroutine addmass(this, mass_increment, energy_increment)
+    pure module function incremented_chamber_gas_t(old_chamber_gas_t, mass_increment, energy_increment)
       implicit none
-      class(chamber_gas_t), intent(inout) :: this
+      type(chamber_gas_t), intent(in) :: old_chamber_gas_t
       real(dp), intent(in) :: mass_increment, energy_increment
-    end subroutine
+      type(chamber_gas_t) incremented_chamber_gas_t
+    end function
 
     pure module function R_gas(this)
       implicit none
@@ -447,16 +450,18 @@ submodule(chamber_gas_interface) chamber_gas_implementation
   implicit none
 contains
 
-  module procedure define
-    this%MW_  = MW
-    this%c_p_ = c_p
-    this%mcham_ = p*V/(this%R_gas()*T)
-    this%echam_  = this%mcham_*this%c_v()*T
+  module procedure new_chamber_gas_t
+    new_chamber_gas_t%MW_  = MW
+    new_chamber_gas_t%c_p_ = c_p
+    new_chamber_gas_t%mcham_ = p*V/(new_chamber_gas_t%R_gas()*T)
+    new_chamber_gas_t%echam_  = new_chamber_gas_t%mcham_*new_chamber_gas_t%c_v()*T
   end procedure
 
-  module procedure addmass
-    this%mcham_ = this%mcham_ + mass_increment
-    this%echam_ = this%echam_ + energy_increment
+  module procedure incremented_chamber_gas_t
+    incremented_chamber_gas_t%MW_    = old_chamber_gas_t%MW_
+    incremented_chamber_gas_t%c_p_   = old_chamber_gas_t%c_p_
+    incremented_chamber_gas_t%mcham_ = old_chamber_gas_t%mcham_ + mass_increment
+    incremented_chamber_gas_t%echam_ = old_chamber_gas_t%echam_ + energy_increment
   end procedure
 
   module procedure R_gas
@@ -614,7 +619,7 @@ tmax = t_max_
 
 read(file_unit, nml=gas_list)
 read(file_unit, nml=state_list)
-call chamber_gas%define(MW = MW_, c_p = c_p_, T = temperature_, p = pressure_, V = initial_volume)
+chamber_gas = chamber_gas_t(MW = MW_, c_p = c_p_, T = temperature_, p = pressure_, V = initial_volume)
 
 read(file_unit, nml=combustion_list)
 Tflame = T_flame_
@@ -659,7 +664,7 @@ allocate(output(0:nsteps,6)) ! preallocate an output array
               generation_rate => generation_rate_t(rhos, r, surf, c_p, Tflame) &
             )
               associate(mdotos => flow_rate%mdotos())
-                call chamber_gas%increment( &
+                chamber_gas = chamber_gas_t( chamber_gas,  &
                   mass_increment   = (generation_rate%mdotgen() - mdotos)*dt, &
                   energy_increment = (generation_rate%edotgen() - flow_rate%edotos())*dt  &
                 )
