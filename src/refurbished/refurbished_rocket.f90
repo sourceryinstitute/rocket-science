@@ -58,13 +58,14 @@ module burn_state_interface
 
   end interface
 
-  real(dp), parameter :: psipa=6894.76d0    ! unit conversion factor: pascals per psi
-  real(dp), parameter :: p_ref=3000d0*psipa ! constant reference pressure for burn-rate calculation
-
 end module burn_state_interface
 
 submodule(burn_state_interface) burn_state_implementation
   implicit none
+
+  real(dp), parameter :: psipa=6894.76d0    ! unit conversion factor: pascals per psi
+  real(dp), parameter :: p_ref=3000d0*psipa ! constant reference pressure for burn-rate calculation
+
 contains
 
   module procedure new_burn_state_t
