@@ -22,7 +22,6 @@ module burn_state_interface
     real(dp) r_, db_
   contains
     procedure :: set_db
-    procedure :: set_r
     procedure :: db
     procedure :: r
   end type
@@ -44,12 +43,6 @@ module burn_state_interface
       implicit none
       class(burn_state_t), intent(inout) :: this
       real(dp), intent(in) :: db
-    end subroutine
-
-    module subroutine set_r(this, r)
-      implicit none
-      class(burn_state_t), intent(inout) :: this
-      real(dp), intent(in) :: r
     end subroutine
 
     pure module function db(this)
@@ -84,10 +77,6 @@ contains
 
   module procedure set_db
     this%db_ = db
-  end procedure
-
-  module procedure set_r
-    this%r_ = r
   end procedure
 
   module procedure db
