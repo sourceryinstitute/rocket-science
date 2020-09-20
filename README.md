@@ -74,7 +74,7 @@ cd tests/integration/rocket
  ../../../src/rocket-science --graph
 ```
 which should produce plots much like the thrust history below.  Press any button to bring up the next plot.
-If the run completed successfully, the modern and legacy curves will be indistinguishable.
+If the run completed successfully, the modern, legacy and refurbished curves will be indistinguishable.
 
 ![Thrust history](https://user-images.githubusercontent.com/13108868/93721216-36439200-fb43-11ea-9ad2-d0797b043783.png)
 
