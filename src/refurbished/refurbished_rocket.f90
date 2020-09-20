@@ -171,11 +171,11 @@ contains
   end procedure
 
   module procedure surf
-    use constants, only : pi
+    use constants, only : pi, zero
 
     associate(db=>(burn_depth))
       associate(id=>(this%id_), od=>(this%od_), length=>(this%length_))
-        surf = merge(0._dp, pi*(id+2.0d0*db)*(length-2.0d0*db)+0.5d0*pi*(od**2.0d0-(id+2.0*db)**2.0d0), this%burnout(db))
+        surf = merge(zero, pi*(id+2.0d0*db)*(length-2.0d0*db)+0.5d0*pi*(od**2.0d0-(id+2.0*db)**2.0d0), this%burnout(db))
       end associate
     end associate
 
@@ -654,7 +654,7 @@ allocate(output(0:nsteps,6)) ! preallocate an output array
         associate(db => burn_state%db(), r => burn_state%r())
           associate(surf => geometry%surf(db))
 
-            geometry = geometry_t(geometry,  merge(zero, r*surf*dt, geometry%burnout(db)) )
+            geometry = geometry_t(geometry,  volume_increment = merge(zero, r*surf*dt, geometry%burnout(db)) )
 
             associate( &
               flow_rate => flow_rate_t(chamber_gas%T(), g, R_gas, p, c_p, nozzle%area()), &
