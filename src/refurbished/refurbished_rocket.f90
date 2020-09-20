@@ -113,27 +113,30 @@ module geometry_interface
     private
     real(dp) vol_, id_, od_, length_
   contains
-    procedure :: define
-    procedure :: increment_volume => calcsurf
     procedure :: surf
     procedure :: vol
     procedure :: burnout
   end type
 
+  interface geometry_t
+    module procedure new_geometry_t, incremented_geometry_t
+  end interface
+
   interface
 
-    module subroutine define(this, vol, id, od, length)
+    pure module function new_geometry_t(vol, id, od, length)
       implicit none
-      class(geometry_t), intent(out) :: this
       real(dp), intent(in) :: vol, id, od, length
-    end subroutine
+      type(geometry_t) :: new_geometry_t
+    end function
 
-    module subroutine calcsurf(this, increment)
+    pure module function incremented_geometry_t(old_geometry_t, volume_increment)
       !! cylinder burning from id outward and from both ends along the length
       implicit none
-      class(geometry_t), intent(inout) :: this
-      real(dp), intent(in) :: increment
-    end subroutine
+      type(geometry_t), intent(in) :: old_geometry_t
+      real(dp), intent(in) :: volume_increment
+      type(geometry_t) incremented_geometry_t
+    end function
 
     pure module function surf(this, burn_depth)
       implicit none
@@ -163,15 +166,18 @@ submodule(geometry_interface) geometry_implementation
   implicit none
 contains
 
-  module procedure define
-    this%vol_ = vol
-    this%id_ = id
-    this%od_ = od
-    this%length_ = length
+  module procedure new_geometry_t
+    new_geometry_t%vol_    = vol
+    new_geometry_t%id_     = id
+    new_geometry_t%od_     = od
+    new_geometry_t%length_ = length
   end procedure
 
-  module procedure calcsurf
-    this%vol_ = this%vol_ + increment ! increment the interior volume of the chamber a little
+  module procedure incremented_geometry_t
+    incremented_geometry_t%id_     = old_geometry_t%id_
+    incremented_geometry_t%od_     = old_geometry_t%od_
+    incremented_geometry_t%length_ = old_geometry_t%length_
+    incremented_geometry_t%vol_    = old_geometry_t%vol_ + volume_increment
   end procedure
 
   module procedure surf
@@ -625,7 +631,7 @@ read(file_unit, nml=combustion_list)
 Tflame = T_flame_
 
 read(file_unit, nml=grain_list)
-call geometry%define(vol = initial_volume, id = id_, od = od_, length = length_)
+geometry = geometry_t(vol = initial_volume, id = id_, od = od_, length = length_)
 rhos   = rho_solid_
 
 read(file_unit, nml=nozzle_list)
@@ -657,7 +663,7 @@ allocate(output(0:nsteps,6)) ! preallocate an output array
         associate(db => burn_state%db(), r => burn_state%r())
           associate(surf => geometry%surf(db))
 
-            call geometry%increment_volume( merge(zero, r*surf*dt, geometry%burnout(db)) )
+            geometry = geometry_t(geometry,  merge(zero, r*surf*dt, geometry%burnout(db)) )
 
             associate( &
               flow_rate => flow_rate_t(chamber_gas%T(), g, R_gas, p, c_p, nozzle%area()), &
