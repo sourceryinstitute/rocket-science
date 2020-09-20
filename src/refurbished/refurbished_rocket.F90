@@ -13,7 +13,6 @@ contains
     !! encapsulates the time history of values that can be printed via user-defined
     !! derived-type output.
 
-    use assertions_interface, only : assert, max_errmsg_len
     use results_interface, only : results_t
     use burn_state_t_interface, only : burn_state_t
     use geometry_t_interface, only : geometry_t
@@ -27,20 +26,10 @@ contains
     character(len=*), intent(in) :: input_file
     type(results_t) refurbished_rocket
 
-    character(len=max_errmsg_len) error_message
-    integer io_status, file_unit
-    integer, parameter :: success = 0
-
     type(burn_state_t) burn_state
     type(geometry_t) geometry
     type(chamber_gas_t) chamber_gas
     type(nozzle_t) nozzle
-
-    real(dp), parameter :: initial_volume = one
-    real(dp) time, dt, tmax, rhos, Tflame
-    real(dp), allocatable :: output(:,:)
-
-    integer nsteps, i
 
     real(dp) dt_, t_max_
     real(dp) c_p_, MW_
@@ -49,44 +38,64 @@ contains
     real(dp) id_, od_, length_, rho_solid_
     real(dp) dia_, C_f_
 
-    namelist/numerics_list/ dt_, t_max_
-    namelist/gas_list/ c_p_, MW_
-    namelist/state_list/  temperature_, pressure_
-    namelist/combustion_list/ T_flame_, r_ref_, n_
-    namelist/grain_list/ id_, od_, length_, rho_solid_
-    namelist/nozzle_list/ dia_, C_f_
+    call read_input_and_define_objects(burn_state, geometry, chamber_gas, nozzle, dt_, t_max_)
 
-    open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
-    call assert(io_status == success, "legacy_rocket: io_status == success", error_message)
+    refurbished_rocket = compute_time_history(nsteps = nint(t_max_/dt_))
 
-    read(file_unit, nml=numerics_list)
-    dt   = dt_
-    tmax = t_max_
+  contains
 
-    read(file_unit, nml=gas_list)
-    read(file_unit, nml=state_list)
-    chamber_gas = chamber_gas_t(MW = MW_, c_p = c_p_, T = temperature_, p = pressure_, V = initial_volume)
+    subroutine read_input_and_define_objects(burn_state, geometry, chamber_gas, nozzle, dt_, t_max_)
+      use assertions_interface, only : assert, max_errmsg_len
+      type(burn_state_t), intent(out) :: burn_state
+      type(geometry_t), intent(out) :: geometry
+      type(chamber_gas_t), intent(out) :: chamber_gas
+      type(nozzle_t), intent(out) :: nozzle
+      real(dp), intent(out) :: dt_, t_max_
 
-    read(file_unit, nml=combustion_list)
-    Tflame = T_flame_
+      real(dp), parameter :: initial_volume = one
+      integer, parameter :: success = 0
+      integer io_status, file_unit
+      character(len=max_errmsg_len) error_message
 
-    read(file_unit, nml=grain_list)
-    geometry = geometry_t(vol = initial_volume, id = id_, od = od_, length = length_)
-    rhos   = rho_solid_
+      namelist/numerics_list/ dt_, t_max_
+      namelist/gas_list/ c_p_, MW_
+      namelist/state_list/  temperature_, pressure_
+      namelist/combustion_list/ T_flame_, r_ref_, n_
+      namelist/grain_list/ id_, od_, length_, rho_solid_
+      namelist/nozzle_list/ dia_, C_f_
 
-    read(file_unit, nml=nozzle_list)
-    nozzle = nozzle_t(dia=dia_, C_f=C_f_)
+      open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
+      call assert(io_status == success, "refurbished_rocket: io_status == success", error_message)
 
-    close(file_unit)
+      read(file_unit, nml=numerics_list) ! must read in order defined in the file (this requirement might be compiler-specific)
+      read(file_unit, nml=gas_list)
+      read(file_unit, nml=state_list)
+      chamber_gas = chamber_gas_t(MW = MW_, c_p = c_p_, T = temperature_, p = pressure_, V = initial_volume)
 
-    burn_state = burn_state_t(reference_burn_rate = r_ref_, pressure = pressure_, exponent_ = n_)
+      read(file_unit, nml=combustion_list)
+      burn_state = burn_state_t(reference_burn_rate = r_ref_, pressure = pressure_, exponent_ = n_)
+
+      read(file_unit, nml=grain_list)
+      geometry = geometry_t(vol = initial_volume, id = id_, od = od_, length = length_)
+
+      read(file_unit, nml=nozzle_list)
+      nozzle = nozzle_t(dia=dia_, C_f=C_f_)
 
 
-    nsteps=nint(tmax/dt) ! number of time steps
+      close(file_unit)
 
-    allocate(output(0:nsteps,6)) ! preallocate an output array
+    end subroutine read_input_and_define_objects
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
+    function compute_time_history(nsteps)
+
+      integer, intent(in) :: nsteps
+      type(results_t) compute_time_history
+
+      integer i
+      real(dp), allocatable :: output(:,:)
+      real(dp) time
+
+      allocate(output(0:nsteps,6)) ! preallocate an output array
 
       time = zero
       associate(mdotos => zero, thrust => zero, volume => geometry%vol())
@@ -99,25 +108,25 @@ contains
 
           associate(p => chamber_gas%p(geometry%vol()))
 
-            burn_state = burn_state_t(burn_state, r_ref_, p, n_, dt)
+            burn_state = burn_state_t(burn_state, r_ref_, p, n_, dt_)
 
             associate(db => burn_state%db(), r => burn_state%r())
               associate(surf => geometry%surf(db))
 
-                geometry = geometry_t(geometry,  volume_increment = merge(zero, r*surf*dt, geometry%burnout(db)) )
+                geometry = geometry_t(geometry,  volume_increment = merge(zero, r*surf*dt_, geometry%burnout(db)) )
 
                 associate( &
                   flow_rate => flow_rate_t(chamber_gas%T(), g, R_gas, p, c_p, nozzle%area()), &
-                  generation_rate => generation_rate_t(rhos, r, surf, c_p, Tflame) &
+                  generation_rate => generation_rate_t(rho_solid_, r, surf, c_p, T_flame_) &
                 )
                   associate(mdotos => flow_rate%mdotos())
                     chamber_gas = chamber_gas_t( chamber_gas,  &
-                      mass_increment   = (generation_rate%mdotgen() - mdotos)*dt, &
-                      energy_increment = (generation_rate%edotgen() - flow_rate%edotos())*dt  &
+                      mass_increment   = (generation_rate%mdotgen() - mdotos)*dt_, &
+                      energy_increment = (generation_rate%edotgen() - flow_rate%edotos())*dt_  &
                     )
                     associate(volume => geometry%vol())
                       associate(p => chamber_gas%p(volume))
-                        time = time + dt
+                        time = time + dt_
                         output(i,:)=[time, p, chamber_gas%T(), mdotos, nozzle%thrust(p), volume]
                       end associate
                     end associate
@@ -133,8 +142,10 @@ contains
         character(len=*), parameter :: header(*) = [ character(len=len("temperatureRefurbished)")) :: &
           "timeRefurbished", "pressureRefurbished", "temperatureRefurbished", "mdotosRefurbished", "thrustRefurbished", &
           "volumeRefurbished"]
-        refurbished_rocket = results_t(header, output)
+        compute_time_history = results_t(header, output)
       end block
+
+    end function compute_time_history
 
   end function refurbished_rocket
 
