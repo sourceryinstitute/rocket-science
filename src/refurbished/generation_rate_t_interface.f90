@@ -1,4 +1,4 @@
-module generation_rate_interface
+module generation_rate_t_interface
   !! Describe the gas-liberation from the burning propellant
   use constants, only : dp
   implicit none
@@ -44,4 +44,4 @@ module generation_rate_interface
 
   end interface
 
-end module generation_rate_interface
+end module generation_rate_t_interface

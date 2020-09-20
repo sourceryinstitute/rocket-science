@@ -1,4 +1,4 @@
-module burn_state_interface
+module burn_state_t_interface
   !! Capture the state and state-update methods of the propellent burning process
   use constants, only : dp
   implicit none
@@ -56,4 +56,4 @@ module burn_state_interface
 
   end interface
 
-end module burn_state_interface
+end module burn_state_t_interface

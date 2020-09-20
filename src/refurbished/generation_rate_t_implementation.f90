@@ -1,4 +1,4 @@
-submodule(generation_rate_interface) generation_rate_implementation
+submodule(generation_rate_t_interface) generation_rate_t_implementation
   !! Defined the generation_rate_t user-defined structure constructors and type-bound procedures
   implicit none
 contains
@@ -18,4 +18,4 @@ contains
     mdotgen = this%mdotgen_
   end procedure
 
-end submodule generation_rate_implementation
+end submodule generation_rate_t_implementation

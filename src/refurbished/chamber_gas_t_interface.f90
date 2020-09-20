@@ -1,4 +1,4 @@
-module chamber_gas_interface
+module chamber_gas_t_interface
   !! Model the thermodynamic state of the liberated gas in the motor chamber
   use constants, only : dp
   implicit none
@@ -88,4 +88,4 @@ module chamber_gas_interface
 
   end interface
 
-end module chamber_gas_interface
+end module chamber_gas_t_interface

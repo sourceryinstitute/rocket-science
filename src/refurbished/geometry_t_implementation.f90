@@ -1,4 +1,4 @@
-submodule(geometry_interface) geometry_implementation
+submodule(geometry_t_interface) geometry_t_implementation
   !! Define the grain geometry user-defined structure constructors and geometrical formulas
   implicit none
 contains
@@ -38,4 +38,4 @@ contains
     vol = this%vol_
   end procedure
 
-end submodule geometry_implementation
+end submodule geometry_t_implementation

@@ -15,11 +15,11 @@ function refurbished_rocket(input_file)
 
 use assertions_interface, only : assert, max_errmsg_len
 use results_interface, only : results_t
-use burn_state_interface, only : burn_state_t
-use geometry_interface, only : geometry_t
-use generation_rate_interface, only : generation_rate_t
+use burn_state_t_interface, only : burn_state_t
+use geometry_t_interface, only : geometry_t
+use generation_rate_t_interface, only : generation_rate_t
 use flow_rate_t_interface, only : flow_rate_t
-use chamber_gas_interface, only : chamber_gas_t
+use chamber_gas_t_interface, only : chamber_gas_t
 use nozzle_t_interface, only : nozzle_t
 use constants, only : dp, zero, one
 implicit none

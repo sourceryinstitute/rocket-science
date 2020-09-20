@@ -1,4 +1,4 @@
-submodule(burn_state_interface) burn_state_implementation
+submodule(burn_state_t_interface) burn_state_t_implementation
   !! Define the burn_state_t user-defined structure constructors and type-bound procedures
   implicit none
 
@@ -32,4 +32,4 @@ contains
     r = this%r_
   end procedure
 
-end submodule burn_state_implementation
+end submodule burn_state_t_implementation

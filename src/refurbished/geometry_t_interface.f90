@@ -1,4 +1,4 @@
-module geometry_interface
+module geometry_t_interface
   !! Model the propellent grain as a cylinder burning radially outward from its
   !! evacuated axial core and axially inward towards its cross-sectional mid-plane.
   !! The outer diameter is inhibited by the surroundin casing as the propellent was
@@ -71,4 +71,4 @@ module geometry_interface
 
   end interface
 
-end module geometry_interface
+end module geometry_t_interface

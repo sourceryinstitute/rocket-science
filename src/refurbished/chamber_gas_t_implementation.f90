@@ -1,4 +1,4 @@
-submodule(chamber_gas_interface) chamber_gas_implementation
+submodule(chamber_gas_t_interface) chamber_gas_t_implementation
   !! Defined the chamber_gas_t user-defined structure constructors and type-bound procedures
   implicit none
 
@@ -43,4 +43,4 @@ contains
     g = this%c_p_/this%c_v()
   end procedure
 
-end submodule chamber_gas_implementation
+end submodule chamber_gas_t_implementation
