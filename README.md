@@ -76,8 +76,7 @@ cd tests/integration/rocket
 which should produce plots much like the thrust history below.  Press any button to bring up the next plot.
 If the run completed successfully, the modern and legacy curves will be indistinguishable.
 
-![Thrust history](https://user-images.githubusercontent.com/13108868/92982607-b6873a80-f453-11ea-950f-294275381502.png)
-
+![Thrust history](https://user-images.githubusercontent.com/13108868/93721216-36439200-fb43-11ea-9ad2-d0797b043783.png)
 
 [Fortran 2018 Development Enviroment]: http://www.sourceryinstitute.org
 [GNU Compiler Collection]: https://gcc.gnu.org
