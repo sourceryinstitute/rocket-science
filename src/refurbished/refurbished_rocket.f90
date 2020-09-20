@@ -21,29 +21,28 @@ module burn_state_interface
     private
     real(dp) r_, db_
   contains
-    procedure :: set_db
     procedure :: db
     procedure :: r
   end type
 
   interface burn_state_t
-    module procedure new_burn_state_t
+    module procedure new_burn_state_t, zero_burn_depth
   end interface
 
   interface
 
-    pure module function new_burn_state_t(old_burn_state, rref, p, n, dt)
+    pure module function new_burn_state_t(old_burn_state, r_ref, p, n, dt)
       implicit none
       type(burn_state_t) :: new_burn_state_t
       type(burn_state_t), intent(in) :: old_burn_state
-      real(dp), intent(in) :: rref, p, n, dt
+      real(dp), intent(in) :: r_ref, p, n, dt
     end function
 
-    module subroutine set_db(this, db)
+    pure module function zero_burn_depth(reference_burn_rate, pressure, exponent_)
       implicit none
-      class(burn_state_t), intent(inout) :: this
-      real(dp), intent(in) :: db
-    end subroutine
+      real(dp), intent(in) :: reference_burn_rate, pressure, exponent_
+      type(burn_state_t) zero_burn_depth
+    end function
 
     pure module function db(this)
       implicit none
@@ -59,6 +58,9 @@ module burn_state_interface
 
   end interface
 
+  real(dp), parameter :: psipa=6894.76d0    ! unit conversion factor: pascals per psi
+  real(dp), parameter :: p_ref=3000d0*psipa ! constant reference pressure for burn-rate calculation
+
 end module burn_state_interface
 
 submodule(burn_state_interface) burn_state_implementation
@@ -66,17 +68,16 @@ submodule(burn_state_interface) burn_state_implementation
 contains
 
   module procedure new_burn_state_t
-    real(dp), parameter :: psipa=6894.76d0   ! unit conversion factor: pascals per psi
-    real(dp), parameter :: pref=3000d0*psipa ! constant reference pressure for burn-rate calculation
-
-    new_burn_state_t%r_ = rref*(p/pref)**n ! calculate burn rate
+    new_burn_state_t%r_ = r_ref*(p/p_ref)**n ! calculate burn rate
     associate(r => (new_burn_state_t%r_))
       new_burn_state_t%db_ = old_burn_state%db_+r*dt  ! calculate incremental burn distance
     end associate
   end procedure
 
-  module procedure set_db
-    this%db_ = db
+  module procedure zero_burn_depth
+    use constants, only : zero
+    zero_burn_depth%r_  = reference_burn_rate*(pressure/p_ref)**exponent_
+    zero_burn_depth%db_ = zero
   end procedure
 
   module procedure db
@@ -628,7 +629,8 @@ nozzle = nozzle_t(dia=dia_, C_f=C_f_)
 
 close(file_unit)
 
-call burn_state%set_db(zero) ! initialize propellant burn distance
+burn_state = burn_state_t(r_ref_, pressure_, n_)
+
 
 nsteps=nint(tmax/dt) ! number of time steps
 
