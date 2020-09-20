@@ -21,32 +21,28 @@ module burn_state_interface
     private
     real(dp) r_, db_
   contains
-    procedure :: define => burnrate
-    procedure :: set_db
-    procedure :: set_r
     procedure :: db
     procedure :: r
   end type
 
+  interface burn_state_t
+    module procedure new_burn_state_t, zero_burn_depth
+  end interface
+
   interface
 
-    module subroutine burnrate(this, rref, p, n, dt)
+    pure module function new_burn_state_t(old_burn_state, r_ref, p, n, dt)
       implicit none
-      class(burn_state_t), intent(inout) :: this
-      real(dp), intent(in) :: rref, p, n, dt
-    end subroutine
+      type(burn_state_t) :: new_burn_state_t
+      type(burn_state_t), intent(in) :: old_burn_state
+      real(dp), intent(in) :: r_ref, p, n, dt
+    end function
 
-    module subroutine set_db(this, db)
+    pure module function zero_burn_depth(reference_burn_rate, pressure, exponent_)
       implicit none
-      class(burn_state_t), intent(inout) :: this
-      real(dp), intent(in) :: db
-    end subroutine
-
-    module subroutine set_r(this, r)
-      implicit none
-      class(burn_state_t), intent(inout) :: this
-      real(dp), intent(in) :: r
-    end subroutine
+      real(dp), intent(in) :: reference_burn_rate, pressure, exponent_
+      type(burn_state_t) zero_burn_depth
+    end function
 
     pure module function db(this)
       implicit none
@@ -66,24 +62,23 @@ end module burn_state_interface
 
 submodule(burn_state_interface) burn_state_implementation
   implicit none
+
+  real(dp), parameter :: psipa=6894.76d0    ! unit conversion factor: pascals per psi
+  real(dp), parameter :: p_ref=3000d0*psipa ! constant reference pressure for burn-rate calculation
+
 contains
 
-  module procedure burnrate
-    real(dp), parameter :: psipa=6894.76d0   ! unit conversion factor: pascals per psi
-    real(dp), parameter :: pref=3000d0*psipa ! constant reference pressure for burn-rate calculation
-
-    this%r_ = rref*(p/pref)**n ! calculate burn rate
-    associate(r => (this%r_))
-      this%db_=this%db_+r*dt  ! calculate incremental burn distance
+  module procedure new_burn_state_t
+    new_burn_state_t%r_ = r_ref*(p/p_ref)**n ! calculate burn rate
+    associate(r => (new_burn_state_t%r_))
+      new_burn_state_t%db_ = old_burn_state%db_+r*dt  ! calculate incremental burn distance
     end associate
   end procedure
 
-  module procedure set_db
-    this%db_ = db
-  end procedure
-
-  module procedure set_r
-    this%r_ = r
+  module procedure zero_burn_depth
+    use constants, only : zero
+    zero_burn_depth%r_  = reference_burn_rate*(pressure/p_ref)**exponent_
+    zero_burn_depth%db_ = zero
   end procedure
 
   module procedure db
@@ -109,27 +104,30 @@ module geometry_interface
     private
     real(dp) vol_, id_, od_, length_
   contains
-    procedure :: define
-    procedure :: increment_volume => calcsurf
     procedure :: surf
     procedure :: vol
     procedure :: burnout
   end type
 
+  interface geometry_t
+    module procedure new_geometry_t, incremented_geometry_t
+  end interface
+
   interface
 
-    module subroutine define(this, vol, id, od, length)
+    pure module function new_geometry_t(vol, id, od, length)
       implicit none
-      class(geometry_t), intent(out) :: this
       real(dp), intent(in) :: vol, id, od, length
-    end subroutine
+      type(geometry_t) :: new_geometry_t
+    end function
 
-    module subroutine calcsurf(this, increment)
+    pure module function incremented_geometry_t(old_geometry_t, volume_increment)
       !! cylinder burning from id outward and from both ends along the length
       implicit none
-      class(geometry_t), intent(inout) :: this
-      real(dp), intent(in) :: increment
-    end subroutine
+      type(geometry_t), intent(in) :: old_geometry_t
+      real(dp), intent(in) :: volume_increment
+      type(geometry_t) incremented_geometry_t
+    end function
 
     pure module function surf(this, burn_depth)
       implicit none
@@ -159,23 +157,26 @@ submodule(geometry_interface) geometry_implementation
   implicit none
 contains
 
-  module procedure define
-    this%vol_ = vol
-    this%id_ = id
-    this%od_ = od
-    this%length_ = length
+  module procedure new_geometry_t
+    new_geometry_t%vol_    = vol
+    new_geometry_t%id_     = id
+    new_geometry_t%od_     = od
+    new_geometry_t%length_ = length
   end procedure
 
-  module procedure calcsurf
-    this%vol_ = this%vol_ + increment ! increment the interior volume of the chamber a little
+  module procedure incremented_geometry_t
+    incremented_geometry_t%id_     = old_geometry_t%id_
+    incremented_geometry_t%od_     = old_geometry_t%od_
+    incremented_geometry_t%length_ = old_geometry_t%length_
+    incremented_geometry_t%vol_    = old_geometry_t%vol_ + volume_increment
   end procedure
 
   module procedure surf
-    use constants, only : pi
+    use constants, only : pi, zero
 
     associate(db=>(burn_depth))
       associate(id=>(this%id_), od=>(this%od_), length=>(this%length_))
-        surf = merge(0._dp, pi*(id+2.0d0*db)*(length-2.0d0*db)+0.5d0*pi*(od**2.0d0-(id+2.0*db)**2.0d0), this%burnout(db))
+        surf = merge(zero, pi*(id+2.0d0*db)*(length-2.0d0*db)+0.5d0*pi*(od**2.0d0-(id+2.0*db)**2.0d0), this%burnout(db))
       end associate
     end associate
 
@@ -374,29 +375,32 @@ module chamber_gas_interface
     private
     real(dp) MW_, c_p_, mcham_, echam_
   contains
-    procedure :: define
     procedure :: R_gas
     procedure :: c_p
     procedure :: c_v
     procedure :: T
     procedure :: p => calcp
     procedure :: g
-    procedure :: increment => addmass
   end type
+
+  interface chamber_gas_t
+    module procedure new_chamber_gas_t, incremented_chamber_gas_t
+  end interface
 
   interface
 
-    module subroutine define(this, MW, c_p, T, p, V)
+    pure module function new_chamber_gas_t(MW, c_p, T, p, V)
       implicit none
-      class(chamber_gas_t), intent(out) :: this
       real(dp), intent(in) :: MW, c_p, T, p, V
-    end subroutine
+      type(chamber_gas_t) new_chamber_gas_t
+    end function
 
-    module subroutine addmass(this, mass_increment, energy_increment)
+    pure module function incremented_chamber_gas_t(old_chamber_gas_t, mass_increment, energy_increment)
       implicit none
-      class(chamber_gas_t), intent(inout) :: this
+      type(chamber_gas_t), intent(in) :: old_chamber_gas_t
       real(dp), intent(in) :: mass_increment, energy_increment
-    end subroutine
+      type(chamber_gas_t) incremented_chamber_gas_t
+    end function
 
     pure module function R_gas(this)
       implicit none
@@ -443,16 +447,18 @@ submodule(chamber_gas_interface) chamber_gas_implementation
   implicit none
 contains
 
-  module procedure define
-    this%MW_  = MW
-    this%c_p_ = c_p
-    this%mcham_ = p*V/(this%R_gas()*T)
-    this%echam_  = this%mcham_*this%c_v()*T
+  module procedure new_chamber_gas_t
+    new_chamber_gas_t%MW_  = MW
+    new_chamber_gas_t%c_p_ = c_p
+    new_chamber_gas_t%mcham_ = p*V/(new_chamber_gas_t%R_gas()*T)
+    new_chamber_gas_t%echam_  = new_chamber_gas_t%mcham_*new_chamber_gas_t%c_v()*T
   end procedure
 
-  module procedure addmass
-    this%mcham_ = this%mcham_ + mass_increment
-    this%echam_ = this%echam_ + energy_increment
+  module procedure incremented_chamber_gas_t
+    incremented_chamber_gas_t%MW_    = old_chamber_gas_t%MW_
+    incremented_chamber_gas_t%c_p_   = old_chamber_gas_t%c_p_
+    incremented_chamber_gas_t%mcham_ = old_chamber_gas_t%mcham_ + mass_increment
+    incremented_chamber_gas_t%echam_ = old_chamber_gas_t%echam_ + energy_increment
   end procedure
 
   module procedure R_gas
@@ -493,18 +499,21 @@ module nozzle_interface
     private
     real(dp) area_, C_f_
   contains
-    procedure :: define
     procedure :: thrust => calcthrust
     procedure :: area
   end type
 
+  interface nozzle_t
+    module procedure new_nozzle_t
+  end interface
+
   interface
 
-    module subroutine define(this, dia, C_f)
+    pure module function new_nozzle_t(dia, C_f)
       implicit none
-      class(nozzle_t), intent(inout) :: this
       real(dp), intent(in) ::  dia, C_f
-    end subroutine
+      type(nozzle_t) new_nozzle_t
+    end function
 
     pure module function calcthrust(this, p)
       implicit none
@@ -527,10 +536,10 @@ submodule(nozzle_interface) nozzle_implementation
   implicit none
 contains
 
-  module procedure define
-   use constants, only : pi
-   this%area_ = pi/4d0*dia**2 ! nozzle area
-   this%C_f_ = C_f
+  module procedure new_nozzle_t
+    use constants, only : pi
+    new_nozzle_t%area_ = pi/4d0*dia**2 ! nozzle area
+    new_nozzle_t%C_f_ = C_f
   end procedure
 
   module procedure calcthrust
@@ -607,21 +616,22 @@ tmax = t_max_
 
 read(file_unit, nml=gas_list)
 read(file_unit, nml=state_list)
-call chamber_gas%define(MW = MW_, c_p = c_p_, T = temperature_, p = pressure_, V = initial_volume)
+chamber_gas = chamber_gas_t(MW = MW_, c_p = c_p_, T = temperature_, p = pressure_, V = initial_volume)
 
 read(file_unit, nml=combustion_list)
 Tflame = T_flame_
 
 read(file_unit, nml=grain_list)
-call geometry%define(vol = initial_volume, id = id_, od = od_, length = length_)
+geometry = geometry_t(vol = initial_volume, id = id_, od = od_, length = length_)
 rhos   = rho_solid_
 
 read(file_unit, nml=nozzle_list)
-call nozzle%define(dia=dia_, C_f=C_f_)
+nozzle = nozzle_t(dia=dia_, C_f=C_f_)
 
 close(file_unit)
 
-call burn_state%set_db(zero) ! initialize propellant burn distance
+burn_state = burn_state_t(r_ref_, pressure_, n_)
+
 
 nsteps=nint(tmax/dt) ! number of time steps
 
@@ -640,19 +650,19 @@ allocate(output(0:nsteps,6)) ! preallocate an output array
 
       associate(p => chamber_gas%p(geometry%vol()))
 
-        call burn_state%define((r_ref_), p, (n_), (dt))
+        burn_state = burn_state_t(burn_state, r_ref_, p, n_, dt)
 
         associate(db => burn_state%db(), r => burn_state%r())
           associate(surf => geometry%surf(db))
 
-            call geometry%increment_volume( merge(zero, r*surf*dt, geometry%burnout(db)) )
+            geometry = geometry_t(geometry,  volume_increment = merge(zero, r*surf*dt, geometry%burnout(db)) )
 
             associate( &
               flow_rate => flow_rate_t(chamber_gas%T(), g, R_gas, p, c_p, nozzle%area()), &
               generation_rate => generation_rate_t(rhos, r, surf, c_p, Tflame) &
             )
               associate(mdotos => flow_rate%mdotos())
-                call chamber_gas%increment( &
+                chamber_gas = chamber_gas_t( chamber_gas,  &
                   mass_increment   = (generation_rate%mdotgen() - mdotos)*dt, &
                   energy_increment = (generation_rate%edotgen() - flow_rate%edotos())*dt  &
                 )
