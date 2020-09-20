@@ -1,4 +1,4 @@
-module flow_rate_interface
+module flow_rate_t_interface
   !! Describe the gas flow rates resulting from the chamber-pressure/exit-pressure differential
   use constants, only : dp
   implicit none
@@ -16,12 +16,12 @@ module flow_rate_interface
   end type
 
   interface flow_rate_t !! Generic interface to user-defined structure constructors
-    module procedure flow_rate_t
+    module procedure new_flow_rate_t
   end interface
 
   interface
 
-    pure module function flow_rate_t(t, g, rgas, p, cp, area) result(new_flow_rate)
+    pure module function new_flow_rate_t(t, g, rgas, p, cp, area) result(new_flow_rate)
        !! Result is a new flow_rate_t object defined by the actual arguments
        implicit none
        real(dp), intent(in) :: t       !! temperature
@@ -49,4 +49,4 @@ module flow_rate_interface
 
   end interface
 
-end module flow_rate_interface
+end module flow_rate_t_interface

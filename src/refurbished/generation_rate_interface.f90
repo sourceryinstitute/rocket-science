@@ -15,7 +15,7 @@ module generation_rate_interface
     procedure :: edotgen
   end type
 
-  interface generation_rate_t !! Generic interface for ser-defined structure constructors
+  interface generation_rate_t !! Generic interface for user-defined structure constructors
     module procedure calmdotgen
   end interface
 

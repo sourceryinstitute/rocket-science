@@ -1,9 +1,9 @@
-submodule(flow_rate_interface) flow_rate_implementation
+submodule(flow_rate_t_interface) flow_rate_implementation
   !! Defined the flow_rate_t user-defined structure constructors and type-bound procedures
   implicit none
 contains
 
-  module procedure flow_rate_t
+  module procedure new_flow_rate_t
     use constants, only : p_amb
 
     REAL (dp):: mdtx, tx,gx,rx,px,cpx,pcrit,facx,term1,term2,pratio,cstar,ax,hx, p1, p2, dsigng
@@ -52,7 +52,7 @@ contains
       new_flow_rate%edotos_ = engyx*dsigng ! exiting enthalpy
     end associate
 
-  end procedure
+  end procedure new_flow_rate_t
 
   module procedure edotos
     edotos = this%edotos_
