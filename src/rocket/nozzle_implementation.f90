@@ -1,30 +1,13 @@
-module nozzle_module
+submodule(nozzle_interface) nozzle_implementation
   !! Encapsulate nozzle geometry and geometrical calculations
   use assertions_interface, only : assert, max_errmsg_len
   use kind_parameters, only : rkind
-
   implicit none
-  private
-
-  public :: nozzle_t
-
-  type nozzle_t
-    private
-    real(rkind) diameter_
-    real(rkind) C_f_        !! thrust coefficient
-  contains
-    procedure :: define
-    procedure :: diameter
-    procedure :: area
-    procedure :: thrust
-  end type
 
 contains
 
-   subroutine define(this, input_file)
-      class(nozzle_t), intent(out) :: this
-      character(len=*), intent(in) :: input_file
-      real(rkind) :: dia_ , C_f_
+   module procedure define
+      real(rkind) dia_ , C_f_
       namelist/nozzle_list/ dia_, C_f_
 
       block
@@ -40,26 +23,19 @@ contains
 
       this%diameter_ = dia_
       this%C_f_ = C_f_
-   end subroutine
+   end procedure
 
-   pure function diameter(this)
-     class(nozzle_t), intent(in) :: this
-     real(rkind) diameter
+   module procedure diameter
      diameter = this%diameter_
-   end function
+   end procedure
 
-   elemental function area(this)
+   module procedure area
      use universal_constants, only : pi
-     class(nozzle_t), intent(in) :: this
-     real(rkind) area
      area = pi*(this%diameter_**2)/4._rkind
-   end function
+   end procedure
 
-   elemental function thrust(this, gage_pressure)
-     class(nozzle_t), intent(in) :: this
-     real(rkind), intent(in) :: gage_pressure
-     real(rkind) thrust
+   module procedure thrust
      thrust = gage_pressure*this%area()*this%C_f_ ! correction to thrust (actual vs vacuum thrust)
-   end function
+   end procedure
 
-end module nozzle_module
+end submodule nozzle_implementation

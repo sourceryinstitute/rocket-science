@@ -1,0 +1,18 @@
+&numerics_list
+  dt_=0.001, t_max_=15.
+/
+&gas_list
+  c_p_=1500., MW_=28.
+/
+&state_list
+  temperature_=300., pressure_=101325.
+/
+&combustion_list
+  T_flame_=4000., r_ref_=0.05, n_ =0.4
+/
+&grain_list
+  id_=.25, od_=0.5, length_=1., rho_solid_=2000.
+/
+&nozzle_list
+  dia_=0.05, C_f_=1.7
+/

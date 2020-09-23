@@ -7,14 +7,12 @@ Test Steps
 
 Steps
 -----
-1. Copy the thrust unit test directory to a new directory with one of four names:
-  - calc_thrust
-  - calc_p
-  - calc_t
-  - mass_flow
+1. Copy the results-class unit test directory to a new directory, e.g., "nozzle-class".
 2. Edit tests/unit/CMakeLists.txt to add the new directory in the foreach statement.  This tells `cmake` look in that directory for further instructions.
 3. Edit tests/<new_name>/CMakeLists.txt to replace "thrust" with the name of the function you're testing (e.g., `calc_p`).
-4. Edit rocket_science/CMakeLists.txt to add your test direcotry name, which the script will also expect to be in the test program name in the form test-<name>.f90.
+4. Edit rocket_science/CMakeLists.txt to add your test directory name, which the script will also expect to be in the test program name in the form test-<name>.f90.
+
+-- Ignore this --
 5. Edit your new test so that it tests an as-yet-unwritten function with the same name as the prior subroutine, e.g., `calc_t()`:
   - Replace the legacy `mod1` with the soon-to-be refactored `module_variables`.
     -- Remove the `subroutine` call and invoke the new `pure function` of the same name as the legacy `subroutine` inside the `assert` call.
