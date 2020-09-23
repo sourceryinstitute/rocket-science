@@ -9,4 +9,5 @@ add_executable( test-results-class
 target_link_libraries( test-results-class
   PRIVATE utilities
   PRIVATE legacy
+  PRIVATE rocket
 )
