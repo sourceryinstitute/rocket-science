@@ -3,7 +3,7 @@ module chamber_interface
   use assertions_interface, only : assert, max_errmsg_len
   use gas_interface, only : gas_t
   use combustion_interface, only : combustion_t
-  use nozzle_module, only : nozzle_t
+  use nozzle_interface, only : nozzle_t
   use grain_interface, only : grain_t
   use kind_parameters, only : rkind
   implicit none

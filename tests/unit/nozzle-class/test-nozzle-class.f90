@@ -5,6 +5,8 @@ program main
 
   type(nozzle_t) nozzle
 
+  call nozzle%define("rocket.inp")
+
   print *," Test passed."
 
 end program main
