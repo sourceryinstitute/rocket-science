@@ -1,4 +1,4 @@
-submodule(nozzle_interface) nozzle_implementation
+submodule(nozzle_interface) nozzle_t_implementation
   !! Encapsulate nozzle geometry and geometrical calculations
   use assertions_interface, only : assert, max_errmsg_len
   use kind_parameters, only : rkind
@@ -38,4 +38,4 @@ contains
      thrust = gage_pressure*this%area()*this%C_f_ ! correction to thrust (actual vs vacuum thrust)
    end procedure
 
-end submodule nozzle_implementation
+end submodule nozzle_t_implementation
