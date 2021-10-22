@@ -1,4 +1,4 @@
-submodule(flow_rate_t_interface) flow_rate_implementation
+submodule(flow_rate_t_interface) flow_rate_t_implementation
   !! Defined the flow_rate_t user-defined structure constructors and type-bound procedures
   implicit none
 contains
@@ -62,4 +62,4 @@ contains
     mdotos = this%mdotos_
   end procedure
 
-end submodule flow_rate_implementation
+end submodule flow_rate_t_implementation
