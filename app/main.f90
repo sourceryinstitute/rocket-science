@@ -9,7 +9,7 @@ program main
   implicit none
 
   real(rkind), parameter :: zero=0._rkind
-  character(len=*), parameter :: input_file="rocket.inp"
+  character(len=*), parameter :: input_file="tests/integration/rocket/rocket.inp"
 
   type(motor_t) motor
   type(state_t) state !! state variables updated at each time step: mass, energy, time, and burn depth
@@ -92,6 +92,6 @@ contains
     type(command_line_t) command
     character(len=*), parameter :: graph(*) = [character(len=len("--graph")):: "--graph", "-g", "/graph", "/g"]
 
-    if (command%argument_present(graph)) call execute_command_line('gnuplot gnuplot.inp')
+    if (command%argument_present(graph)) call execute_command_line('gnuplot ./tests/integration/rocket/gnuplot.inp')
   end subroutine
 end program
