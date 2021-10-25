@@ -12,8 +12,10 @@ module state_interface
     real(rkind) energy_     !! internal energy contained in chamber
     real(rkind) burn_depth_ !! surface-normal burn distance
   contains
-    procedure :: define, row_vector, energy, mass, burn_depth, time, add
+    procedure :: define, row_vector, energy, mass, burn_depth, time
+    procedure, private :: add, multiply
     generic :: operator(+) => add
+    generic :: operator(*) => multiply
   end type
 
   interface state_t
@@ -76,6 +78,14 @@ module state_interface
       implicit none
       class(state_t), intent(in) :: lhs, rhs
       type(state_t) total
+    end function
+
+    pure module function multiply(lhs, rhs) result(product_)
+      !! result has components computed from summing lhs & rhs components
+      implicit none
+      class(state_t), intent(in) :: lhs
+      real(rkind), intent(in) :: rhs
+      type(state_t) product_
     end function
 
   end interface
