@@ -64,4 +64,11 @@ contains
     total%energy_     = lhs%energy_    + rhs%energy_
   end procedure
 
+  module procedure multiply
+    product_%time_       = lhs%time_       * rhs
+    product_%burn_depth_ = lhs%burn_depth_ * rhs
+    product_%mass_       = lhs%mass_       * rhs
+    product_%energy_     = lhs%energy_     * rhs
+  end procedure
+
 end submodule

@@ -157,7 +157,7 @@ namelist/grain_list/ id_, od_, length_, rho_solid_
 namelist/nozzle_list/ dia_, C_f_
 
 open(newunit=file_unit, file=input_file, status="old", iostat=io_status, iomsg=error_message)
-call assert(io_status == success, "legcy_rocket: io_status == success", error_message)
+call assert(io_status == success, "legacy_rocket: io_status == success", error_message)
 
 read(file_unit, nml=numerics_list)
 dt   = dt_
