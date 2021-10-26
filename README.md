@@ -32,9 +32,10 @@ Prerequisites
 -------------
 We developed this code using the following package versions
 
-* [`fpm`] 0.4.0,
-* [`gfortran`] 11.2.0 compiler, and
-* [`gnuplot`] 5.4, patchlevel 2 plotting package.
+* [`fpm`] 0.4.0 package manager and build system, 
+* [`gfortran`] 11.2.0 compiler, 
+* [`gnuplot`] 5.4, patchlevel 2 plotting package, and
+* [Vegetables] 7.2.1 unit testing framework.
 
 Earlier versions might work also.
 
@@ -47,11 +48,23 @@ git clone https://github.com/sourceryinstitute/rocket-science
 cd rocket-science
 fpm run -- "--graph"
 ```
-which should produce plots much like the thrust history below.  Press any button to bring up the next plot.
-If the run completed successfully, the modern, legacy and refurbished curves will be indistinguishable.
+which should produce plots much like the thrust history graph below.  
+Press any button to bring up the next plot.  If the run completed successfully, 
+the modern, legacy and refurbished curves will be indistinguishable.
+
+Test Fire 
+---------
+To run the rocket-science test suite, execute
+```
+fpm test
+```
+At the time of this writing, the test suite contains two integration tests:
+one each comparing the modern and refurbished simulation results to those
+of the legacy code.
 
 ![Thrust history](https://user-images.githubusercontent.com/13108868/93721216-36439200-fb43-11ea-9ad2-d0797b043783.png)
 
 [`fpm`]: https://github.com/fortran-lang/fpm
 [`gfortran`]: https://gcc.gnu.org
 [`gnuplot`]: http://www.gnuplot.info
+[Vegetables]: https://gitlab.com/everythingfunctional/vegetables
