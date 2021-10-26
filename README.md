@@ -42,15 +42,22 @@ Earlier versions might work also.
 Using Rocket-Science
 --------------------
 
-To download, build, and run the example application and plot the results, execute
+To download, build, and run the simplest version of the mini-app (which uses explicit euler time advancement), 
+and to plot the results with `gnuplot` installed on macOS, Linux, or Windows Subsystem for Linux, execute the
+following at a `bash` or `zsh` command prompt:
 ```bash
 git clone https://github.com/sourceryinstitute/rocket-science
 cd rocket-science
-fpm run -- "--graph"
+fpm run explicit-euler -- "--graph"
 ```
 which should produce plots much like the thrust history graph below.  
 Press any button to bring up the next plot.  If the run completed successfully, 
 the modern, legacy and refurbished curves will be indistinguishable.
+
+To run a mini-app version that uses 2nd-order Runge Kutta, execute
+```bash
+fpm run runge-kutta-2nd-order -- "--graph"
+```
 
 Test Fire 
 ---------
