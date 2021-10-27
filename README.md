@@ -54,9 +54,11 @@ which should produce plots much like the thrust history graph below.
 Press any button to bring up the next plot.  If the run completed successfully, 
 the modern, legacy and refurbished curves will be indistinguishable.
 
-To run a mini-app version that uses 2nd-order Runge Kutta, execute
+To run a mini-app versions that use 2nd-order Runge Kutta and Runge-Kutta-Fehlberg
+time advancement, respectively, and to graph the results, execute
 ```bash
 fpm run runge-kutta-2nd-order -- "--graph"
+fpm run runge-kutta-fehlberg -- "--graph"
 ```
 
 Test Fire 
