@@ -1,0 +1,37 @@
+@startuml
+Title Refurbished Rocket Classes
+
+class nozzle_t{
+  area_ : real
+  C_f_  : real
+}
+class geometry_t{
+  r_     : real
+  r_ref_ : real
+  db_    : real
+  surf() : real
+  vol() : real
+  burnout() : logical
+}
+class chamber_gas_t{
+  MW_    : real
+  c_p_   : real
+  mcham_ : real
+  echam_ : real
+}
+class flow_rate_t{
+  mdotos_ : real
+  edotos_ : real
+}
+class generation_rate_t{
+  mdotgen_ : real
+  edotgen_ : real
+}
+class burn_state_t{
+  vol_    : real
+  id_     : real
+  od_     : real
+  length_ : real
+}
+
+@enduml
