@@ -1,4 +1,4 @@
-program main
+program explicit_euler
   !! A mini-application for rocket motor simulation:
   !! demonstrating an object-oriented, functional programming style in Fortran 2018
   !! with automatic graphing of results in gnuplot for comparison against a legacy,

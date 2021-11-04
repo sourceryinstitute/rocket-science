@@ -1,4 +1,4 @@
-program main
+program runge_kutta_2nd_order
   !! A mini-application for rocket motor simulation:
   !! demonstrating an object-oriented, functional programming style in Fortran 2018
   !! with automatic graphing of results in gnuplot for comparison against a legacy,

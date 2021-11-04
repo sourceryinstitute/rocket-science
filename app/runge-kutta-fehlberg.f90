@@ -1,4 +1,4 @@
-program main
+program runge_kutta_fehlberg
   !! A mini-application for rocket motor simulation:
   !! demonstrating an object-oriented, functional programming style in Fortran 2018
   !! with automatic graphing of results in gnuplot for comparison against a legacy,
@@ -12,7 +12,7 @@ program main
   character(len=*), parameter :: input_file="app/rocket.inp"
 
   type(motor_t) motor
-  type(state_t) state !! state variables updated at each time step: mass, energy, time, and burn depth
+  type(state_t) state, TE !! state variables updated at each time step: mass, energy, time, and burn depth
   type(state_t), allocatable :: history(:)
 
   call motor%define(input_file)
@@ -34,6 +34,11 @@ program main
         [65._rkind/432._rkind, -5._rkind/16._rkind, 13._rkind/16._rkind, 4._rkind/27._rkind, 5._rkind/144._rkind]
       real(rkind), parameter :: CH(*) = &
         [47._rkind/450._rkind, 0._rkind, 12._rkind/25._rkind, 32._rkind/225._rkind, 1._rkind/30._rkind, 6._rkind/25._rkind]
+        real(rkind), parameter :: CT(*) = &
+          [-1._rkind/150._rkind, 0._rkind, 3._rkind/100._rkind, -16._rkind/75._rkind, -1._rkind/20._rkind, 6._rkind/25._rkind]
+        real(rkind), allocatable :: TE_max_abs(:)
+
+      TE_max_abs = [0., 0., 0.]
 
       do while(state%time() < motor%t_max())
         associate(k1 => motor%d_dt(state)*dt)
@@ -42,7 +47,9 @@ program main
               associate(k4 => motor%d_dt(state + k1*B4(1)  + k2*B4(2)+ k3*B4(3))*dt)
                 associate(k5 => motor%d_dt(state + k1*B5(1) + k2*B5(2) + k3*B5(3) + k4*B5(4))*dt)
                   associate(k6 => motor%d_dt(state + k1*B6(1) + k2*B6(2) + k3*B6(3) + k4*B6(4) + k5*B6(5))*dt)
-                    state = state + k1*CH(1) + k2*CH(2) + k3*CH(3) + k4*CH(4) + k5*CH(5)+ k6*CH(6)
+                    state = state + k1*CH(1) + k2*CH(2) + k3*CH(3) + k4*CH(4) + k5*CH(5) + k6*CH(6)
+                    TE =            k1*CT(1) + k2*CT(2) + k3*CT(3) + k4*CT(4) + k5*CT(5) + k6*CT(6) 
+                    TE_max_abs = max(TE_max_abs, TE%abs())
                   end associate
                 end associate
               end associate
@@ -51,8 +58,12 @@ program main
         end associate
         history = [history, state]
       end do
+      
+      print *,"maximum absolute truncation error: ", TE_max_abs(:)
+
     end block 
   end associate
+  
 
   call write_results
   call graph_if_requested
