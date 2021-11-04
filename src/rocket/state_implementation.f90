@@ -29,8 +29,8 @@ contains
     end associate
   end procedure
 
-  module procedure abs
-    this_abs = [0._rkind] !abs([this%mass_, this%energy_, this%burn_depth_])
+  module procedure absolute
+    this_abs = abs([this%mass_, this%energy_, this%burn_depth_])
   end procedure
   
   module procedure new_state

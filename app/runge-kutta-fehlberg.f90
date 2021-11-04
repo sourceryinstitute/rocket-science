@@ -10,6 +10,7 @@ program runge_kutta_fehlberg
 
   real(rkind), parameter :: zero=0._rkind
   character(len=*), parameter :: input_file="app/rocket.inp"
+  real(rkind) dt
 
   type(motor_t) motor
   type(state_t) state, TE !! state variables updated at each time step: mass, energy, time, and burn depth
@@ -23,7 +24,7 @@ program runge_kutta_fehlberg
     end associate
   end associate
 
-  associate(dt => motor%dt() )
+  dt = motor%dt()
     history = [state]
     block
       real(rkind), parameter :: B2(*) = [2._rkind/9._rkind]
@@ -36,9 +37,9 @@ program runge_kutta_fehlberg
         [47._rkind/450._rkind, 0._rkind, 12._rkind/25._rkind, 32._rkind/225._rkind, 1._rkind/30._rkind, 6._rkind/25._rkind]
         real(rkind), parameter :: CT(*) = &
           [-1._rkind/150._rkind, 0._rkind, 3._rkind/100._rkind, -16._rkind/75._rkind, -1._rkind/20._rkind, 6._rkind/25._rkind]
-        real(rkind), allocatable :: TE_max_abs(:)
+        real(rkind), allocatable :: TE_tol(:)
 
-      TE_max_abs = [0., 0., 0.]
+      TE_tol =  [2.7498406275424329E-003_rkind,   16507.011164154210_rkind,        1.7452907228589804E-006_rkind]
 
       do while(state%time() < motor%t_max())
         associate(k1 => motor%d_dt(state)*dt)
@@ -47,9 +48,15 @@ program runge_kutta_fehlberg
               associate(k4 => motor%d_dt(state + k1*B4(1)  + k2*B4(2)+ k3*B4(3))*dt)
                 associate(k5 => motor%d_dt(state + k1*B5(1) + k2*B5(2) + k3*B5(3) + k4*B5(4))*dt)
                   associate(k6 => motor%d_dt(state + k1*B6(1) + k2*B6(2) + k3*B6(3) + k4*B6(4) + k5*B6(5))*dt)
-                    state = state + k1*CH(1) + k2*CH(2) + k3*CH(3) + k4*CH(4) + k5*CH(5) + k6*CH(6)
-                    TE =            k1*CT(1) + k2*CT(2) + k3*CT(3) + k4*CT(4) + k5*CT(5) + k6*CT(6) 
-                    TE_max_abs = max(TE_max_abs, TE%abs())
+                    TE = k1*CT(1) + k2*CT(2) + k3*CT(3) + k4*CT(4) + k5*CT(5) + k6*CT(6)
+                    associate(TE_abs => TE%absolute())
+                      if (any(TE_abs > TE_tol)) then
+                        dt = minval(0.9_rkind*dt*(TE_tol/TE_abs)**.2_rkind)
+                        cycle
+                      else 
+                        state = state + k1*CH(1) + k2*CH(2) + k3*CH(3) + k4*CH(4) + k5*CH(5) + k6*CH(6)
+                      end if
+                    end associate
                   end associate
                 end associate
               end associate
@@ -58,12 +65,7 @@ program runge_kutta_fehlberg
         end associate
         history = [history, state]
       end do
-      
-      print *,"maximum absolute truncation error: ", TE_max_abs(:)
-
-    end block 
-  end associate
-  
+    end block  
 
   call write_results
   call graph_if_requested
