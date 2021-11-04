@@ -12,7 +12,7 @@ module state_interface
     real(rkind) energy_     !! internal energy contained in chamber
     real(rkind) burn_depth_ !! surface-normal burn distance
   contains
-    procedure :: define, row_vector, energy, mass, burn_depth, time
+    procedure :: define, row_vector, energy, mass, burn_depth, time, absolute
     procedure, private :: add, multiply
     generic :: operator(+) => add
     generic :: operator(*) => multiply
@@ -31,6 +31,13 @@ module state_interface
       character(len=*), intent(in) :: input_file
       real(rkind), intent(in) :: R_gas, c_v, volume, time, burn_depth
     end subroutine
+    
+    pure module function absolute(this) result(this_abs)
+      !! result is absolute value of the state vector
+      implicit none
+      class(state_t), intent(in) :: this
+      real(rkind), allocatable :: this_abs(:)
+    end function
 
     pure module function new_state(mass, energy, burn_depth, time)
       !! result is a new state_t object

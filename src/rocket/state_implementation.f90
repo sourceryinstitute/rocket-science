@@ -29,6 +29,10 @@ contains
     end associate
   end procedure
 
+  module procedure absolute
+    this_abs = abs([this%mass_, this%energy_, this%burn_depth_])
+  end procedure
+  
   module procedure new_state
     new_state%mass_ = mass
     new_state%energy_ = energy
