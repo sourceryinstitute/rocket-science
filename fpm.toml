@@ -7,3 +7,6 @@ copyright = "2020-2021 Sourcery Institute"
 
 [dev-dependencies]
 vegetables = {git = "https://gitlab.com/everythingfunctional/vegetables", tag = "v7.2.1"}
+
+[fortran]
+implicit-external = true

@@ -32,12 +32,12 @@ Prerequisites
 -------------
 We developed this code using the following package versions
 
-* [`fpm`] 0.7.0 package manager and build system, 
+* [`fpm`] 0.9.0 package manager and build system, 
 * [`gfortran`] 11.2.0 compiler, 
 * [`gnuplot`] 5.4, patchlevel 2 plotting package, and
 * [Vegetables] 7.2.1 unit testing framework.
 
-Other versions might work also. **However, using `fpm` 0.8.0 or later requires turning off `fpm`'s new default use of the `-Werror=implicit-interface` flag.**
+Other versions might work also.
 
 Using Rocket-Science
 --------------------
